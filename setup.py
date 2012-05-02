@@ -1,8 +1,9 @@
 from distutils.core import setup
+import multi_schema
 
 setup(
     name = "django-multi-schema",
-    version = "0.1",
+    version = multi_schema.__version__,
     description = "Postgres schema support in django.",
     url = "http://hg.schinckel.net/django-multi-schema",
     author = "Matthew Schinckel",
