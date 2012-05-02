@@ -1,8 +1,7 @@
 {% if user.is_superuser and schemata %}
 <select id="__schemalist" onchange="window.location.search = '?__schema=' + document.getElementById('__schemalist').value;">
-    <option value="0">Change schema</option>
   {% for schema in schemata %}
-    <option value="{{ schema.pk }}">{{ schema.name }}</option>
+    <option value="{{ schema.pk }}" {% if schema.pk|lower == selected_schema %}selected="selected"{% endif %}>{{ schema.name }}</option>
   {% endfor %}
 </select>
 <input id='__schemaid' style="width:35px;" value="{{ selected_schema }}"><button onclick="window.location.search = '?__schema=' + document.getElementById('__schemaid').value;">→</button>
