@@ -1,6 +1,11 @@
 from django.core.management.commands import syncdb
 from django.db import models, connection, transaction
 
+try:
+    from south.management.commands import syncdb
+except ImportError:
+    pass
+
 class Command(syncdb.Command):
     def handle_noargs(self, **options):
         # Set the db_table to all non-schema-aware models to public.db_table
