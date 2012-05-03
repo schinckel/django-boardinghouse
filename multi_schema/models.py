@@ -1,9 +1,11 @@
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.db import models, connection
+from django.db import models, connection, transaction
 from django.utils.translation import ugettext as _
 
 models.Model._is_schema_aware = False
+
+from multi_schema import signals
 
 class Schema(models.Model):
     name = models.CharField(max_length=128, help_text=_(u'The display name of the schema.'))
@@ -22,11 +24,15 @@ class Schema(models.Model):
         return super(Schema, self).save(*args, **kwargs)
     
     def create_schema(self):
-        connection.cursor().execute('CREATE SCHEMA "%s";' %self.schema)
-        # We probably also want to create any tables that are required?
+        cursor = connection.cursor()
+        cursor.execute("SELECT clone_schema('__template__', %s);" % self.schema)
+        transaction.commit_unless_managed()
+        signals.schema_created.send(sender=self, schema=self.schema)
     
     def activate(self):
+        signals.schema_pre_activate.send(sender=self, schema=self.schema)
         connection.cursor().execute('SET search_path TO "%s",public' % self.schema)
+        signals.schema_post_activate.send(sender=self, schema=self.schema)        
 
 class UserSchema(models.Model):
     user = models.OneToOneField(User, related_name='schema')
