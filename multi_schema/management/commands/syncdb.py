@@ -17,6 +17,7 @@ class Command(syncdb.Command):
                     processed_models.append(model)
         
         cursor = connection.cursor()
+        
         # Ensure we have a __template__ schema.
         cursor.execute("SELECT schema_name FROM information_schema.schemata WHERE schema_name = '__template__';")
         if not cursor.fetchone():
