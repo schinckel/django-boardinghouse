@@ -8,12 +8,13 @@ except ImportError:
 
 class Command(syncdb.Command):
     def handle_noargs(self, **options):
+        import pdb; pdb.set_trace()
         # Set the db_table to all non-schema-aware models to public.db_table
         processed_models = []
         for model in models.get_models():
-            if not getattr(model, '_is_schema_aware', False):
-                if not model._meta.db_table.startswith('public.'):
-                    model._meta.db_table = "public." + model._meta.db_table
+            if getattr(model, '_is_schema_aware', False):
+                if not model._meta.db_table.startswith('__template__"."'):
+                    model._meta.db_table = '__template__"."' + model._meta.db_table
                     processed_models.append(model)
         
         cursor = connection.cursor()
@@ -24,10 +25,11 @@ class Command(syncdb.Command):
             cursor.execute("CREATE SCHEMA __template__;")
         
         # Set the search path
-        cursor.execute("SET search_path TO __template__,public;")
+        cursor.execute("SET search_path TO public,__template__;")
         
         super(Command, self).handle_noargs(**options)
         
         # reset the search_path
+        cursor = connection.cursor()
         cursor.execute("SET search_path to public;")
         transaction.commit_unless_managed()
