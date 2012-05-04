@@ -3,7 +3,14 @@ from django.contrib.auth.models import User
 from django.db import models, connection, transaction
 from django.utils.translation import ugettext as _
 
-models.Model._is_schema_aware = False
+class ClassProperty(property):
+    def __get__(self, cls, owner):
+        return self.fget.__get__(None, owner)()
+
+def is_schema_aware(cls):
+    return cls._meta.auto_created and cls._meta.auto_created._is_schema_aware
+    
+models.Model._is_schema_aware = ClassProperty(classmethod(is_schema_aware))
 
 from multi_schema import signals
 
@@ -25,7 +32,7 @@ class Schema(models.Model):
     
     def create_schema(self):
         cursor = connection.cursor()
-        cursor.execute("SELECT clone_schema('__template__', %s);" % self.schema)
+        cursor.execute("SELECT clone_schema('__template__', '%s');" % self.schema)
         transaction.commit_unless_managed()
         signals.schema_created.send(sender=self, schema=self.schema)
     
