@@ -24,10 +24,10 @@ class SchemaMiddleware:
                 try:
                     Schema.objects.get(pk=request.session['schema']).activate()
                 except ObjectDoesNotExist:
-                    # TODO Figure out how to not have the duplicate messages.
                     messages.add_message(request, messages.WARNING, 
                         _(u'Unable to find Schema matching query: %s' % request.session['schema'])
                     )
+                    request.session.pop('schema')
                 else:
                     return None
         try:
