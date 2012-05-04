@@ -15,7 +15,7 @@ class Command(syncdb.Command):
             cursor.execute("CREATE SCHEMA __template__;")
         transaction.commit_unless_managed()
         
-        # Set the search path
+        # Set the search path, so we find created models correctly
         cursor.execute("SET search_path TO public,__template__;")
         
         super(Command, self).handle_noargs(**options)

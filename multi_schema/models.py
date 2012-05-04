@@ -30,15 +30,16 @@ class Schema(models.Model):
             self.create_schema()
         return super(Schema, self).save(*args, **kwargs)
     
-    def create_schema(self):
-        cursor = connection.cursor()
+    def create_schema(self, cursor=None):
+        if not cursor:
+            cursor = connection.cursor()
         cursor.execute("SELECT clone_schema('__template__', '%s');" % self.schema)
         transaction.commit_unless_managed()
         signals.schema_created.send(sender=self, schema=self.schema)
     
-    def activate(self):
+    def activate(self, cursor=None):
         signals.schema_pre_activate.send(sender=self, schema=self.schema)
-        connection.cursor().execute('SET search_path TO "%s",public' % self.schema)
+        (cursor or connection.cursor()).execute('SET search_path TO "%s",public' % self.schema)
         signals.schema_post_activate.send(sender=self, schema=self.schema)        
 
 class UserSchema(models.Model):
