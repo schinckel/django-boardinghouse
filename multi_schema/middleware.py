@@ -44,5 +44,8 @@ class SchemaMiddleware:
             if 'schema' in request.session:
                 response.context_data['selected_schema'] = request.session['schema']
             else:
-                response.context_data['selected_schema'] = request.user.schema.schema_id
+                try:
+                    response.context_data['selected_schema'] = request.user.schema.schema_id
+                except ObjectDoesNotExist:
+                    pass
         return response
