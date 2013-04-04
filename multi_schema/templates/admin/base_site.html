@@ -1,10 +1,28 @@
 {% extends "admin/base.html" %}
-{% load i18n %}
+{% load i18n multi_schema %}
 
 {% block title %}{{ title }} | {% trans 'Django site admin' %}{% endblock %}
 
+{% block content_title %}
+  {% if title %}<h1 style="display: inline">{{ title }}</h1>{% endif %}
+  <em style="display: inline">
+    {% if cl.model|is_schema_aware %}
+      Only displaying objects from {{ selected_schema|schema_name }}.
+    {% endif %}
+    {% if adminform and original.pk and original|is_schema_aware %}
+      This object is from {{ selected_schema|schema_name }}.
+    {% endif %}
+    {% if action_list and object|is_schema_aware %}
+      This object is from {{ selected_schema|schema_name }}.
+    {% endif %}
+    {% if adminform and add and adminform.form.instance|is_schema_aware %}
+      This object will belong to {{ selected_schema|schema_name }}.
+    {% endif %}    
+  </em>
+{% endblock %}
+
 {% block branding %}
-<h1 id="site-name">{% trans 'Django administration' %}{% include 'multi_schema/change_schema.html' %}</h1>
+<h1 id="site-name">{% trans 'Django administration' %}{% include 'admin/change_schema.html' %}</h1>
 {% endblock %}
 
 {% block nav-global %}

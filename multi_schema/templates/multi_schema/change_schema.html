@@ -1,8 +1,15 @@
-{% if user.is_superuser and schemata %}
-<select id="__schemalist" onchange="window.location.search = '?__schema=' + document.getElementById('__schemalist').value;">
+{% if user.is_staff and schemata %}
+
+<select {% if disabled %}disabled="disabled"{% endif %} id="__schemalist" onchange="window.location.search = '?__schema=' + document.getElementById('__schemalist').value;">
   {% for schema in schemata %}
     <option value="{{ schema.pk }}" {% if schema.pk|lower == selected_schema %}selected="selected"{% endif %}>{{ schema.name }}</option>
   {% endfor %}
 </select>
-<input id='__schemaid' style="width:35px;" value="{{ selected_schema }}"><button onclick="window.location.search = '?__schema=' + document.getElementById('__schemaid').value;">→</button>
+<input {% if disabled %}disabled="disabled"{% endif %} id='__schemaid' style="width:35px;" value="{{ selected_schema }}">
+<button {% if disabled %}disabled="disabled"{% endif %} onclick="window.location.search = '?__schema=' + document.getElementById('__schemaid').value;">→</button>
+
+{% if disabled %}
+<span style="font-size: small">Unable to change schema while viewing this object.</span>
+{% endif %}
+
 {% endif %}

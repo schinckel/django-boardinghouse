@@ -1,0 +1,21 @@
+{% load multi_schema %}
+
+{% if adminform and original.pk and original|is_schema_aware %}
+  {% include 'multi_schema/change_schema.html' with disabled=1 %}
+{% else %}
+  {% if action_list and object|is_schema_aware %}
+    {% include 'multi_schema/change_schema.html' with disabled=1 %}
+  {% else %}
+    {% include 'multi_schema/change_schema.html' with disabled=0 %}
+  {% endif %}
+{% endif %}
+ 
+{% if adminform and add and adminform.form.instance|is_schema_aware %}
+  {% if '__schema' in request.GET %}
+    <span style="font-size: small;">Schema selected</span>
+  {% else %}
+    <span style="font-size: small; color: orange">
+      Change schema before editing fields, if necessary.
+    </span>
+  {% endif %}
+{% endif %}
