@@ -20,3 +20,4 @@ class SchemaUserAdmin(UserAdmin):
     
 admin.site.unregister(auth.models.User)
 admin.site.register(auth.models.User, SchemaUserAdmin)
+
