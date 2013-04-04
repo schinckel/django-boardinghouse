@@ -13,39 +13,46 @@ from django.utils.translation import ugettext as _
 
 from models import Schema
 
+def activate_schema(request, available_schemata):
+    if '__schema' in request.GET:
+        request.session['schema'] = request.GET['__schema']
+    if 'schema' in request.session:
+        try:
+            available_schemata.get(pk=request.session['schema']).activate()
+        except ObjectDoesNotExist:
+            messages.add_message(request, messages.WARNING, 
+                _(u'Unable to find Schema matching query: %s' % request.session['schema'])
+            )
+            request.session.pop('schema')
+        else:
+            return None
+
 class SchemaMiddleware:
     def process_request(self, request):
         if request.user.is_anonymous():
             return None
         if request.user.is_superuser:
-            if '__schema' in request.GET:
-                request.session['schema'] = request.GET['__schema']
-            if 'schema' in request.session:
-                try:
-                    Schema.objects.get(pk=request.session['schema']).activate()
-                except ObjectDoesNotExist:
-                    messages.add_message(request, messages.WARNING, 
-                        _(u'Unable to find Schema matching query: %s' % request.session['schema'])
-                    )
-                    request.session.pop('schema')
-                else:
-                    return None
-        try:
-            request.user.schema.schema.activate()
-        except ObjectDoesNotExist:
-            # If we require a schema, what should we do here? Logging it is fine, but how do we
-            # know we need one for this request?
-            pass
+            available_schemata = Schema.objects
+        elif request.user.schemata.exists():
+            available_schemata = request.user.schemata
             
-    
+        activate_schema(request, available_schemata)
+        
     def process_template_response(self, request, response):
+        if request.user.is_anonymous():
+            return response
+        
         if request.user.is_superuser:
-            response.context_data['schemata'] = Schema.objects.all()
-            if 'schema' in request.session:
-                response.context_data['selected_schema'] = request.session['schema']
-            else:
-                try:
-                    response.context_data['selected_schema'] = request.user.schema.schema_id
-                except ObjectDoesNotExist:
-                    pass
+            available_schemata = Schema.objects.all()
+        elif request.user.schemata.exists():
+            available_schemata = request.user.schemata.all()
+        else:
+            # No schemata available for this user?
+            available_schemata = Schema.objects.none()
+            
+        response.context_data['schemata'] = available_schemata
+        
+        if 'schema' in request.session:
+            response.context_data['selected_schema'] = request.session['schema']
+                    
         return response
