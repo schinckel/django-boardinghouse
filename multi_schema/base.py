@@ -1,12 +1,14 @@
 from django.db import models
 
-class SchemaAwareModel(models.Model):
+class SchemaAware(object):
+    _is_schema_aware = True
+
+class SchemaAwareModel(SchemaAware, models.Model):
     """
     The Base class for models that should be in a seperate schema.
     
-    You could just put `_is_schema_aware` on your model class, though.
+    You could just put `_is_schema_aware = True` on your model class, though.
     """
-    _is_schema_aware = True
 
     class Meta:
         abstract = True
