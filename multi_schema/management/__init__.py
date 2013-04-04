@@ -15,6 +15,8 @@ def post_syncdb_duplicator(sender, **kwargs):
             known_models = set([model for model in connection.introspection.installed_models(tables)])
             seen_models = set(known_models)
             for model in schema_aware_models:
+                if model in seen_models:
+                    continue
                 output, references = connection.creation.sql_create_model(model, no_style(), known_models, schema.schema)
                 seen_models.add(model)
                 for refto, refs in references.items():
