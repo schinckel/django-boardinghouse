@@ -3,10 +3,10 @@ from django.contrib.auth.models import User
 from django.db import models, connection, transaction
 from django.utils.translation import ugettext as _
 from django.core.validators import RegexValidator
+from django.forms import ValidationError
 
-from multi_schema import signals
-
-
+import ensure_installation
+import signals
 
 class ClassProperty(property):
     def __get__(self, cls, owner):
@@ -22,7 +22,7 @@ class Schema(models.Model):
     name = models.CharField(max_length=128, help_text=_(u'The display name of the schema.'))
     schema = models.CharField(max_length=36, unique=True,
         validators=[RegexValidator(
-            regex='^[a-z][a-z_]$',
+            regex='^[a-z][a-z_]*$',
             message=_(u'May only contain lowercase letters and underscores. Must start with a letter.')
         )],
         help_text=_(u'The internal name of the schema. May not be changed after creation.'),
@@ -35,8 +35,13 @@ class Schema(models.Model):
         return self.name
     
     def save(self, *args, **kwargs):
-        if not self.pk:
-            self.create_schema()
+        self._meta.get_field_by_name('schema')[0].run_validators(self.schema)
+        
+        if self.pk and Schema.objects.get(pk=self.pk).schema != self.schema:
+                raise ValidationError(_(u'Schema value may not be changed after creation.'))
+        
+        self.create_schema()
+        
         return super(Schema, self).save(*args, **kwargs)
         
     def create_schema(self, cursor=None):
@@ -69,15 +74,3 @@ class UserSchema(models.Model):
     
     def __unicode__(self):
         return u"%s : %s" % (self.user, self.schema)
-
-
-class SchemaAwareModel(models.Model):
-    """
-    The Base class for models that should be in a seperate schema.
-    """
-    _is_schema_aware = True
-
-    class Meta:
-        abstract = True
-
-import multi_schema.listeners
