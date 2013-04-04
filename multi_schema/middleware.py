@@ -1,7 +1,7 @@
 """
 Middleware to automatically set the schema (namespace).
 
-if request.user.is_superuser, then look for a ?schema=XXX and set the schema to that.
+if request.user.is_staff, then look for a ?__schema=XXX and set the schema to that.
 
 Otherwise, set the schema to the one associated with the logged in user.
 
@@ -31,7 +31,7 @@ class SchemaMiddleware:
     def process_request(self, request):
         if request.user.is_anonymous():
             return None
-        if request.user.is_superuser:
+        if request.user.is_staff:
             available_schemata = Schema.objects
         elif request.user.schemata.exists():
             available_schemata = request.user.schemata
@@ -42,17 +42,17 @@ class SchemaMiddleware:
         if request.user.is_anonymous():
             return response
         
-        if request.user.is_superuser:
+        if request.user.is_staff:
             available_schemata = Schema.objects.all()
         elif request.user.schemata.exists():
             available_schemata = request.user.schemata.all()
         else:
             # No schemata available for this user?
             available_schemata = Schema.objects.none()
-            
+        
         response.context_data['schemata'] = available_schemata
         
         if 'schema' in request.session:
             response.context_data['selected_schema'] = request.session['schema']
-                    
+        
         return response
