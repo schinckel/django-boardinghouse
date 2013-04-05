@@ -12,14 +12,15 @@ for name in settings.DATABASES:
             name, DB_ENGINE, current_db_engine
         ))
     
-    if not hasattr(settings, 'SOUTH_DATABASE_ADAPTERS'):
-        raise ImproperlyConfigured('You must set SOUTH_DATABASE_ADAPTERS for all DATABASES to "%s".' % SOUTH_DB_ADAPTER)
+    if 'south' in settings.INSTALLED_APPS:
+        if not hasattr(settings, 'SOUTH_DATABASE_ADAPTERS'):
+            raise ImproperlyConfigured('You must set SOUTH_DATABASE_ADAPTERS for all DATABASES to "%s".' % SOUTH_DB_ADAPTER)
     
-    current_south_adapter = settings.SOUTH_DATABASE_ADAPTERS.get(name, '<missing value>')
-    if current_south_adapter != SOUTH_DB_ADAPTER:
-        raise ImproperlyConfigured('SOUTH_DATABASE_ADAPTERS["%s"] must be "%s", not "%s".' % (
-            name, SOUTH_DB_ADAPTER, current_south_adapter
-        ))
+        current_south_adapter = settings.SOUTH_DATABASE_ADAPTERS.get(name, '<missing value>')
+        if current_south_adapter != SOUTH_DB_ADAPTER:
+            raise ImproperlyConfigured('SOUTH_DATABASE_ADAPTERS["%s"] must be "%s", not "%s".' % (
+                name, SOUTH_DB_ADAPTER, current_south_adapter
+            ))
 
 if MULTI_SCHEMA_MIDDLEWARE not in settings.MIDDLEWARE_CLASSES:
     raise ImproperlyConfigured('You must have "%s" in your MIDDLEWARE_CLASSES.' % MULTI_SCHEMA_MIDDLEWARE)
@@ -37,7 +38,7 @@ if 'django.contrib.admin' in settings.INSTALLED_APPS:
     
     LogEntry.add_to_class(
         'object_schema', 
-        models.ForeignKey('multi_schema.Schema', blank=True, null=True)
+        models.CharField(max_length=36, blank=True, null=True)
     )
     
     # Now, when we have an object that gets saved in the admin, we
@@ -47,7 +48,7 @@ if 'django.contrib.admin' in settings.INSTALLED_APPS:
         obj = instance.get_edited_object()
         if obj._is_schema_aware:
             from schema import get_schema
-            instance.object_schema = get_schema()
+            instance.object_schema = get_schema().schema
             
     
     # So we can add that bit to the url, and have links in the admin
@@ -55,9 +56,32 @@ if 'django.contrib.admin' in settings.INSTALLED_APPS:
     get_admin_url = LogEntry.get_admin_url
     
     def new_get_admin_url(self):
-        if self.object_schema_id:
-            return get_admin_url(self) + '?__schema=%s' % self.object_schema_id
+        if self.object_schema:
+            return get_admin_url(self) + '?__schema=%s' % self.object_schema
         
         return get_admin_url(self)
     
     LogEntry.get_admin_url = new_get_admin_url
+
+# Hacks to get dumpdata/loaddata to work a bit better...
+from django.core.serializers.python import Serializer
+# django 1.5+
+if hasattr(Serializer, 'get_dump_object'):
+    _get_dump_object = Serializer.get_dump_object
+
+    def get_dump_object(self, obj):
+        dump_object = _get_dump_object(self, obj)
+        if obj._is_schema_aware:
+            from schema import get_schema
+            dump_object['schema'] = get_schema().schema
+        return obj
+    
+    Serializer.get_dump_object = get_dump_object
+else: # django 1.4
+    _end_object = Serializer.end_object
+    def end_object(self, obj):
+        _end_object(self, obj)
+        if obj._is_schema_aware:
+            from schema import get_schema
+            self.objects[-1]['schema'] = get_schema().schema
+    Serializer.end_object = end_object
