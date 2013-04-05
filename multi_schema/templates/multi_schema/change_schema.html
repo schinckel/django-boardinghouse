@@ -1,4 +1,5 @@
 {% if user.is_staff and schemata %}
+<label style="font-size: small">Viewing:
 
 <select {% if disabled %}disabled="disabled"{% endif %} id="__schemalist" onchange="if (document.getElementById('__schemalist').value) { window.location.search = '?__schema=' + document.getElementById('__schemalist').value;}">
   <option value="">Please select</option>
@@ -6,8 +7,8 @@
     <option value="{{ schema.pk }}" {% if schema.pk|lower == selected_schema %}selected="selected"{% endif %}>{{ schema.name }}</option>
   {% endfor %}
 </select>
-<input {% if disabled %}disabled="disabled"{% endif %} id='__schemaid' style="width:35px;" value="{{ selected_schema }}">
-<button {% if disabled %}disabled="disabled"{% endif %} onclick="if (document.getElementById('__schemaid').value) { window.location.search = '?__schema=' + document.getElementById('__schemaid').value; }">&rarr;</button>
+
+</label>
 
 {% if disabled %}
 <span style="font-size: small">Unable to change schema while viewing this object.</span>
