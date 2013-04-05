@@ -33,7 +33,7 @@ Admin users can change to view any schema. There is an added selector in the bra
 I've hacked in support in admin.LogEntry to store the schema on a log when there is a schema associated with the model. The links that are generated (that you see in the recent actions, for instance) contain a url fragment to switch to the correct schema, so they still work.
 
 
-``./manage.py dumpdata`` and ``loaddata`` gain a ``--schema`` keyword. It defaults to ``__template__``, which is a special empty template. Data will only be dumped-from/loaded-to the selected schema (or public, if the objects are not schema-aware). Data will _not_ be written to ``__template__``, instead an error will be thrown.
+``./manage.py dumpdata`` and ``loaddata`` gain a ``--schema`` keyword. It defaults to ``__template__``, which is a special empty template. Data will only be dumped-from/loaded-to the selected schema (or public, if the objects are not schema-aware). Data will *not* be written to ``__template__``, instead an error will be thrown.
 
 
 TODOs
