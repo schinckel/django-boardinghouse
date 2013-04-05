@@ -24,6 +24,7 @@ for name in settings.DATABASES:
 
 if MULTI_SCHEMA_MIDDLEWARE not in settings.MIDDLEWARE_CLASSES:
     raise ImproperlyConfigured('You must have "%s" in your MIDDLEWARE_CLASSES.' % MULTI_SCHEMA_MIDDLEWARE)
+# Should it be at the top? Is there anything it must be before?
 
 if 'south' in settings.INSTALLED_APPS:
     if settings.INSTALLED_APPS.index('south') > settings.INSTALLED_APPS.index('multi_schema'):
