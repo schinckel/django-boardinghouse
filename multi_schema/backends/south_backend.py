@@ -6,29 +6,20 @@ from django.db import models
 
 from multi_schema.models import Schema, template_schema
 
-def get_model_with_tablename(table_name):
-    data = [x for x in models.get_models() if x._meta.db_table == table_name]
-    if data:
-        return data[0]
-    
 def is_model_aware(table):
     data = [x for x in models.get_models() if x._meta.db_table == table]
     if data:
         return data[0]._is_schema_aware
     return False
-    
-all_schemata = Schema.objects.all()
-def apply_to_all(operation, *args, **kwargs):
-    for schema in all_schemata:
-        schema.activate()
-        operation(*args, **kwargs)
-    template_schema.activate()
 
 def wrap(name):
-    function = getattr(postgresql_psycopg2.DatabaseOperations, name)
+    if isinstance(name, basestring):
+        function = getattr(postgresql_psycopg2.DatabaseOperations, name)
+    else:
+        function = name
     def apply_to_all(self, table, *args, **kwargs):
         if is_model_aware(table):
-            for schema in all_schemata:
+            for schema in Schema.objects.all():
                 schema.activate()
                 function(self, table, *args, **kwargs)
             template_schema.activate()
@@ -63,8 +54,7 @@ class DatabaseOperations(postgresql_psycopg2.DatabaseOperations):
         operation = super(DatabaseOperations, self).alter_column
         stack = inspect.stack()
         if stack[2][3] != "add_column":
-            if get_model_with_tablename(table_name)._is_schema_aware:
-                apply_to_all(operation, *((table_name,) + args), **kwargs)
+            return wrap(operation)(table_name, *args, **kwargs)
         return operation(table_name, *args, **kwargs)
 
     # These deliberately skip our immediate parent.
