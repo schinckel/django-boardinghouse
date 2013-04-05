@@ -39,9 +39,9 @@ I've hacked in support in admin.LogEntry to store the schema on a log when there
 TODOs
 -----
 
-  * Cache schema queryset so we don't have to load it each request.
+* Cache schema queryset so we don't have to load it each request.
+
+* Provide a better error when loaddata is run without --schema, and an error occurred.
   
-  * Provide a better error when loaddata is run without --schema, and an error occurred.
-  
-  * Use the ``schema`` attribute on serialised objects to load them into the correct schema. I think this is possible.
+* Use the ``schema`` attribute on serialised objects to load them into the correct schema. I think this is possible.
   
