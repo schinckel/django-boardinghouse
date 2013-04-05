@@ -40,7 +40,7 @@ class Schema(models.Model):
     
     """
     name = models.CharField(max_length=128, help_text=_(u'The display name of the schema.'))
-    schema = models.CharField(max_length=36, unique=True,
+    schema = models.CharField(max_length=36, unique=True, primary_key=True,
         validators=[RegexValidator(
             regex='^[a-z][a-z_]*$',
             message=_(u'May only contain lowercase letters and underscores. Must start with a letter.')
