@@ -11,6 +11,9 @@ setup(
     packages = [
         "multi_schema",
     ],
+    install_requires = [
+      'south==0.7.4',  
+    ],
     classifiers = [
         'Programming Language :: Python',
         'Operating System :: OS Independent',
