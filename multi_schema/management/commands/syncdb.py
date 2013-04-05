@@ -1,3 +1,5 @@
+import os.path
+
 from django.core.management.commands import syncdb
 from django.db import models, connection, transaction
 
@@ -10,6 +12,12 @@ from ...models import Schema, template_schema
 
 class Command(syncdb.Command):
     def handle_noargs(self, **options):
+        # Ensure we have the clone_schema() function
+        clone_schema_file = os.path.join(os.path.abspath(__file__ + '/../../../'), 'sql', 'clone_schema.sql')
+        clone_schema_function = open(clone_schema_file).readlines()[-1].strip()
+        cursor = connection.cursor()
+        cursor.execute(clone_schema_function)
+        
         # Ensure we have a __template__ schema.
         template_schema.create_schema()
         
