@@ -4,29 +4,24 @@ Django Multi-Schema
 Use Postgres Schemas for multi-tenant applications (or other segmenting).
 
 
-TODO: Admin link needs to have ?__schema=<id>
+
+Philosophy
+----------
+
+Some models should be seperated, others should be global.
 
 
-Migrations
------------
+Users belong to a schema, and when they view a page, it automatically only fetches data that is from their schema.
 
-pre_migrate (app)
 
-  * find any models in app that are _not_ schema_aware.
-    set their db_table to "public"."<db_table>"
-  
-  * (db) set the search path to __template__,public
 
-post_migrate (app)
+How it works
+------------
 
-  * find any models in app that are not schema_aware
-    remove a prefix of `"public".`
-  
-  * (db) set the search path to public.
+There is a special model: ``Schema``. Whenever new instances of this model are created, the system creates a Postgres schema with that name. There is a special ``__template__`` schema, that stores an empty copy of the schema, and the new schema is defined according to that.
 
-ran_migration (app, migration, method)
+Whenever a ``syncdb`` or ``migrate`` happens, we repeat all of the changes to each schema.
 
-  * for schema in Schema.objects.all()
-    * (db) set the search path to schema.schema,public
-    * re-run the migration
-  * (db) set the search path to __template__,public
+Whenever a user logs in, some middleware determines which schema should be active, and sets the postgres ``search_path`` accordingly. Some users may be able to request a different schema to be activated, and if they have the permission, they will then see data from that schema.
+
+
