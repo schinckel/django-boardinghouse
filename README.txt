@@ -41,7 +41,10 @@ TODOs
 
 * Cache schema queryset so we don't have to load it each request.
 
-* Provide a better error when loaddata is run without --schema, and an error occurred.
+* Provide a better error when ``loaddata`` is run without ``--schema``, and an error occurred.
   
 * Use the ``schema`` attribute on serialised objects to load them into the correct schema. I think this is possible.
-  
+
+* Write automated tests
+
+* Create an example project (maybe part of tests?)
