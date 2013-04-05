@@ -1,5 +1,6 @@
 from django.core.management.commands import loaddata
 from django.core.management.base import CommandError
+from django.db import DatabaseError
 
 from optparse import make_option
 
@@ -16,17 +17,19 @@ class Command(loaddata.Command):
     def handle(self, *app_labels, **options):
         schema_name = options.get('schema')
         if schema_name == '__template__':
-            schema = template_schema
+            # Hmm, we don't want to accidentally write data to this, so
+            # we should raise an exception if we are going to be
+            # writing any schema-aware objects.
+            schema = None
         else:
             try:
                 schema = Schema.objects.get(schema=options.get('schema'))
             except Schema.DoesNotExist:
                 raise CommandError('No Schema found named "%s"' % schema_name)
         
-        schema.activate()
+            schema.activate()
         
-        data = super(Command, self).handle(*app_labels, **options)
-        
-        schema.deactivate()
-        
-        return data
+             super(Command, self).handle(*app_labels, **options)
+
+        if schema:
+            schema.deactivate()
