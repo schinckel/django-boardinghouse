@@ -29,7 +29,11 @@ class Command(loaddata.Command):
         
             schema.activate()
         
-             super(Command, self).handle(*app_labels, **options)
+        super(Command, self).handle(*app_labels, **options)
 
         if schema:
             schema.deactivate()
+        
+        
+        for schema in Schema.objects.all():
+            schema.create_schema()
