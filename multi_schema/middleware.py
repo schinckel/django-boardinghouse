@@ -7,14 +7,20 @@ Otherwise, set the schema to the one associated with the logged in user.
 
 
 """
-from django.core.exceptions import ObjectDoesNotExist
+
+import logging
+import re
+
 from django.contrib import messages
-from django.utils.translation import ugettext as _
-from django.shortcuts import redirect
+from django.core.exceptions import ObjectDoesNotExist
+from django.db import DatabaseError
 from django.http import HttpResponse
+from django.shortcuts import redirect
+from django.utils.translation import ugettext as _
 
 from models import Schema
 
+logger = logging.getLogger(__file__)
 
 def activate_schema(available_schemata, session):
     """
@@ -24,7 +30,7 @@ def activate_schema(available_schemata, session):
         try:
             available_schemata.get(pk=session['schema']).activate()
         except ObjectDoesNotExist:
-            logging.warning(
+            logger.warning(
                 u'Unable to find Schema matching query: %s' % session['schema']
             )
             session.pop('schema')
@@ -112,9 +118,19 @@ class SchemaMiddleware:
             # No schemata available for this user?
             available_schemata = Schema.objects.none()
         
-        response.context_data['schemata'] = available_schemata
+        if 'schemata' not in response.context_data:
+            response.context_data['schemata'] = available_schemata
         
         if request.session.get('schema', None):
-            response.context_data['selected_schema'] = request.session['schema']
+            if 'selected_schema' not in response.context_data:
+                response.context_data['selected_schema'] = request.session['schema']
         
         return response
+
+
+    def process_exception(self, request, exception):
+        if isinstance(exception, DatabaseError) and not request.session.get('schema'):
+            if re.search('relation ".*" does not exist', exception.message):
+                # TODO: make this styleable?
+                return HttpResponse("You must select a schema to access this resource", status=449)
+        
