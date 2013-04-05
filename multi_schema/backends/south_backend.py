@@ -34,7 +34,8 @@ class DatabaseOperations(postgresql_psycopg2.DatabaseOperations):
     delete_table = wrap('delete_table')
     clear_table = wrap('clear_table')
     add_column = wrap('add_column')
-    # see alter_column below...
+    alter_column = wrap('alter_column')
+    # see alter_column below...not sure if it's required yet.
     create_unique = wrap('create_unique')
     delete_unique = wrap('delete_unique')
     delete_foreign_key = wrap('delete_foreign_key')
@@ -48,14 +49,14 @@ class DatabaseOperations(postgresql_psycopg2.DatabaseOperations):
     drop_primary_key = wrap('delete_primary_key')
     create_primary_key = wrap('create_primary_key')
     
-    # Need custom handling, as this may be called by add_column.
-    @generic.invalidate_table_constraints
-    def alter_column(self, table_name, *args, **kwargs):
-        operation = super(DatabaseOperations, self).alter_column
-        stack = inspect.stack()
-        if stack[2][3] != "add_column":
-            return wrap(operation)(table_name, *args, **kwargs)
-        return operation(table_name, *args, **kwargs)
+    # # Need custom handling, as this may be called by add_column.
+    # @generic.invalidate_table_constraints
+    # def alter_column(self, table_name, *args, **kwargs):
+    #     operation = super(DatabaseOperations, self).alter_column
+    #     stack = inspect.stack()
+    #     if stack[2][3] != "add_column":
+    #         return wrap(operation)(table_name, *args, **kwargs)
+    #     return operation(table_name, *args, **kwargs)
 
     # These deliberately skip our immediate parent.
     def _db_type_for_alter_column(self, field):
