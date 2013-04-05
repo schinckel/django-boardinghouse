@@ -79,9 +79,9 @@ class Schema(models.Model):
         signals.schema_post_activate.send(sender=self, schema=self.schema)
     
     def deactivate(self, cursor=None):
-        signals.schema_pre_activate.send(sender=self, schema=self.schema)
+        signals.schema_pre_activate.send(sender=self, schema=None)
         (cursor or connection.cursor()).execute('SET search_path TO public')
-        signals.schema_post_activate.send(sender=self, schema=self.schema)
+        signals.schema_post_activate.send(sender=self, schema=None)
 
 # An in-memory only template schema.
 template_schema = Schema(name="Template Schema", schema="__template__")
