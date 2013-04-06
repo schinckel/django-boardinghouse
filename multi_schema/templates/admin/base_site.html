@@ -16,7 +16,13 @@
       This object is from {{ selected_schema|schema_name }}.
     {% endif %}
     {% if adminform and add and adminform.form.instance|is_schema_aware %}
-      This object will belong to {{ selected_schema|schema_name }}.
+      {% if not selected_schema %}
+        <span style="color: red">
+          You must select a schema in order to create {{ opts.verbose_name_plural }}.
+        </span>
+      {% else %}
+        This object will belong to {{ selected_schema|schema_name }}.
+      {% endif %}
     {% endif %}    
   </em>
 {% endblock %}

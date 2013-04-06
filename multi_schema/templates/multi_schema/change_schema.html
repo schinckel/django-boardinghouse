@@ -1,8 +1,8 @@
 {% if schemata.count > 1 %}
 <label style="font-size: small">Viewing:
 
-<select {% if disabled %}disabled="disabled"{% endif %} id="__schemalist" onchange="if (document.getElementById('__schemalist').value) { window.location.search = '?__schema=' + document.getElementById('__schemalist').value;}">
-  <option value="">Please select</option>
+<select {% if disabled %}disabled="disabled"{% endif %} id="__schemalist" onchange="window.location.search = '?__schema=' + document.getElementById('__schemalist').value;">
+  <option value="">No schema. Please select...</option>
   {% for schema in schemata %}
     <option value="{{ schema.pk }}" {% if schema.pk|lower == selected_schema %}selected="selected"{% endif %}>{{ schema.name }}</option>
   {% endfor %}

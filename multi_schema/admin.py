@@ -22,3 +22,15 @@ class SchemaUserAdmin(UserAdmin):
 admin.site.unregister(auth.models.User)
 admin.site.register(auth.models.User, SchemaUserAdmin)
 
+
+
+# Patch ModelAdmin
+ModelAdmin_queryset = admin.ModelAdmin.queryset
+
+def queryset(self, request):
+    queryset = ModelAdmin_queryset(self, request)
+    if not request.session.get('schema'):
+        return queryset.none()
+    return queryset
+
+admin.ModelAdmin.queryset = queryset

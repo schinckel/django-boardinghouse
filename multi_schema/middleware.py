@@ -40,8 +40,6 @@ def activate_schema(available_schemata, session):
                 u'Unable to find Schema matching query: %s' % session['schema']
             )
             session.pop('schema')
-        else:
-            return True
 
 class SchemaMiddleware:
     """
@@ -68,8 +66,9 @@ class SchemaMiddleware:
     
         https://example.com/__change_schema__/<schema-name>/
     
-    This is designed to be used from AJAX requests, as it returns a status
-    code (and a short message) about the schema change request.
+    This is designed to be used from AJAX requests, or as part of
+    an API call, as it returns a status code (and a short message) 
+    about the schema change request.
     
     """
     def process_request(self, request):
@@ -84,13 +83,14 @@ class SchemaMiddleware:
         # 1. URL /__change_schema__/<name>/
         if request.path.startswith('/__change_schema__/'):
             request.session['schema'] = request.path.split('/')[2]
-            if not request.session['schema']:
-                return HttpResponse('No schema selected: missing schema value', status=404)
-            if activate_schema(available_schemata, request.session):
-                return HttpResponse('Schema changed')
-            return HttpResponse('Unable to change schema', status=403)
+            activate_schema(available_schemata, request.session)
+            if request.session.get('schema'):
+                response = 'Schema changed to %s' % request.session['schema']
+            else:
+                response = "No schema found: schema deselected."
+            return HttpResponse(response)
         # 2. GET querystring ...?__schema=<name>
-        elif request.GET.get('__schema', None):
+        elif request.GET.get('__schema', None) is not None:
             request.session['schema'] = request.GET['__schema']
             if request.method == "GET":
                 data = request.GET.copy()

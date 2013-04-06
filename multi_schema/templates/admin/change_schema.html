@@ -11,11 +11,7 @@
 {% endif %}
  
 {% if adminform and add and adminform.form.instance|is_schema_aware %}
-  {% if '__schema' in request.GET %}
-    <span style="font-size: small;">Schema selected</span>
-  {% else %}
     <span style="font-size: small; color: orange">
-      Change schema before editing fields, if necessary.
+      You should select schema first: it clears the data.
     </span>
-  {% endif %}
 {% endif %}
