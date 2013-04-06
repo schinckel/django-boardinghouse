@@ -21,10 +21,6 @@
   </em>
 {% endblock %}
 
-{% comment %}
-  TODO: make it so the change list will not be shown if this model is schema aware and no schema is selected.
-{% endcomment %}
-
 {% block branding %}
 <h1 id="site-name">{% trans 'Django administration' %}{% include 'admin/change_schema.html' %}</h1>
 {% endblock %}

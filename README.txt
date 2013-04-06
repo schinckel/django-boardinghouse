@@ -48,3 +48,5 @@ TODOs
 * Write automated tests
 
 * Create an example project (maybe part of tests?)
+
+* In the admin, show the change list page, but with a message instead of the list, if the current model is schema aware, but no schema has been selected. This cannot just be done in the template, it requires the admin view class to be changed.
