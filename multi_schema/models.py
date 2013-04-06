@@ -47,6 +47,7 @@ class Schema(models.Model):
         )],
         help_text=_(u'The internal name of the schema. May not be changed after creation.'),
     )
+    users = models.ManyToManyField(User, blank=True, null=True, related_name='schemata')
     
     class Meta:
         app_label = 'multi_schema'
@@ -86,19 +87,19 @@ class Schema(models.Model):
 # An in-memory only template schema.
 template_schema = Schema(name="Template Schema", schema="__template__")
 
-class UserSchema(models.Model):
-    """
-    A relationship between a User and a Schema. A User may be able to
-    access the data from many schemata, and in that case should be
-    provided with tools to do so.
-    
-    See templates/multi_schema/change_schema.html for an example.
-    """
-    user = models.ForeignKey(User, related_name='schemata')
-    schema = models.ForeignKey(Schema, related_name='users')
-    
-    class Meta:
-        app_label = 'multi_schema'
-    
-    def __unicode__(self):
-        return u"%s : %s" % (self.user, self.schema)
+# class UserSchema(models.Model):
+#     """
+#     A relationship between a User and a Schema. A User may be able to
+#     access the data from many schemata, and in that case should be
+#     provided with tools to do so.
+#     
+#     See templates/multi_schema/change_schema.html for an example.
+#     """
+#     user = models.ForeignKey(User, related_name='schemata')
+#     schema = models.ForeignKey(Schema, related_name='users')
+#     
+#     class Meta:
+#         app_label = 'multi_schema'
+#     
+#     def __unicode__(self):
+#         return u"%s : %s" % (self.user, self.schema)

@@ -1,5 +1,5 @@
 from django.contrib import admin, auth
-from models import Schema, UserSchema
+from models import Schema
 
 class SchemaAdmin(admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
@@ -9,8 +9,9 @@ class SchemaAdmin(admin.ModelAdmin):
 
 admin.site.register(Schema, SchemaAdmin)
 
-class SchemaInline(admin.StackedInline):
-    model = UserSchema
+class SchemaInline(admin.TabularInline):
+    model = Schema.users.through
+    extra = 0
 
 # Inject SchemeInline into UserAdmin
 UserAdmin = admin.site._registry[auth.models.User].__class__

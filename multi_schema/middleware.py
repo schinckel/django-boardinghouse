@@ -26,6 +26,12 @@ def activate_schema(available_schemata, session):
     """
     Activate the session's schema
     """
+    if available_schemata.count() == 1:
+        schema = available_schemata.get()
+        session['schema'] = schema.schema
+        schema.activate()
+        return True
+    
     if session.get('schema', None):
         try:
             available_schemata.get(pk=session['schema']).activate()
@@ -74,6 +80,8 @@ class SchemaMiddleware:
         elif request.user.schemata.exists():
             available_schemata = request.user.schemata
         
+        # Ways of changing the schema.
+        # 1. URL /__change_schema__/<name>/
         if request.path.startswith('/__change_schema__/'):
             request.session['schema'] = request.path.split('/')[2]
             if not request.session['schema']:
@@ -81,6 +89,7 @@ class SchemaMiddleware:
             if activate_schema(available_schemata, request.session):
                 return HttpResponse('Schema changed')
             return HttpResponse('Unable to change schema', status=403)
+        # 2. GET querystring ...?__schema=<name>
         elif request.GET.get('__schema', None):
             request.session['schema'] = request.GET['__schema']
             if request.method == "GET":
@@ -89,6 +98,7 @@ class SchemaMiddleware:
                 if data:
                     return redirect(request.path + '?' + data.urlencode())
                 return redirect(request.path)
+        # 3. Header "X-Change-Schema: <name>"
         elif 'HTTP_X_CHANGE_SCHEMA' in request.META:
             request.session['schema'] = request.META['HTTP_X_CHANGE_SCHEMA']
         
@@ -96,7 +106,7 @@ class SchemaMiddleware:
 
         
         
-    def process_template_response(self, request, response):
+    def _process_template_response(self, request, response):
         """
         Inject some context variables into the context for page
         rendering. This means we can get access to the schema

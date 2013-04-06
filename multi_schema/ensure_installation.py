@@ -4,6 +4,7 @@ from django.core.exceptions import ImproperlyConfigured
 DB_ENGINE = 'multi_schema.backends.postgres'
 SOUTH_DB_ADAPTER = 'multi_schema.backends.south_backend'
 MULTI_SCHEMA_MIDDLEWARE = 'multi_schema.middleware.SchemaMiddleware'
+MULTI_SCHEMA_CONTEXT_PROCESSOR = 'multi_schema.context_processors.schemata'
 
 for name in settings.DATABASES:
     current_db_engine = settings.DATABASES[name]['ENGINE']
@@ -25,6 +26,10 @@ for name in settings.DATABASES:
 if MULTI_SCHEMA_MIDDLEWARE not in settings.MIDDLEWARE_CLASSES:
     raise ImproperlyConfigured('You must have "%s" in your MIDDLEWARE_CLASSES.' % MULTI_SCHEMA_MIDDLEWARE)
 # Should it be at the top? Is there anything it must be before?
+
+if MULTI_SCHEMA_CONTEXT_PROCESSOR not in settings.TEMPLATE_CONTEXT_PROCESSORS:
+    # Change this to a warning?
+    raise ImproperlyConfigured('You must have "%s" in your TEMPLATE_CONTEXT_PROCESSORS.' % MULTI_SCHEMA_CONTEXT_PROCESSOR)
 
 if 'south' in settings.INSTALLED_APPS:
     if settings.INSTALLED_APPS.index('south') > settings.INSTALLED_APPS.index('multi_schema'):
