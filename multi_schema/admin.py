@@ -29,7 +29,7 @@ ModelAdmin_queryset = admin.ModelAdmin.queryset
 
 def queryset(self, request):
     queryset = ModelAdmin_queryset(self, request)
-    if not request.session.get('schema'):
+    if self.model._is_schema_aware and not request.session.get('schema'):
         return queryset.none()
     return queryset
 
