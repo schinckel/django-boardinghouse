@@ -2,6 +2,8 @@ from django.contrib import admin, auth
 from models import Schema
 
 class SchemaAdmin(admin.ModelAdmin):
+    exclude = ('users',)
+    
     def get_readonly_fields(self, request, obj=None):
         if obj is not None:
             return ('schema',)
