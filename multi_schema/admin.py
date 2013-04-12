@@ -1,5 +1,6 @@
 from django.contrib import admin, auth
-from models import Schema
+
+from .models import Schema, User
 
 class SchemaAdmin(admin.ModelAdmin):
     exclude = ('users',)
@@ -16,13 +17,13 @@ class SchemaInline(admin.TabularInline):
     extra = 0
 
 # Inject SchemeInline into UserAdmin
-UserAdmin = admin.site._registry[auth.models.User].__class__
+UserAdmin = admin.site._registry[User].__class__
 
 class SchemaUserAdmin(UserAdmin):
     inlines = UserAdmin.inlines + [SchemaInline]
     
-admin.site.unregister(auth.models.User)
-admin.site.register(auth.models.User, SchemaUserAdmin)
+admin.site.unregister(User)
+admin.site.register(User, SchemaUserAdmin)
 
 
 
