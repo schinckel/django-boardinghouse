@@ -18,6 +18,7 @@ def main():
     global_settings.INSTALLED_APPS = (
         'django.contrib.auth',
         'django.contrib.contenttypes',
+        'django.contrib.sessions',
         'django.contrib.admin',
         'multi_schema',
     )
@@ -27,12 +28,17 @@ def main():
             'NAME': os.environ['USER'],
         }
     } 
-
+    global_settings.ROOT_URLCONF = 'multi_schema.tests.urls'
+    
     global_settings.STATIC_URL = "/static/"
     global_settings.MEDIA_ROOT = os.path.join(BASE_PATH, 'static')
     global_settings.STATIC_ROOT = global_settings.MEDIA_ROOT
     
     global_settings.SECRET_KEY = '334ebe58-a77d-4321-9d01-a7d2cb8d3eea'
+    global_settings.PASSWORD_HASHERS = (
+        'django.contrib.auth.hashers.MD5PasswordHasher',
+    )
+    
     global_settings.TEST_RUNNER = 'django_coverage.coverage_runner.CoverageRunner'
     global_settings.COVERAGE_REPORT_HTML_OUTPUT_DIR = os.path.join(BASE_PATH, '.coverage')
     global_settings.COVERAGE_USE_STDOUT = True

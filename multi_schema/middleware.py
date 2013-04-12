@@ -20,7 +20,7 @@ from django.utils.translation import ugettext as _
 
 from models import Schema
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger('multi_schema')
 
 def activate_schema(available_schemata, session):
     """
@@ -72,9 +72,10 @@ class SchemaMiddleware:
     
     """
     def process_request(self, request):
+        available_schemata = Schema.objects.none()
         if request.user.is_anonymous():
             return None
-        if request.user.is_staff:
+        if request.user.is_staff or request.user.is_superuser:
             available_schemata = Schema.objects
         elif request.user.schemata.exists():
             available_schemata = request.user.schemata
@@ -103,39 +104,6 @@ class SchemaMiddleware:
             request.session['schema'] = request.META['HTTP_X_CHANGE_SCHEMA']
         
         activate_schema(available_schemata, request.session)
-
-        
-        
-    def _process_template_response(self, request, response):
-        """
-        Inject some context variables into the context for page
-        rendering. This means we can get access to the schema
-        information on each page, and use a schema switcher, as
-        can be found in ``multi_schema/templates/change_schema.html``.
-        
-        It would be nice to prefix them with underscores, but then we
-        would be unable to access them in the template.
-        """
-        
-        if request.user.is_anonymous():
-            return response
-        
-        if request.user.is_staff:
-            available_schemata = Schema.objects.all()
-        elif request.user.schemata.exists():
-            available_schemata = request.user.schemata.all()
-        else:
-            # No schemata available for this user?
-            available_schemata = Schema.objects.none()
-        
-        if 'schemata' not in response.context_data:
-            response.context_data['schemata'] = available_schemata
-        
-        if request.session.get('schema', None):
-            if 'selected_schema' not in response.context_data:
-                response.context_data['selected_schema'] = request.session['schema']
-        
-        return response
 
 
     def process_exception(self, request, exception):

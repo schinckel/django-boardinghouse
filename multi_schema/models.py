@@ -39,8 +39,8 @@ class Schema(models.Model):
     itself (at the start and end of the request cycle would be a good plan).
     
     """
-    name = models.CharField(max_length=128, help_text=_(u'The display name of the schema.'))
-    schema = models.CharField(max_length=36, unique=True, primary_key=True,
+    name = models.CharField(max_length=128, unique=True, help_text=_(u'The display name of the schema.'))
+    schema = models.CharField(max_length=36, primary_key=True, unique=True,
         validators=[RegexValidator(
             regex='^[a-z][a-z_]*$',
             message=_(u'May only contain lowercase letters and underscores. Must start with a letter.')
@@ -58,9 +58,26 @@ class Schema(models.Model):
     def save(self, *args, **kwargs):
         self._meta.get_field_by_name('schema')[0].run_validators(self.schema)
         
-        if self.pk and Schema.objects.get(pk=self.pk).schema != self.schema:
-                raise ValidationError(_(u'Schema value may not be changed after creation.'))
-        
+        if kwargs.get('force_insert'):
+            try:
+                Schema.objects.get(schema=self.schema)
+            except Schema.DoesNotExist:
+                pass
+            else:
+                raise ValidationError('Schema already in use')
+            
+            try:
+                Schema.objects.get(name=self.name)
+            except Schema.DoesNotExist:
+                pass
+            else:
+                raise ValidationError('Schema name already in use')
+        else:
+            try:
+                Schema.objects.get(schema=self.schema)
+            except Schema.DoesNotExist:
+                raise ValidationError('May not change schema after creation')
+
         self.create_schema()
         
         return super(Schema, self).save(*args, **kwargs)
@@ -81,7 +98,7 @@ class Schema(models.Model):
     
     def deactivate(self, cursor=None):
         signals.schema_pre_activate.send(sender=self, schema=None)
-        (cursor or connection.cursor()).execute('SET search_path TO public')
+        (cursor or connection.cursor()).execute('SET search_path TO "$user",public')
         signals.schema_post_activate.send(sender=self, schema=None)
 
 # An in-memory only template schema.
