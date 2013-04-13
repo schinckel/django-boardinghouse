@@ -6,6 +6,8 @@ from django.shortcuts import render
 from django.contrib import admin
 admin.autodiscover()
 
+from .models import AwareModel, NaiveModel
+
 def echo_schema(request):
     data = ""
     if request.GET:
@@ -15,9 +17,16 @@ def echo_schema(request):
 def change_schema_view(request):
     return render(request, 'multi_schema/change_schema.html', {})
 
+def aware_objects_view(request):
+    obj = AwareModel.objects.all()[0]
+    return HttpResponse(obj.name)
+    
 urlpatterns = patterns('',
     url(r'^$', echo_schema),
     url(r'^change/$', change_schema_view),
+    
+    url(r'^aware/$', aware_objects_view),
+    
     url(r'^admin/', include(admin.site.urls)),
 ) + patterns('django.contrib.auth.views', 
     url(r'login/$', 'login', {'template_name': 'admin/login.html'}, name='login'),

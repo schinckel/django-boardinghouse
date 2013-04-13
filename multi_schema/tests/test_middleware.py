@@ -4,7 +4,7 @@ from ..schema import get_schema
 from ..models import Schema, User
 from .models import AwareModel
 
-class TestMiddlewareInstalled(TestCase):
+class TestMiddleware(TestCase):
     def test_view_without_schema_aware_models_works_without_activation(self):
         resp = self.client.get('/')
         self.assertEquals(200, resp.status_code)
@@ -95,6 +95,16 @@ class TestMiddlewareInstalled(TestCase):
         resp = self.client.get('/')
         self.assertEquals('a', resp.content)
 
+    def test_exception_caused_by_no_active_schema(self):
+        Schema.objects.create(schema='a', name='a').activate()
+        AwareModel.objects.create(name='foo')
+        AwareModel.objects.create(name='bar')
+        
+        user = User.objects.create_user(username='test',password='test',email='test@example.com')
+        self.client.login(username='test',password='test')
+        resp = self.client.get('/aware/')
+        
+        
 class TestContextProcessor(TestCase):
     def setUp(self):
         Schema.objects.mass_create('a','b','c')
