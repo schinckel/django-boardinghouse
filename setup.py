@@ -1,10 +1,9 @@
-import os
 from setuptools import setup
-
+import multi_schema
 
 setup(
     name = "django-multi-schema",
-    version = open(os.path.join(os.path.dirname(__file__), 'multi_schema', 'VERSION')).read().strip(),
+    version = multi_schema.__version__,
     description = "Postgres schema support in django.",
     url = "http://hg.schinckel.net/django-multi-schema",
     author = "Matthew Schinckel",
