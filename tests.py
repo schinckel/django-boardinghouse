@@ -20,6 +20,7 @@ def main():
         'django.contrib.contenttypes',
         'django.contrib.sessions',
         'django.contrib.admin',
+        'south',
         'multi_schema',
     )
     global_settings.DATABASES = {

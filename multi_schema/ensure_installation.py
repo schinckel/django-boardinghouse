@@ -28,7 +28,7 @@ if MULTI_SCHEMA_MIDDLEWARE not in settings.MIDDLEWARE_CLASSES:
 # Should it be at the top? Is there anything it must be before?
 
 if MULTI_SCHEMA_CONTEXT_PROCESSOR not in settings.TEMPLATE_CONTEXT_PROCESSORS:
-    # Change this to a warning?
+    # Change this to a warning? It is not _required_, just a simple way to get this data into the request context.
     raise ImproperlyConfigured('You must have "%s" in your TEMPLATE_CONTEXT_PROCESSORS.' % MULTI_SCHEMA_CONTEXT_PROCESSOR)
 
 if 'south' in settings.INSTALLED_APPS:

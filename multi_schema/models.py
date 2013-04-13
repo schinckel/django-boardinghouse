@@ -5,6 +5,8 @@ from django.utils.translation import ugettext as _
 from django.core.validators import RegexValidator
 from django.forms import ValidationError
 
+from model_utils.managers import PassThroughManager
+
 import ensure_installation
 import signals
 
@@ -29,6 +31,15 @@ def is_schema_aware(cls):
 
 models.Model._is_schema_aware = ClassProperty(classmethod(is_schema_aware))
 
+class SchemaQuerySet(models.query.QuerySet):
+    def bulk_create(self, *args, **kwargs):
+        created = super(SchemaQuerySet, self).bulk_create(*args, **kwargs)
+        for schema in created:
+            schema.create_schema()
+        return created
+    
+    def mass_create(self, *args):
+        self.bulk_create([Schema(name=x, schema=x) for x in args])
 
 class Schema(models.Model):
     """
@@ -48,6 +59,8 @@ class Schema(models.Model):
         help_text=_(u'The internal name of the schema. May not be changed after creation.'),
     )
     users = models.ManyToManyField(User, blank=True, null=True, related_name='schemata')
+    
+    objects = PassThroughManager.for_queryset_class(SchemaQuerySet)()
     
     class Meta:
         app_label = 'multi_schema'

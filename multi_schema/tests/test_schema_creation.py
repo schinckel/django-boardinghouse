@@ -44,6 +44,20 @@ class TestPostgresSchemaCreation(TestCase):
         data = cursor.fetchone()
         self.assertEquals(('foo',), data)
     
+    def test_bulk_create_creates_schemata(self):
+        schemata = ['first', 'second', 'third']
+        created = Schema.objects.bulk_create([Schema(name=x, schema=x) for x in schemata])
+        for schema in schemata:
+            Schema.objects.get(schema=schema).activate()
+            cursor = connection.cursor()
+            cursor.execute(SCHEMA_QUERY, [schema])
+            data = cursor.fetchone()
+            self.assertEquals((schema,), data)
+    
+    def test_mass_create(self):
+        Schema.objects.mass_create('a','b','c')
+        self.assertEquals(['a','b','c'], list(Schema.objects.values_list('schema', flat=True)))
+    
 class TestSchemaClassValidationLogic(TestCase):
     def test_ensure_schema_model_is_not_schema_aware(self):
         self.assertFalse(Schema._is_schema_aware)

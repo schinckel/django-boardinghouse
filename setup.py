@@ -13,7 +13,9 @@ setup(
     ],
     include_package_data=True,
     install_requires = [
-      'psycopg2',
+        'django',
+        'psycopg2',
+        'django-model-utils',
     ],
     classifiers = [
         'Programming Language :: Python',

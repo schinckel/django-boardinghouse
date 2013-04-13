@@ -1,6 +1,8 @@
 Django Multi-Schema
 ====================
 
+.. image:: https://drone.io/bitbucket.org/schinckel/django-multi-schema/status.png
+
 Use Postgres Schemas for multi-tenant applications (or other segmenting).
 
 
@@ -8,10 +10,13 @@ Use Postgres Schemas for multi-tenant applications (or other segmenting).
 Philosophy
 ----------
 
-Some models should be seperated, others should be global.
+Some models should be partitioned between schemata, others should be global (public schema).
 
 
-Users belong to a schema, and when they view a page, it automatically only fetches data that is from their schema.
+Users have a relationship to a schema, and when they view a page, it automatically only fetches data that is from their schema.
+
+
+Users may belong to multiple schemata, and should be a mechanism for switching between them.
 
 
 
