@@ -74,10 +74,11 @@ class SchemaMiddleware:
     def process_request(self, request):
         available_schemata = Schema.objects.none()
         if request.user.is_anonymous():
+            request.session['schema'] = None
             return None
         if request.user.is_staff or request.user.is_superuser:
             available_schemata = Schema.objects
-        elif request.user.schemata.exists():
+        else:
             available_schemata = request.user.schemata
         
         # Ways of changing the schema.

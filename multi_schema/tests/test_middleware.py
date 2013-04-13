@@ -79,4 +79,51 @@ class TestMiddlewareInstalled(TestCase):
         
         resp = self.client.get('/', HTTP_X_CHANGE_SCHEMA='first')
         self.assertEquals('first', resp.content)
+    
+    def test_non_superuser_schemata(self):
+        Schema.objects.mass_create('a','b','c')
+        user = User.objects.create_user(username='test',password='test',email='test@example.com')
+        self.client.login(username='test',password='test')
+        resp = self.client.get('/', {'__schema': 'a'}, follow=True)
+        self.assertEquals('None', resp.content)
+        
+        user.schemata.add(Schema.objects.get(schema='a'))
+        resp = self.client.get('/')
+        self.assertEquals('a', resp.content)
+        
+        user.schemata.add(Schema.objects.get(schema='c'))
+        resp = self.client.get('/')
+        self.assertEquals('a', resp.content)
+
+class TestContextProcessor(TestCase):
+    def setUp(self):
+        Schema.objects.mass_create('a','b','c')
+    
+    def test_no_schemata_if_anonymous(self):
+        response = self.client.get('/change/')
+        self.assertNotIn('schemata', response.context)
+        self.assertNotIn('selected_schema', response.context)
+    
+    def test_schemata_in_context(self):
+        user = User.objects.create_user(username='test',password='test',email='test@example.com')
+        schemata = Schema.objects.exclude(schema='b')
+        user.schemata.add(*schemata)
+        self.client.login(username='test',password='test')
+        resp = self.client.get('/change/')
+        self.assertEquals(2, len(resp.context['schemata']))
+        self.assertIn(schemata[0], resp.context['schemata'])
+        self.assertIn(schemata[1], resp.context['schemata'])
+        self.assertEquals(None, resp.context['selected_schema'])
+        
+        resp = self.client.get('/change/',  HTTP_X_CHANGE_SCHEMA='a')
+        self.assertEquals(2, len(resp.context['schemata']))
+        self.assertIn(schemata[0], resp.context['schemata'])
+        self.assertIn(schemata[1], resp.context['schemata'])
+        self.assertEquals('a', resp.context['selected_schema'])
+    
+    def user_has_no_schemata(self):
+        user = User.objects.create_user(username='test',password='test',email='test@example.com')
+        self.client.login(username='test',password='test')
+        resp = self.client.get('/change/')
+        self.assertEquals([], list(resp.context['schemata']))
         
