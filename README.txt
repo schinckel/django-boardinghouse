@@ -2,6 +2,7 @@ Django Multi-Schema
 ====================
 
 .. image:: https://drone.io/bitbucket.org/schinckel/django-multi-schema/status.png
+.. image:: https://drone.io/bitbucket.org/schinckel/django-multi-schema/files/.coverage/coverage_status.png
 
 Use Postgres Schemas for multi-tenant applications (or other segmenting).
 
