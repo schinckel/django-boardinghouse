@@ -1,0 +1,17 @@
+[
+  {
+    "pk": null,
+    "model": "multi_schema.NaiveModel",
+    "fields": {
+      "name": "naive1"
+    }
+  },
+  {
+    "pk": null,
+    "model": "multi_schema.NaiveModel",
+    "fields": {
+      "name": "🌊🌊🌊🌊🌊"
+    }
+  }
+  
+]

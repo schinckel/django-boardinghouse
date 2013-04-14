@@ -1,0 +1,17 @@
+[
+  {
+    "pk": null,
+    "model": "multi_schema.AwareModel",
+    "fields": {
+      "name": "aware1"
+    }
+  },
+  {
+    "pk": null,
+    "model": "multi_schema.AwareModel",
+    "fields": {
+      "name": "🌊🌊🌊🌊🌊"
+    }
+  }
+  
+]

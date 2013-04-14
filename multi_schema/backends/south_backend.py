@@ -4,8 +4,6 @@ from south.db import postgresql_psycopg2, generic
 
 from django.db import models
 
-from multi_schema.models import Schema, template_schema
-
 def is_model_aware(table):
     data = [x for x in models.get_models() if x._meta.db_table == table]
     if data:
@@ -19,6 +17,8 @@ def wrap(name):
         function = name
     def apply_to_all(self, table, *args, **kwargs):
         if is_model_aware(table):
+            # Need a late import to prevent circular importing error.
+            from multi_schema.models import Schema, template_schema
             for schema in Schema.objects.all():
                 schema.activate()
                 function(self, table, *args, **kwargs)

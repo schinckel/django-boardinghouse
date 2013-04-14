@@ -69,25 +69,25 @@ if 'django.contrib.admin' in settings.INSTALLED_APPS:
     
     LogEntry.get_admin_url = new_get_admin_url
 
-# Hacks to get dumpdata/loaddata to work a bit better...
-from django.core.serializers.python import Serializer
-# django 1.5+
-if hasattr(Serializer, 'get_dump_object'):
-    _get_dump_object = Serializer.get_dump_object
-
-    def get_dump_object(self, obj):
-        dump_object = _get_dump_object(self, obj)
-        if obj._is_schema_aware:
-            from schema import get_schema
-            dump_object['schema'] = get_schema().schema
-        return obj
-    
-    Serializer.get_dump_object = get_dump_object
-else: # django 1.4
-    _end_object = Serializer.end_object
-    def end_object(self, obj):
-        _end_object(self, obj)
-        if obj._is_schema_aware:
-            from schema import get_schema
-            self.objects[-1]['schema'] = get_schema().schema
-    Serializer.end_object = end_object
+# # Hacks to get dumpdata/loaddata to work a bit better...
+# from django.core.serializers.python import Serializer
+# # django 1.5+
+# if hasattr(Serializer, 'get_dump_object'):
+#     _get_dump_object = Serializer.get_dump_object
+# 
+#     def get_dump_object(self, obj):
+#         dump_object = _get_dump_object(self, obj)
+#         if obj._is_schema_aware:
+#             from schema import get_schema
+#             dump_object['schema'] = get_schema().schema
+#         return obj
+#     
+#     Serializer.get_dump_object = get_dump_object
+# else: # django 1.4
+#     _end_object = Serializer.end_object
+#     def end_object(self, obj):
+#         _end_object(self, obj)
+#         if obj._is_schema_aware:
+#             from schema import get_schema
+#             self.objects[-1]['schema'] = get_schema().schema
+#     Serializer.end_object = end_object

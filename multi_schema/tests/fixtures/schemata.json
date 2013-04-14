@@ -1,0 +1,16 @@
+[
+  {
+    "pk": "a",
+    "model": "multi_schema.schema",
+    "fields": {
+      "name": "a"
+    }
+  },
+  {
+    "pk": "b",
+    "model": "multi_schema.schema",
+    "fields": {
+      "name": "b"
+    }
+  }
+]
