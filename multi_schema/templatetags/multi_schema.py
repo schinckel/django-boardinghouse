@@ -10,6 +10,7 @@ def is_schema_aware(obj):
 
 @register.filter
 def schema_name(pk):
-    if not pk:
+    try:
+        return Schema.objects.get(pk=pk).name
+    except Schema.DoesNotExist:
         return "no schema"
-    return Schema.objects.get(pk=pk).name
