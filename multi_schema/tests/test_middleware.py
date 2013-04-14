@@ -102,8 +102,11 @@ class TestMiddleware(TestCase):
         
         user = User.objects.create_user(username='test',password='test',email='test@example.com')
         self.client.login(username='test',password='test')
-        resp = self.client.get('/aware/')
+        resp = self.client.get('/')
+        self.assertEquals('None', resp.content)
         
+        resp = self.client.get('/aware/')
+        self.assertEquals(449, resp.status_code)
         
 class TestContextProcessor(TestCase):
     def setUp(self):

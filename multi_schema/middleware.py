@@ -18,7 +18,7 @@ from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.utils.translation import ugettext as _
 
-from models import Schema
+from models import Schema, template_schema
 
 logger = logging.getLogger('multi_schema')
 
@@ -72,6 +72,7 @@ class SchemaMiddleware:
     
     """
     def process_request(self, request):
+        template_schema.deactivate()
         available_schemata = Schema.objects.none()
         if request.user.is_anonymous():
             request.session['schema'] = None
