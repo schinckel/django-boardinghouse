@@ -3,6 +3,7 @@ import sys
 from cStringIO import StringIO
 from contextlib import contextmanager
 
+import django
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.db import connection, DatabaseError
@@ -23,10 +24,25 @@ def capture(command, *args, **kwargs):
     yield sys.stdout.read()
     sys.stdout = out
 
+@contextmanager
+def capture_err(command, *args, **kwargs):
+    err, sys.stderr = sys.stderr, StringIO()
+    command(*args, **kwargs)
+    sys.stderr.seek(0)
+    yield sys.stderr.read()
+    sys.stderr = err
+
 class TestLoadData(TestCase):
+    @unittest.skipIf(django.VERSION < (1,5), "CommandError used here")
     def test_invalid_schema_causes_error(self):
         with self.assertRaises(CommandError):
             call_command('loaddata', 'foo', schema='foo')
+
+    @unittest.skipIf(django.VERSION >= (1,5), "SystemExit used here")
+    def test_invalid_schema_causes_error(self):
+        with self.assertRaises(SystemExit):
+            with capture_err(call_command, 'loaddata', 'foo', schema='foo') as output:
+                self.assertEquals('Error: No Schema found named "foo"\n', output)
         
     def test_loading_schemata_creates_pg_schemata(self):
         self.assertEquals(0, Schema.objects.count())
@@ -58,7 +74,8 @@ class TestLoadData(TestCase):
     
     def test_loading_aware_data_without_a_schema_fails(self):
         with self.assertRaises(DatabaseError):
-            call_command('loaddata', 'multi_schema/tests/fixtures/aware.json', commit=False)
+            with capture_err(call_command, 'loaddata', 'multi_schema/tests/fixtures/aware.json', commit=False) as output:
+                self.assertIn('DatabaseError: Could not load multi_schema.AwareModel(pk=None): relation "multi_schema_awaremodel" does not exist\n', output)
     
     def test_loading_aware_data_works(self):
         Schema.objects.mass_create('a', 'b')
@@ -76,9 +93,16 @@ class TestLoadData(TestCase):
         self.assertTrue(False)
 
 class TestDumpData(TestCase):
+    @unittest.skipIf(django.VERSION < (1,5), "CommandError used here")
     def test_invalid_schema_raises_exception(self):
         with self.assertRaises(CommandError):
             call_command('dumpdata', 'multi_schema', schema='foo')
+
+    @unittest.skipIf(django.VERSION >= (1,5), "SystemExit used here")
+    def test_invalid_schema_raises_exception(self):
+        with self.assertRaises(SystemExit):
+            with capture_err(call_command, 'dumpdata', 'multi_schema', schema='foo') as output:
+                self.assertEquals('Error: No Schema found named "foo"\n', output)
             
     def test_dumpdata_on_naive_models_does_not_require_schema(self):
         with capture(call_command, 'dumpdata', 'multi_schema') as output:
