@@ -64,6 +64,7 @@ class Schema(models.Model):
     
     class Meta:
         app_label = 'multi_schema'
+        verbose_name_plural = 'schemata'
     
     def __unicode__(self):
         return self.name

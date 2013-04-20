@@ -9,3 +9,9 @@ def get_schema():
         return Schema.objects.get(schema=search_path.split(',')[0])
     except Schema.DoesNotExist:
         return None
+
+def activate_schema(schema):
+    Schema.objects.get(schema=schema).activate()
+
+def deactivate_schema(schema=None):
+    Schema().deactivate()

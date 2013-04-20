@@ -11,14 +11,15 @@ def is_model_aware(table):
     return False
 
 def wrap(name):
+    # Need a late import to prevent circular importing error.
+    from multi_schema.models import Schema, template_schema
+    
     if isinstance(name, basestring):
         function = getattr(postgresql_psycopg2.DatabaseOperations, name)
     else:
         function = name
     def apply_to_all(self, table, *args, **kwargs):
         if is_model_aware(table):
-            # Need a late import to prevent circular importing error.
-            from multi_schema.models import Schema, template_schema
             for schema in Schema.objects.all():
                 schema.activate()
                 function(self, table, *args, **kwargs)
