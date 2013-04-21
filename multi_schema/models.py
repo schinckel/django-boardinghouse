@@ -74,7 +74,7 @@ class Schema(models.Model):
     def save(self, *args, **kwargs):
         self._meta.get_field_by_name('schema')[0].run_validators(self.schema)
         
-        if self.tracker.previous('schema') is None:
+        if self.tracker.previous('schema') is None or 'force_insert' in kwargs:
             try:
                 Schema.objects.get(schema=self.schema)
             except Schema.DoesNotExist:
