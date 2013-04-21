@@ -14,7 +14,7 @@ class Command(syncdb.Command):
     def handle_noargs(self, **options):
         # Ensure we have the clone_schema() function
         clone_schema_file = os.path.join(os.path.abspath(__file__ + '/../../../'), 'sql', 'clone_schema.sql')
-        clone_schema_function = " ".join([x.strip() for x in open(clone_schema_file).readlines() if not x.startswith('--')])
+        clone_schema_function = " ".join([x.strip() for x in open(clone_schema_file).readlines() if not x.strip().startswith('--')])
         clone_schema_function = clone_schema_function.replace("'%'", "'%%'")
         cursor = connection.cursor()
         cursor.execute(clone_schema_function)
