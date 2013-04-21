@@ -11,22 +11,21 @@ def is_model_aware(table):
     return False
 
 def wrap(name):
-    # Need a late import to prevent circular importing error.
-    from multi_schema.models import Schema, template_schema
     
     if isinstance(name, basestring):
         function = getattr(postgresql_psycopg2.DatabaseOperations, name)
     else:
         function = name
     def apply_to_all(self, table, *args, **kwargs):
+        # Need a late import to prevent circular importing error.
+        from multi_schema.models import Schema, template_schema
         if is_model_aware(table):
             for schema in Schema.objects.all():
                 schema.activate()
                 function(self, table, *args, **kwargs)
             template_schema.activate()
-        else:
-            template_schema.deactivate()
         function(self, table, *args, **kwargs)
+        template_schema.deactivate()
     return apply_to_all
     
 class DatabaseOperations(postgresql_psycopg2.DatabaseOperations):
@@ -65,3 +64,9 @@ class DatabaseOperations(postgresql_psycopg2.DatabaseOperations):
 
     def _alter_add_column_mods(self, *args, **kwargs):
         return super(postgresql_psycopg2.DatabaseOperations, self)._alter_add_column_mods(*args ,**kwargs)
+        
+    def add_deferred_sql(self, sql):
+        from multi_schema.schema import get_schema
+        schema = get_schema().schema if get_schema() else '__template__'
+        sql = "SET search_path TO %s,public; %s; SET search_path TO public;" % (schema, sql)
+        self.deferred_sql.append(sql)
