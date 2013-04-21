@@ -16,7 +16,6 @@ class Command(syncdb.Command):
         clone_schema_file = os.path.join(os.path.abspath(__file__ + '/../../../'), 'sql', 'clone_schema.sql')
         clone_schema_function = " ".join([x.strip() for x in open(clone_schema_file).readlines() if not x.startswith('--')])
         clone_schema_function = clone_schema_function.replace("'%'", "'%%'")
-        import pdb; pdb.set_trace()
         cursor = connection.cursor()
         cursor.execute(clone_schema_function)
         
