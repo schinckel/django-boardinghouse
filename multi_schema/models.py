@@ -6,6 +6,7 @@ from django.core.validators import RegexValidator
 from django.forms import ValidationError
 
 from model_utils.managers import PassThroughManager
+from model_utils import ModelTracker
 
 import ensure_installation
 import signals
@@ -61,6 +62,7 @@ class Schema(models.Model):
     users = models.ManyToManyField(User, blank=True, null=True, related_name='schemata')
     
     objects = PassThroughManager.for_queryset_class(SchemaQuerySet)()
+    tracker = ModelTracker()
     
     class Meta:
         app_label = 'multi_schema'
@@ -72,7 +74,7 @@ class Schema(models.Model):
     def save(self, *args, **kwargs):
         self._meta.get_field_by_name('schema')[0].run_validators(self.schema)
         
-        if kwargs.get('force_insert'):
+        if self.tracker.previous('schema') is None:
             try:
                 Schema.objects.get(schema=self.schema)
             except Schema.DoesNotExist:
@@ -87,9 +89,7 @@ class Schema(models.Model):
             else:
                 raise ValidationError('Schema name already in use')
         else:
-            try:
-                Schema.objects.get(schema=self.schema)
-            except Schema.DoesNotExist:
+            if self.tracker.has_changed('schema'):
                 raise ValidationError('May not change schema after creation')
 
         self.create_schema()
