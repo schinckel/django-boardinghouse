@@ -19,8 +19,14 @@ class SchemaInline(admin.TabularInline):
 # Inject SchemeInline into UserAdmin
 UserAdmin = admin.site._registry[User].__class__
 
+def schemata(obj):
+    return '<br>'.join(obj.schemata.values_list('name', flat=True))
+schemata.allow_tags = True
+
 class SchemaUserAdmin(UserAdmin):
     inlines = UserAdmin.inlines + [SchemaInline]
+    list_display = ('username', 'is_active', 'first_name', 'last_name', 'email', schemata, )
+    list_filter = ('is_staff', 'is_superuser', 'is_active', 'schemata')
     
 admin.site.unregister(User)
 admin.site.register(User, SchemaUserAdmin)
