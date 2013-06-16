@@ -3,14 +3,14 @@ from django.db import connection
 from django import forms
 
 from ..models import Schema, template_schema
-from ..schema import get_schema
+from ..schema import get_schema, activate_schema, deactivate_schema
 
 SCHEMA_QUERY = "SELECT schema_name FROM information_schema.schemata WHERE schema_name = %s"
 TABLE_QUERY = "SELECT table_name FROM information_schema.tables WHERE table_schema = %s AND table_name = %s"
 
 class TestPostgresSchemaCreation(TestCase):
     def test_schema_table_is_in_public(self):
-        template_schema.deactivate()
+        deactivate_schema()
         cursor = connection.cursor()
         table_name = Schema._meta.db_table
         cursor.execute(TABLE_QUERY, ['public', table_name])
@@ -49,7 +49,7 @@ class TestPostgresSchemaCreation(TestCase):
         schemata = ['first', 'second', 'third']
         created = Schema.objects.bulk_create([Schema(name=x, schema=x) for x in schemata])
         for schema in schemata:
-            Schema.objects.get(schema=schema).activate()
+            activate_schema(schema)
             cursor = connection.cursor()
             cursor.execute(SCHEMA_QUERY, [schema])
             data = cursor.fetchone()
