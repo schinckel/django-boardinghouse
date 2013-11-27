@@ -26,7 +26,7 @@ def main():
     global_settings.DATABASES = {
         'default': {
             'ENGINE': 'boardinghouse.backends.postgres',
-            'NAME': os.environ['USER'],
+            'NAME': os.environ['USER']
         }
     } 
     global_settings.ROOT_URLCONF = 'boardinghouse.tests.urls'
@@ -35,12 +35,11 @@ def main():
     global_settings.MEDIA_ROOT = os.path.join(BASE_PATH, 'static')
     global_settings.STATIC_ROOT = global_settings.MEDIA_ROOT
     
-    global_settings.SECRET_KEY = '334ebe58-a77d-4321-9d01-a7d2cb8d3eea'
+    global_settings.SECRET_KEY = 'd1a1f7a0-7f88-4638-86d1-d71dc21634d7'
     global_settings.PASSWORD_HASHERS = (
         'django.contrib.auth.hashers.MD5PasswordHasher',
     )
     
-    global_settings.TEST_RUNNER = 'django_coverage.coverage_runner.CoverageRunner'
     global_settings.COVERAGE_REPORT_HTML_OUTPUT_DIR = os.path.join(BASE_PATH, '.coverage')
     global_settings.COVERAGE_USE_STDOUT = True
     global_settings.COVERAGE_PATH_EXCLUDES = ['.hg', 'templates', 'tests', 'sql', '__pycache__']
@@ -54,8 +53,12 @@ def main():
     global_settings.TEMPLATE_CONTEXT_PROCESSORS = global_settings.TEMPLATE_CONTEXT_PROCESSORS + (
         'boardinghouse.context_processors.schemata',
     )
-    from django.test.utils import get_runner
-    test_runner = get_runner(global_settings)
+    if os.environ.get('COVERAGE', None):
+        from django_coverage import coverage_runner
+        test_runner = coverage_runner.CoverageRunner
+    else:
+        from django.test.utils import get_runner
+        test_runner = get_runner(global_settings)
 
     test_runner = test_runner()
     failures = test_runner.run_tests(['boardinghouse'])
