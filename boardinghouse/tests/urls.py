@@ -15,7 +15,7 @@ def echo_schema(request):
     return HttpResponse('%s' % request.session.get('schema') + data)
 
 def change_schema_view(request):
-    return render(request, 'multi_schema/change_schema.html', {})
+    return render(request, 'boardinghouse/change_schema.html', {})
 
 def aware_objects_view(request):
     obj = AwareModel.objects.all()[0]

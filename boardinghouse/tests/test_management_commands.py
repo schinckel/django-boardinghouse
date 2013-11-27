@@ -47,7 +47,7 @@ class TestLoadData(TestCase):
     def test_loading_schemata_creates_pg_schemata(self):
         self.assertEquals(0, Schema.objects.count())
         # Need to use commit=False, else the data will be in a different transaction.
-        with capture(call_command, 'loaddata', 'multi_schema/tests/fixtures/schemata.json', commit=False) as output:
+        with capture(call_command, 'loaddata', 'boardinghouse/tests/fixtures/schemata.json', commit=False) as output:
             self.assertEquals('Installed 2 object(s) from 1 fixture(s)\n', output)
         self.assertEquals(2, Schema.objects.count())
         Schema.objects.all()[0].activate()
@@ -60,26 +60,26 @@ class TestLoadData(TestCase):
             
 
     def test_loading_naive_data_does_not_require_schema_arg(self):
-        with capture(call_command, 'loaddata', 'multi_schema/tests/fixtures/naive.json', commit=False) as output:
+        with capture(call_command, 'loaddata', 'boardinghouse/tests/fixtures/naive.json', commit=False) as output:
             self.assertEquals('Installed 2 object(s) from 1 fixture(s)\n', output)
         NaiveModel.objects.get(name="naive1")
     
     
     def test_loading_naive_data_works_with_schema_passed_in(self):
         Schema.objects.create(name='a', schema='a')
-        with capture(call_command, 'loaddata', 'multi_schema/tests/fixtures/naive.json', schema='a', commit=False) as output:
+        with capture(call_command, 'loaddata', 'boardinghouse/tests/fixtures/naive.json', schema='a', commit=False) as output:
             self.assertEquals('Installed 2 object(s) from 1 fixture(s)\n', output)
         NaiveModel.objects.get(name="naive1")
     
     
     def test_loading_aware_data_without_a_schema_fails(self):
         with self.assertRaises(DatabaseError):
-            with capture_err(call_command, 'loaddata', 'multi_schema/tests/fixtures/aware.json', commit=False) as output:
-                self.assertIn('DatabaseError: Could not load multi_schema.AwareModel(pk=None): relation "multi_schema_awaremodel" does not exist\n', output)
+            with capture_err(call_command, 'loaddata', 'boardinghouse/tests/fixtures/aware.json', commit=False) as output:
+                self.assertIn('DatabaseError: Could not load boardinghouse.AwareModel(pk=None): relation "boardinghouse_awaremodel" does not exist\n', output)
     
     def test_loading_aware_data_works(self):
         Schema.objects.mass_create('a', 'b')
-        with capture(call_command, 'loaddata', 'multi_schema/tests/fixtures/aware.json', schema='a', commit=False) as output:
+        with capture(call_command, 'loaddata', 'boardinghouse/tests/fixtures/aware.json', schema='a', commit=False) as output:
             self.assertEquals('Installed 2 object(s) from 1 fixture(s)\n', output)
         
         Schema.objects.get(schema='a').activate()
@@ -96,23 +96,23 @@ class TestDumpData(TestCase):
     @unittest.skipIf(django.VERSION < (1,5), "CommandError used here")
     def test_invalid_schema_raises_exception(self):
         with self.assertRaises(CommandError):
-            call_command('dumpdata', 'multi_schema', schema='foo')
+            call_command('dumpdata', 'boardinghouse', schema='foo')
 
     @unittest.skipIf(django.VERSION >= (1,5), "SystemExit used here")
     def test_invalid_schema_raises_exception(self):
         with self.assertRaises(SystemExit):
-            with capture_err(call_command, 'dumpdata', 'multi_schema', schema='foo') as output:
+            with capture_err(call_command, 'dumpdata', 'boardinghouse', schema='foo') as output:
                 self.assertEquals('Error: No Schema found named "foo"\n', output)
             
     def test_dumpdata_on_naive_models_does_not_require_schema(self):
-        with capture(call_command, 'dumpdata', 'multi_schema') as output:
+        with capture(call_command, 'dumpdata', 'boardinghouse') as output:
             self.assertEquals('[]', output)
     
     def test_dumpdata_on_aware_model(self):
         Schema.objects.mass_create('a', 'b')
         Schema.objects.get(schema='a').activate()
         AwareModel.objects.create(name='foo')
-        with capture(call_command, 'dumpdata', 'multi_schema', schema='a') as output:
+        with capture(call_command, 'dumpdata', 'boardinghouse', schema='a') as output:
             self.assertIn('{"status": false, "name": "foo"}', output)
-        with capture(call_command, 'dumpdata', 'multi_schema', schema='b') as output:
+        with capture(call_command, 'dumpdata', 'boardinghouse', schema='b') as output:
             self.assertNotIn('{"status": false, "name": "foo"}', output)

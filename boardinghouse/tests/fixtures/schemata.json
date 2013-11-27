@@ -1,14 +1,14 @@
 [
   {
     "pk": "a",
-    "model": "multi_schema.schema",
+    "model": "boardinghouse.schema",
     "fields": {
       "name": "a"
     }
   },
   {
     "pk": "b",
-    "model": "multi_schema.schema",
+    "model": "boardinghouse.schema",
     "fields": {
       "name": "b"
     }

@@ -1,15 +1,15 @@
 from setuptools import setup
-import multi_schema
+import boardinghouse
 
 setup(
-    name = "django-multi-schema",
-    version = multi_schema.__version__,
+    name = "django-boardinghouse",
+    version = boardinghouse.__version__,
     description = "Postgres schema support in django.",
-    url = "http://hg.schinckel.net/django-multi-schema",
+    url = "http://hg.schinckel.net/django-boardinghouse",
     author = "Matthew Schinckel",
     author_email = "matt@schinckel.net",
     packages = [
-        "multi_schema",
+        "boardinghouse",
     ],
     include_package_data=True,
     install_requires = [

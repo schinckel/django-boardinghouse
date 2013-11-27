@@ -1,10 +1,10 @@
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
-DB_ENGINE = 'multi_schema.backends.postgres'
-SOUTH_DB_ADAPTER = 'multi_schema.backends.south_backend'
-MULTI_SCHEMA_MIDDLEWARE = 'multi_schema.middleware.SchemaMiddleware'
-MULTI_SCHEMA_CONTEXT_PROCESSOR = 'multi_schema.context_processors.schemata'
+DB_ENGINE = 'boardinghouse.backends.postgres'
+SOUTH_DB_ADAPTER = 'boardinghouse.backends.south_backend'
+MULTI_SCHEMA_MIDDLEWARE = 'boardinghouse.middleware.SchemaMiddleware'
+MULTI_SCHEMA_CONTEXT_PROCESSOR = 'boardinghouse.context_processors.schemata'
 
 for name in settings.DATABASES:
     current_db_engine = settings.DATABASES[name]['ENGINE']
@@ -32,8 +32,8 @@ if MULTI_SCHEMA_CONTEXT_PROCESSOR not in settings.TEMPLATE_CONTEXT_PROCESSORS:
     raise ImproperlyConfigured('You must have "%s" in your TEMPLATE_CONTEXT_PROCESSORS.' % MULTI_SCHEMA_CONTEXT_PROCESSOR)
 
 if 'south' in settings.INSTALLED_APPS:
-    if settings.INSTALLED_APPS.index('south') > settings.INSTALLED_APPS.index('multi_schema'):
-        raise ImproperlyConfigured('You must have "south" in INSTALLED_APPS before "multi_schema".')
+    if settings.INSTALLED_APPS.index('south') > settings.INSTALLED_APPS.index('boardinghouse'):
+        raise ImproperlyConfigured('You must have "south" in INSTALLED_APPS before "boardinghouse".')
 
 if 'django.contrib.admin' in settings.INSTALLED_APPS:
     # Patch LogEntry to store reference to Schema if applicable.

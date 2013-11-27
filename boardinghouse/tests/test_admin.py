@@ -19,12 +19,12 @@ class TestAdminAdditions(TestCase):
         )
         
         self.client.login(username='su', password='su')
-        response = self.client.get('/admin/multi_schema/schema/a/')
+        response = self.client.get('/admin/boardinghouse/schema/a/')
         form = response.context['adminform'].form
         self.assertTrue('name' in form.fields)
         self.assertTrue('schema' not in form.fields, 'Schema.schema should be read-only on edit.')
         
-        response = self.client.get('/admin/multi_schema/schema/add/')
+        response = self.client.get('/admin/boardinghouse/schema/add/')
         form = response.context['adminform'].form
         self.assertTrue('name' in form.fields)
         self.assertTrue('schema' in form.fields, 'Schema.schema should be editable on create.')
@@ -40,4 +40,4 @@ class TestAdminAdditions(TestCase):
         )
         
         self.client.login(username='su', password='su')
-        response = self.client.get(reverse('/admin/multi_schema/aware/'))
+        response = self.client.get(reverse('/admin/boardinghouse/aware/'))

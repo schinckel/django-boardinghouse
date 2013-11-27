@@ -1,7 +1,7 @@
 from django.test import TestCase
 
 from .models import AwareModel, NaiveModel
-from ..templatetags.multi_schema import *
+from ..templatetags.boardinghouse import *
 
 class TestTemplateTags(TestCase):
     def test_is_schema_aware_filter(self):

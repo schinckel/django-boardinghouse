@@ -18,7 +18,7 @@ def wrap(name):
         function = name
     def apply_to_all(self, table, *args, **kwargs):
         # Need a late import to prevent circular importing error.
-        from multi_schema.models import Schema, template_schema
+        from boardinghouse.models import Schema, template_schema
         if is_model_aware(table):
             for schema in Schema.objects.all():
                 schema.activate()
@@ -66,7 +66,7 @@ class DatabaseOperations(postgresql_psycopg2.DatabaseOperations):
         return super(postgresql_psycopg2.DatabaseOperations, self)._alter_add_column_mods(*args ,**kwargs)
         
     def add_deferred_sql(self, sql):
-        from multi_schema.schema import get_schema
+        from boardinghouse.schema import get_schema
         schema = get_schema().schema if get_schema() else '__template__'
         sql = "SET search_path TO %s,public; %s; SET search_path TO public;" % (schema, sql)
         self.deferred_sql.append(sql)

@@ -65,7 +65,7 @@ class Schema(models.Model):
     tracker = ModelTracker()
     
     class Meta:
-        app_label = 'multi_schema'
+        app_label = 'boardinghouse'
         verbose_name_plural = 'schemata'
     
     def __unicode__(self):

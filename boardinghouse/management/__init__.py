@@ -1,7 +1,7 @@
 from django.db import models, connection
 from django.core.management.color import no_style
 
-from multi_schema.models import Schema
+from boardinghouse.models import Schema
 
 def post_syncdb_duplicator(sender, **kwargs):
     # See if any of the newly created models are schema-aware

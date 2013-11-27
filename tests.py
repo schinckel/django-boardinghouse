@@ -21,15 +21,15 @@ def main():
         'django.contrib.sessions',
         'django.contrib.admin',
         'south',
-        'multi_schema',
+        'boardinghouse',
     )
     global_settings.DATABASES = {
         'default': {
-            'ENGINE': 'multi_schema.backends.postgres',
+            'ENGINE': 'boardinghouse.backends.postgres',
             'NAME': os.environ['USER'],
         }
     } 
-    global_settings.ROOT_URLCONF = 'multi_schema.tests.urls'
+    global_settings.ROOT_URLCONF = 'boardinghouse.tests.urls'
     
     global_settings.STATIC_URL = "/static/"
     global_settings.MEDIA_ROOT = os.path.join(BASE_PATH, 'static')
@@ -46,19 +46,19 @@ def main():
     global_settings.COVERAGE_PATH_EXCLUDES = ['.hg', 'templates', 'tests', 'sql', '__pycache__']
     
     global_settings.SOUTH_DATABASE_ADAPTERS = {
-        'default': 'multi_schema.backends.south_backend',
+        'default': 'boardinghouse.backends.south_backend',
     }
     global_settings.MIDDLEWARE_CLASSES = global_settings.MIDDLEWARE_CLASSES + (
-        'multi_schema.middleware.SchemaMiddleware',
+        'boardinghouse.middleware.SchemaMiddleware',
     )
     global_settings.TEMPLATE_CONTEXT_PROCESSORS = global_settings.TEMPLATE_CONTEXT_PROCESSORS + (
-        'multi_schema.context_processors.schemata',
+        'boardinghouse.context_processors.schemata',
     )
     from django.test.utils import get_runner
     test_runner = get_runner(global_settings)
 
     test_runner = test_runner()
-    failures = test_runner.run_tests(['multi_schema'])
+    failures = test_runner.run_tests(['boardinghouse'])
     
     sys.exit(failures)
 

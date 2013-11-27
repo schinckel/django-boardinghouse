@@ -25,7 +25,7 @@ class TestPartitioning(TestCase):
         first.activate()
         self.assertRaises(AwareModel.DoesNotExist, AwareModel.objects.get, name='Baz object')
         
-    def test_multi_schema_manager(self):
+    def test_boardinghouse_manager(self):
         first = Schema.objects.create(name='first', schema='first')
         second = Schema.objects.create(name='second', schema='second')
         

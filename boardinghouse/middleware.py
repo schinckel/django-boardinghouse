@@ -20,7 +20,7 @@ from django.utils.translation import ugettext as _
 
 from models import Schema, template_schema
 
-logger = logging.getLogger('multi_schema')
+logger = logging.getLogger('boardinghouse')
 
 def activate_schema(available_schemata, session):
     """

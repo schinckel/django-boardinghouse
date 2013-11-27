@@ -1,14 +1,14 @@
 [
   {
     "pk": null,
-    "model": "multi_schema.NaiveModel",
+    "model": "boardinghouse.AwareModel",
     "fields": {
-      "name": "naive1"
+      "name": "aware1"
     }
   },
   {
     "pk": null,
-    "model": "multi_schema.NaiveModel",
+    "model": "boardinghouse.AwareModel",
     "fields": {
       "name": "🌊🌊🌊🌊🌊"
     }
