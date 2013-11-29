@@ -51,6 +51,26 @@ TODOs
   
 * Use the ``schema`` attribute on serialised objects to load them into the correct schema. I think this is possible.
 
-* Write automated tests
+* Write more tests
 
 * Create an example project (maybe part of tests?)
+
+* Enable support for django-devserver: we currently get an infinite recursion when both of us are installed.
+
+
+Installation Instructions
+-------------------------
+
+You need to do the following to install `django-boardinghouse`.
+
+* Install it into your virtualenv.
+* Add ``'boardinghouse'`` to your ``settings.INSTALLED_APPS`` (after ``south`` if you have that installed).
+* Set your Database Engine(s) to ``'boardinghouse.backends.postgres'``
+* Add the following to your settings:: 
+
+    SOUTH_DATABASE_ADAPTERS = {
+        'default': 'boardinghouse.backends.south_backend',
+        'boardinghouse.backends.postgres': 'boardinghouse.backends.south_backend',
+    }
+
+``django-boardinghouse`` automatically installs a class to your middleware, and a context processor. If you have the admin installed, it adds a column to the admin ``LogEntry`` class, to store the object schema when applicable.

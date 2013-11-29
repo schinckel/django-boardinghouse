@@ -1,35 +1,32 @@
+"""
+This module ensures that all of the required parts of 
+django-boardinghouse are correctly installed. It does
+this in a rather hidden way: it injects the objects
+that it thinks should be installed into the settings.
+
+"""
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
-DB_ENGINE = 'boardinghouse.backends.postgres'
-SOUTH_DB_ADAPTER = 'boardinghouse.backends.south_backend'
-MULTI_SCHEMA_MIDDLEWARE = 'boardinghouse.middleware.SchemaMiddleware'
-MULTI_SCHEMA_CONTEXT_PROCESSOR = 'boardinghouse.context_processors.schemata'
+DB_ENGINES = ['boardinghouse.backends.postgres']
+BOARDINGHOUSE_MIDDLEWARE = 'boardinghouse.middleware.SchemaMiddleware'
+BOARDINGHOUSE_CONTEXT_PROCESSOR = 'boardinghouse.context_processors.schemata'
 
 for name in settings.DATABASES:
     current_db_engine = settings.DATABASES[name]['ENGINE']
-    if current_db_engine != DB_ENGINE:
-        raise ImproperlyConfigured('DATABASES["%s"][ENGINE] must be "%s", not "%s".' % (
-            name, DB_ENGINE, current_db_engine
+    if current_db_engine not in DB_ENGINES:
+        raise ImproperlyConfigured(
+            'DATABASES["%s"]["ENGINE"]: %s is not a supported engine. '
+            'Supported engines are: %s' % (
+                name, current_db_engine, DB_ENGINES
         ))
-    
-    if 'south' in settings.INSTALLED_APPS:
-        if not hasattr(settings, 'SOUTH_DATABASE_ADAPTERS'):
-            raise ImproperlyConfigured('You must set SOUTH_DATABASE_ADAPTERS for all DATABASES to "%s".' % SOUTH_DB_ADAPTER)
-    
-        current_south_adapter = settings.SOUTH_DATABASE_ADAPTERS.get(name, '<missing value>')
-        if current_south_adapter != SOUTH_DB_ADAPTER:
-            raise ImproperlyConfigured('SOUTH_DATABASE_ADAPTERS["%s"] must be "%s", not "%s".' % (
-                name, SOUTH_DB_ADAPTER, current_south_adapter
-            ))
 
-if MULTI_SCHEMA_MIDDLEWARE not in settings.MIDDLEWARE_CLASSES:
-    raise ImproperlyConfigured('You must have "%s" in your MIDDLEWARE_CLASSES.' % MULTI_SCHEMA_MIDDLEWARE)
+if BOARDINGHOUSE_MIDDLEWARE not in settings.MIDDLEWARE_CLASSES:
+    settings.MIDDLEWARE_CLASSES += (BOARDINGHOUSE_MIDDLEWARE,)
 # Should it be at the top? Is there anything it must be before?
 
-if MULTI_SCHEMA_CONTEXT_PROCESSOR not in settings.TEMPLATE_CONTEXT_PROCESSORS:
-    # Change this to a warning? It is not _required_, just a simple way to get this data into the request context.
-    raise ImproperlyConfigured('You must have "%s" in your TEMPLATE_CONTEXT_PROCESSORS.' % MULTI_SCHEMA_CONTEXT_PROCESSOR)
+if BOARDINGHOUSE_CONTEXT_PROCESSOR not in settings.TEMPLATE_CONTEXT_PROCESSORS:
+    settings.TEMPLATE_CONTEXT_PROCESSORS += (BOARDINGHOUSE_CONTEXT_PROCESSOR,)
 
 if 'south' in settings.INSTALLED_APPS:
     if settings.INSTALLED_APPS.index('south') > settings.INSTALLED_APPS.index('boardinghouse'):

@@ -28,7 +28,11 @@ def main():
             'ENGINE': 'boardinghouse.backends.postgres',
             'NAME': os.environ['USER']
         }
-    } 
+    }
+    global_settings.SOUTH_DATABASE_ADAPTERS = {
+        'default': 'boardinghouse.backends.south_backend',
+        'boardinghouse.backends.postgres': 'boardinghouse.backends.south_backend',
+    }
     global_settings.ROOT_URLCONF = 'boardinghouse.tests.urls'
     
     global_settings.STATIC_URL = "/static/"
@@ -44,15 +48,6 @@ def main():
     global_settings.COVERAGE_USE_STDOUT = True
     global_settings.COVERAGE_PATH_EXCLUDES = ['.hg', 'templates', 'tests', 'sql', '__pycache__']
     
-    global_settings.SOUTH_DATABASE_ADAPTERS = {
-        'default': 'boardinghouse.backends.south_backend',
-    }
-    global_settings.MIDDLEWARE_CLASSES = global_settings.MIDDLEWARE_CLASSES + (
-        'boardinghouse.middleware.SchemaMiddleware',
-    )
-    global_settings.TEMPLATE_CONTEXT_PROCESSORS = global_settings.TEMPLATE_CONTEXT_PROCESSORS + (
-        'boardinghouse.context_processors.schemata',
-    )
     if os.environ.get('COVERAGE', None):
         from django_coverage import coverage_runner
         test_runner = coverage_runner.CoverageRunner
