@@ -19,9 +19,9 @@ def main():
         'django.contrib.auth',
         'django.contrib.contenttypes',
         'django.contrib.sessions',
-        'django.contrib.admin',
         'south',
         'boardinghouse',
+        'django.contrib.admin',
     )
     global_settings.DATABASES = {
         'default': {
