@@ -64,7 +64,7 @@ Installation Instructions
 You need to do the following to install `django-boardinghouse`.
 
 * Install it into your virtualenv.
-* Add ``'boardinghouse'`` to your ``settings.INSTALLED_APPS`` (after ``south`` if you have that installed).
+* Add ``'boardinghouse'`` to your ``settings.INSTALLED_APPS`` (after ``south`` if you have that installed, and before ``django.contrib.admin``).
 * Set your Database Engine(s) to ``'boardinghouse.backends.postgres'``
 * Add the following to your settings:: 
 

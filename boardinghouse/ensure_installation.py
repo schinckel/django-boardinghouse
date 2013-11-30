@@ -33,8 +33,11 @@ if 'south' in settings.INSTALLED_APPS:
         raise ImproperlyConfigured('You must have "south" in INSTALLED_APPS before "boardinghouse".')
 
 if 'django.contrib.admin' in settings.INSTALLED_APPS:
+    if settings.INSTALLED_APPS.index('django.contrib.admin') < settings.INSTALLED_APPS.index('boardinghouse'):
+        raise ImproperlyConfigured('You must have "django.contrib.admin" in INSTALLED_APPS after "boardinghouse".')
+    
     # Patch LogEntry to store reference to Schema if applicable.
-    # We will assume that the LogEntry table does not exist...
+    # We will assume that the LogEntry table does not exist.
     from django.contrib.admin.models import LogEntry
     from django.db import models
     from django.dispatch import receiver
@@ -54,7 +57,7 @@ if 'django.contrib.admin' in settings.INSTALLED_APPS:
             instance.object_schema = get_schema().schema
             
     
-    # So we can add that bit to the url, and have links in the admin
+    # ...so we can add that bit to the url, and have links in the admin
     # that will automatically change the schema for us.
     get_admin_url = LogEntry.get_admin_url
     
