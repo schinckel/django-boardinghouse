@@ -34,6 +34,6 @@ class Command(loaddata.Command):
         if schema:
             schema.deactivate()
         
-        
+        # Ensure we create any schemata that are new.
         for schema in Schema.objects.all():
             schema.create_schema()

@@ -92,6 +92,7 @@ class TestLoadData(TestCase):
     def test_loading_data_containing_schema_data_works(self):
         self.assertTrue(False)
 
+
 class TestDumpData(TestCase):
     @unittest.skipIf(django.VERSION < (1,5), "CommandError used here")
     def test_invalid_schema_raises_exception(self):
@@ -116,3 +117,30 @@ class TestDumpData(TestCase):
             self.assertIn('{"status": false, "name": "foo"}', output)
         with capture(call_command, 'dumpdata', 'boardinghouse', schema='b') as output:
             self.assertNotIn('{"status": false, "name": "foo"}', output)
+
+
+class TestSyncDB(TestCase):
+    fixtures = ['schemata.json']
+    def test_creating_missing_schemata(self):
+        """
+        This is a pretty severe edge case: for some reason, we have data
+        in our Schemata table, without a matching schema.
+        
+        Doing a syncdb will always fix this.
+        """
+        cursor = connection.cursor()
+        cursor.execute("INSERT INTO boardinghouse_schema (name, schema) VALUES ('a', 'a')")
+        cursor.execute(SCHEMA_QUERY, ['a'])
+        data = cursor.fetchone()
+        self.assertEquals(None, cursor.fetchone())
+        
+        with capture(call_command, 'syncdb') as output:
+            pass
+        
+        cursor.execute(SCHEMA_QUERY, ['a'])
+        data = cursor.fetchone()
+        self.assertEquals(('a',), data)
+    
+    def test_no_south_no_error(self):
+        "Can't really come up with a way to test this!"
+        

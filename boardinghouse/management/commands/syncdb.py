@@ -28,6 +28,6 @@ class Command(syncdb.Command):
         
         super(Command, self).handle_noargs(**options)
         
-        # Ensure all existing schemata exist (in case we imported them using loaddata or something)
+        # Ensure all existing schemata exist (in case they were created using RAW SQL or something, as loaddata creates any that are missing).
         for schema in Schema.objects.all():
             schema.create_schema()
