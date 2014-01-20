@@ -118,6 +118,17 @@ class TestDumpData(TestCase):
             self.assertIn('{"status": false, "name": "foo"}', output)
         with capture(call_command, 'dumpdata', 'boardinghouse', schema='b') as output:
             self.assertNotIn('{"status": false, "name": "foo"}', output)
+    
+    @unittest.skipIf(django.VERSION < (1,5), "CommandError used here")
+    def test_dumpdata_on_aware_model_requires_schema(self):
+        with self.assertRaises(CommandError):
+            call_command('dumpdata', 'boardinghouse.awaredmodel')
+        
+    @unittest.skipIf(django.VERSION >= (1,5), "SystemExit used here")
+    def test_dumpdata_on_aware_model_requires_schema_dj_15(self):
+        with self.assertRaises(SystemExit):
+            with capture_err(call_command, 'dumpdata', 'boardinghouse.awaremodel') as output:
+                self.assertEquals('Error: You must pass a schema when an explicit model is aware.', output)
 
 
 class TestSyncDB(TestCase):
