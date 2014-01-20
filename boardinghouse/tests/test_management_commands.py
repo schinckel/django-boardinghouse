@@ -91,6 +91,11 @@ class TestLoadData(TestCase):
     
     @unittest.expectedFailure
     def test_loading_data_containing_schema_data_works(self):
+        """
+        This one is a fair way off: it would be great to be able to dump
+        and load data from multiple schemata at once. I'm thinking the
+        loading may be easier:)
+        """
         self.assertTrue(False)
 
 
