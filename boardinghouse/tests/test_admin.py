@@ -6,7 +6,7 @@ from django.core.urlresolvers import reverse
 
 from ..schema import get_schema
 from ..models import Schema, User
-from .models import AwareModel
+from .models import AwareModel, NaiveModel
 
 class TestAdminAdditions(TestCase):
     def test_ensure_schema_schema_is_not_editable(self):

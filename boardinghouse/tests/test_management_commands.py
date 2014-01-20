@@ -39,7 +39,7 @@ class TestLoadData(TestCase):
             call_command('loaddata', 'foo', schema='foo')
 
     @unittest.skipIf(django.VERSION >= (1,5), "SystemExit used here")
-    def test_invalid_schema_causes_error(self):
+    def test_invalid_schema_causes_error_dj_15(self):
         with self.assertRaises(SystemExit):
             with capture_err(call_command, 'loaddata', 'foo', schema='foo') as output:
                 self.assertEquals('Error: No Schema found named "foo"\n', output)
@@ -99,7 +99,7 @@ class TestDumpData(TestCase):
             call_command('dumpdata', 'boardinghouse', schema='foo')
 
     @unittest.skipIf(django.VERSION >= (1,5), "SystemExit used here")
-    def test_invalid_schema_raises_exception(self):
+    def test_invalid_schema_raises_exception_dj_15(self):
         with self.assertRaises(SystemExit):
             with capture_err(call_command, 'dumpdata', 'boardinghouse', schema='foo') as output:
                 self.assertEquals('Error: No Schema found named "foo"\n', output)
