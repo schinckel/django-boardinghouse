@@ -40,4 +40,21 @@ class TestAdminAdditions(TestCase):
         )
         
         self.client.login(username='su', password='su')
-        response = self.client.get(reverse('/admin/boardinghouse/aware/'))
+        
+        response = self.client.get('/admin/boardinghouse/aware/')
+        self.assertEquals(404, response.status_code)
+        
+        response = self.client.get('/admin/boardinghouse/naive/')
+        self.assertEquals(200, response.status_code)
+    
+    def test_schemata_list(self):
+        from boardinghouse.admin import schemata
+        
+        user = User.objects.create_user(
+            username='user', password='password', email='user@example.com'
+        )
+        Schema.objects.mass_create('a','b','c')
+        self.assertEquals('', schemata(user))
+        
+        user.schemata.add(*Schema.objects.all())
+        self.assertEquals('a<br>b<br>c', schemata(user))
