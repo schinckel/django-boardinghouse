@@ -7,6 +7,7 @@ import django
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.db import connection, DatabaseError
+from django.db import transaction
 from django.test import TestCase
 
 from ..models import Schema
@@ -121,6 +122,8 @@ class TestDumpData(TestCase):
 
 class TestSyncDB(TestCase):
     fixtures = ['schemata.json']
+    
+    @unittest.skipIf(django.VERSION < (1,6), "Transaction handling needs to be done differently")
     def test_creating_missing_schemata(self):
         """
         This is a pretty severe edge case: for some reason, we have data
@@ -131,7 +134,6 @@ class TestSyncDB(TestCase):
         cursor = connection.cursor()
         cursor.execute("INSERT INTO boardinghouse_schema (name, schema) VALUES ('a', 'a')")
         cursor.execute(SCHEMA_QUERY, ['a'])
-        data = cursor.fetchone()
         self.assertEquals(None, cursor.fetchone())
         
         with capture(call_command, 'syncdb') as output:
