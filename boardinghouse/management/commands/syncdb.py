@@ -9,6 +9,7 @@ except ImportError:
     pass
 
 from ...models import Schema, template_schema
+from ...schema import _install_clone_schema_function
 
 class Command(syncdb.Command):
     def handle_noargs(self, **options):

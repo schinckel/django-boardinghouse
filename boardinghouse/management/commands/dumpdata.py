@@ -1,6 +1,6 @@
 from django.core.management.commands import dumpdata
 from django.core.management.base import CommandError
-from django.db.models import get_model
+from django.db import models
 
 from optparse import make_option
 
@@ -26,6 +26,7 @@ class Command(dumpdata.Command):
 
         # If we have have any explicit models that are aware, then we should
         # raise an exception if we weren't handed a schema.
+        get_model = models.get_model
         aware_required = any([
             get_model(*label.split('.'))._is_schema_aware
             for label in app_labels if '.' in label

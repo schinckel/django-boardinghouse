@@ -19,7 +19,7 @@ def main():
         'django.contrib.auth',
         'django.contrib.contenttypes',
         'django.contrib.sessions',
-        'south',
+    ) + (('south', ) if django.VERSION < 1.7 else ()) + (
         'boardinghouse',
         'django.contrib.admin',
     )
@@ -54,7 +54,10 @@ def main():
     else:
         from django.test.utils import get_runner
         test_runner = get_runner(global_settings)
-
+    
+    if getattr(django, 'setup', None):
+        django.setup()
+    
     test_runner = test_runner()
     failures = test_runner.run_tests(['boardinghouse'])
     

@@ -127,7 +127,7 @@ class TestDumpData(TestCase):
     @unittest.skipIf(django.VERSION < (1,5), "CommandError used here")
     def test_dumpdata_on_aware_model_requires_schema(self):
         with self.assertRaises(CommandError):
-            call_command('dumpdata', 'boardinghouse.awaredmodel')
+            call_command('dumpdata', 'boardinghouse.awaremodel')
         
     @unittest.skipIf(django.VERSION >= (1,5), "SystemExit used here")
     def test_dumpdata_on_aware_model_requires_schema_dj_15(self):
@@ -136,6 +136,7 @@ class TestDumpData(TestCase):
                 self.assertEquals('Error: You must pass a schema when an explicit model is aware.', output)
 
 
+@unittest.skipIf(django.VERSION > (1,7), "SyncDB not used with django 1.7+")
 class TestSyncDB(TestCase):
     fixtures = ['schemata.json']
     

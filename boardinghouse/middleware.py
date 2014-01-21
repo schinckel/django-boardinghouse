@@ -16,7 +16,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import DatabaseError
 from django.http import HttpResponse
 from django.shortcuts import redirect
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 
 from models import Schema, template_schema
 
@@ -37,7 +37,7 @@ def activate_schema(available_schemata, session):
             available_schemata.get(pk=session['schema']).activate()
         except ObjectDoesNotExist:
             logger.warning(
-                u'Unable to find Schema matching query: %s' % session['schema']
+                _(u'Unable to find Schema matching query: %s') % session['schema']
             )
             session.pop('schema')
 
@@ -88,9 +88,9 @@ class SchemaMiddleware:
             request.session['schema'] = request.path.split('/')[2]
             activate_schema(available_schemata, request.session)
             if request.session.get('schema'):
-                response = 'Schema changed to %s' % request.session['schema']
+                response = _('Schema changed to %s') % request.session['schema']
             else:
-                response = "No schema found: schema deselected."
+                response = _("No schema found: schema deselected.")
             return HttpResponse(response)
         # 2. GET querystring ...?__schema=<name>
         elif request.GET.get('__schema', None) is not None:
@@ -112,5 +112,5 @@ class SchemaMiddleware:
         if isinstance(exception, DatabaseError) and not request.session.get('schema'):
             if re.search('relation ".*" does not exist', exception.message):
                 # TODO: make this styleable?
-                return HttpResponse("You must select a schema to access this resource", status=449)
+                return HttpResponse(_("You must select a schema to access this resource"), status=449)
         

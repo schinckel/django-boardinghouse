@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib import auth
 from django.db import models, connection, transaction
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 from django.core.validators import RegexValidator
 from django.forms import ValidationError
 
@@ -18,7 +18,6 @@ except:
     import django.contrib.auth.models
     User = auth.models.User
     
-
 # This is a bit of fancy trickery to stick the property _is_schema_aware
 # on every model class, returning False, unless it has been explicitly
 # set to True in the model definition (see base.py for examples).
@@ -80,17 +79,17 @@ class Schema(models.Model):
             except Schema.DoesNotExist:
                 pass
             else:
-                raise ValidationError('Schema already in use')
+                raise ValidationError(_('Schema %s already in use') % self.schema)
             
             try:
                 Schema.objects.get(name=self.name)
             except Schema.DoesNotExist:
                 pass
             else:
-                raise ValidationError('Schema name already in use')
+                raise ValidationError(_('Schema name %s already in use') % self.name)
         else:
             if self.tracker.has_changed('schema'):
-                raise ValidationError('May not change schema after creation')
+                raise ValidationError(_('May not change schema after creation'))
 
         self.create_schema()
         
