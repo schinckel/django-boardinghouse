@@ -30,7 +30,7 @@ class TestPostgresSchemaCreation(TestCase):
         data = cursor.fetchone()
         self.assertEquals(('test_schema',), data)
     
-    def test_z_schema_object_creation_does_not_leak_between_tests(self):
+    def test_schema_object_creation_does_not_leak_between_tests(self):
         cursor = connection.cursor()
         cursor.execute(SCHEMA_QUERY, ['test_schema'])
         data = cursor.fetchone()
