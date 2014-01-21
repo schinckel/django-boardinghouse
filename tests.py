@@ -38,7 +38,9 @@ def main():
     global_settings.STATIC_URL = "/static/"
     global_settings.MEDIA_ROOT = os.path.join(BASE_PATH, 'static')
     global_settings.STATIC_ROOT = global_settings.MEDIA_ROOT
-    
+    global_settings.TEMPLATE_DIRS = (
+        os.path.join(BASE_PATH, 'boardinghouse', 'tests', 'templates'),
+    )
     global_settings.SECRET_KEY = 'd1a1f7a0-7f88-4638-86d1-d71dc21634d7'
     global_settings.PASSWORD_HASHERS = (
         'django.contrib.auth.hashers.MD5PasswordHasher',

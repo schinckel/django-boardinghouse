@@ -29,9 +29,11 @@ class TestAdminAdditions(TestCase):
         self.assertTrue('name' in form.fields)
         self.assertTrue('schema' in form.fields, 'Schema.schema should be editable on create.')
     
-    @unittest.expectedFailure
     def test_schema_aware_models_when_no_schema_selected(self):
         Schema.objects.mass_create('a','b','c')
+        # Schema.objects.get(name='a').activate()
+        # AwareModel.objects.create(name="foo")
+        # Schema().deactivate()
         
         user = User.objects.create_superuser(
             username="su",
@@ -41,11 +43,9 @@ class TestAdminAdditions(TestCase):
         
         self.client.login(username='su', password='su')
         
-        response = self.client.get('/admin/boardinghouse/aware/')
-        self.assertEquals(404, response.status_code)
-        
-        response = self.client.get('/admin/boardinghouse/naive/')
-        self.assertEquals(200, response.status_code)
+        response = self.client.get('/admin/boardinghouse/awaremodel/')
+        # Should we handle this, and provide feedback?
+        self.assertEquals(449, response.status_code)
     
     def test_schemata_list(self):
         from boardinghouse.admin import schemata

@@ -7,6 +7,8 @@ from django.contrib import admin
 admin.autodiscover()
 
 from .models import AwareModel, NaiveModel
+admin.site.register(AwareModel)
+admin.site.register(NaiveModel)
 
 def echo_schema(request):
     data = ""

@@ -13,7 +13,7 @@ import re
 
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import DatabaseError
+from django.db import DatabaseError, transaction
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.utils.translation import ugettext_lazy as _
@@ -112,5 +112,6 @@ class SchemaMiddleware:
         if isinstance(exception, DatabaseError) and not request.session.get('schema'):
             if re.search('relation ".*" does not exist', exception.message):
                 # TODO: make this styleable?
+                transaction.rollback()
                 return HttpResponse(_("You must select a schema to access this resource"), status=449)
         

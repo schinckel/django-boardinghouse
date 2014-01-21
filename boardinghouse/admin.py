@@ -1,4 +1,5 @@
 from django.contrib import admin, auth
+from django.http import Http404
 
 from .models import Schema, User
 
@@ -33,13 +34,13 @@ admin.site.register(User, SchemaUserAdmin)
 
 
 
-# Patch ModelAdmin
-ModelAdmin_queryset = admin.ModelAdmin.queryset
-
-def queryset(self, request):
-    queryset = ModelAdmin_queryset(self, request)
-    if self.model._is_schema_aware and not request.session.get('schema'):
-        return queryset.none()
-    return queryset
-
-admin.ModelAdmin.queryset = queryset
+# # Patch ModelAdmin
+# ModelAdmin_queryset = admin.ModelAdmin.queryset
+# 
+# def queryset(self, request):
+#     if self.model._is_schema_aware and not request.session.get('schema'):
+#         raise Http404()
+#         return ModelAdmin_queryset(self, request).none()
+#     return ModelAdmin_queryset(self, request)
+# 
+# admin.ModelAdmin.queryset = queryset
