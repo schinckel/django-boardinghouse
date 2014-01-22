@@ -5,8 +5,6 @@ from south.db import postgresql_psycopg2, generic
 
 from django.db import models
 
-RAW_SQL_WARNING = "You are performing a raw SQL operation: this will not be applied to multiple schemata."
-
 def is_model_aware(table):
     data = [x for x in models.get_models() if x._meta.db_table == table]
     if data:
@@ -73,13 +71,3 @@ class DatabaseOperations(postgresql_psycopg2.DatabaseOperations):
         schema = get_schema().schema if get_schema() else '__template__'
         sql = "SET search_path TO %s,public; %s; SET search_path TO public;" % (schema, sql)
         self.deferred_sql.append(sql)
-    
-    def execute(self, *args, **kwargs):
-        # We want to output a warning that this will not apply to all
-        # schemata.
-        sys.stderr.write(RAW_SQL_WARNING)
-        return super(DatabaseOperations, self).execute(*args, **kwargs)
-    
-    def execute_many(self, *args, **kwargs):
-        sys.stderr.write(RAW_SQL_WARNING)
-        return super(DatabaseOperations, self).execute_many(*args, **kwargs)
