@@ -7,8 +7,8 @@ def post_syncdb_duplicator(sender, **kwargs):
     # See if any of the newly created models are schema-aware
     schema_aware_models = [m for m in kwargs['created_models'] if m._is_schema_aware and kwargs['app'].__name__ == m.__module__]
     if schema_aware_models:
+        cursor = connection.cursor()
         for schema in Schema.objects.all():
-            cursor = connection.cursor()
             schema.activate(cursor)
             tables = connection.introspection.table_names()
             pending_references = {}
@@ -30,6 +30,6 @@ def post_syncdb_duplicator(sender, **kwargs):
                 for statement in output:
                     cursor.execute(statement)
                 tables.append(connection.introspection.table_name_converter(model._meta.db_table))
-                
+        cursor.close()
 
 models.signals.post_syncdb.connect(post_syncdb_duplicator)

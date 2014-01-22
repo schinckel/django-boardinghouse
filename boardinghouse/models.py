@@ -98,6 +98,8 @@ class Schema(models.Model):
     def create_schema(self, cursor=None):
         if not cursor:
             cursor = connection.cursor()
+            self.create_schema(cursor)
+            return cursor.close()
         cursor.execute("SELECT schema_name FROM information_schema.schemata WHERE schema_name = %s", [self.schema])
         if not cursor.fetchone():
             cursor.execute("SELECT clone_schema('__template__', %s);", [self.schema])
@@ -105,13 +107,21 @@ class Schema(models.Model):
             signals.schema_created.send(sender=self, schema=self.schema)
     
     def activate(self, cursor=None):
+        if not cursor:
+            cursor = connection.cursor()
+            self.activate(cursor)
+            return cursor.close()
         signals.schema_pre_activate.send(sender=self, schema=self.schema)
-        (cursor or connection.cursor()).execute('SET search_path TO "%s",public' % self.schema)
+        cursor.execute('SET search_path TO "%s",public' % self.schema)
         signals.schema_post_activate.send(sender=self, schema=self.schema)
     
     def deactivate(self, cursor=None):
+        if not cursor:
+            cursor = connection.cursor()
+            self.deactivate(cursor)
+            return cursor.close()
         signals.schema_pre_activate.send(sender=self, schema=None)
-        (cursor or connection.cursor()).execute('SET search_path TO "$user",public')
+        cursor.execute('SET search_path TO "$user",public')
         signals.schema_post_activate.send(sender=self, schema=None)
 
 # An in-memory only template schema.

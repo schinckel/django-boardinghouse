@@ -22,5 +22,6 @@ else:
             
             cursor = connection.cursor()
             cursor.execute("SET search_path TO public,__template__;")
+            cursor.close()
             
             super(Command, self).handle(*args, **options)

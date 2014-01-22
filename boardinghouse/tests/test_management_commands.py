@@ -53,12 +53,12 @@ class TestLoadData(TestCase):
         self.assertEquals(2, Schema.objects.count())
         Schema.objects.all()[0].activate()
         self.assertTrue(get_schema())
+        cursor = connection.cursor()
         for schema in Schema.objects.all():
-            cursor = connection.cursor()
             cursor.execute(SCHEMA_QUERY, [schema.schema])
             data = cursor.fetchone()
             self.assertEquals((schema.schema,), data)
-            
+        cursor.close()
 
     def test_loading_naive_data_does_not_require_schema_arg(self):
         with capture(call_command, 'loaddata', 'boardinghouse/tests/fixtures/naive.json', commit=False) as output:
@@ -159,6 +159,7 @@ class TestSyncDB(TestCase):
         cursor.execute(SCHEMA_QUERY, ['a'])
         data = cursor.fetchone()
         self.assertEquals(('a',), data)
+        cursor.close()
     
     def test_no_south_no_error(self):
         "Can't really come up with a way to test this!"

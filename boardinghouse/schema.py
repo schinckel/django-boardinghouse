@@ -8,6 +8,7 @@ def get_schema():
     cursor = connection.cursor()
     cursor.execute('SHOW search_path')
     search_path = cursor.fetchone()[0]
+    cursor.close()
     try:
         return Schema.objects.get(schema=search_path.split(',')[0])
     except Schema.DoesNotExist:
@@ -26,3 +27,4 @@ def _install_clone_schema_function():
     clone_schema_function = clone_schema_function.replace("%", "%%")
     cursor = connection.cursor()
     cursor.execute(clone_schema_function)
+    cursor.close()
