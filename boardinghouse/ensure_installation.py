@@ -7,6 +7,7 @@ that it thinks should be installed into the settings.
 """
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+from django.contrib.auth import get_user_model
 
 DB_ENGINES = ['boardinghouse.backends.postgres']
 BOARDINGHOUSE_MIDDLEWARE = 'boardinghouse.middleware.SchemaMiddleware'
@@ -68,6 +69,11 @@ if 'django.contrib.admin' in settings.INSTALLED_APPS:
         return get_admin_url(self)
     
     LogEntry.get_admin_url = new_get_admin_url
+
+# We need the user model to have an attribute 'schemata', which is a
+# relationship to Schema. However, this is hard to test, as when we have
+# test data, we don't add that until after.
+
 
 # # Hacks to get dumpdata/loaddata to work a bit better...
 # from django.core.serializers.python import Serializer

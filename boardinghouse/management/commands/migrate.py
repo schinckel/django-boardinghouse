@@ -12,6 +12,7 @@ except ImportError:
     
     We will just set it so that command will get run.
     """
+    from south.management.commands import migrate
     Command = migrate.Command
 else:
         

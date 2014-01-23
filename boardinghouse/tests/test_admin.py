@@ -1,12 +1,12 @@
 import unittest
 
 from django.test import TestCase
-from django.contrib import admin
+from django.contrib import admin, auth
 from django.core.urlresolvers import reverse
 
 from ..schema import get_schema
-from ..models import Schema, User
-from .models import AwareModel, NaiveModel
+from ..models import Schema
+from .models import AwareModel, NaiveModel, User
 
 class TestAdminAdditions(TestCase):
     def test_ensure_schema_schema_is_not_editable(self):

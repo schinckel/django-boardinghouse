@@ -80,6 +80,7 @@ class SchemaMiddleware:
         if request.user.is_staff or request.user.is_superuser:
             available_schemata = Schema.objects
         else:
+            # What about if there is no attribute schemata on request.user?
             available_schemata = request.user.schemata
         
         # Ways of changing the schema.
