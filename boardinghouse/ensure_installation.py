@@ -7,7 +7,6 @@ that it thinks should be installed into the settings.
 """
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
-from django.contrib.auth import get_user_model
 
 DB_ENGINES = ['boardinghouse.backends.postgres']
 BOARDINGHOUSE_MIDDLEWARE = 'boardinghouse.middleware.SchemaMiddleware'
