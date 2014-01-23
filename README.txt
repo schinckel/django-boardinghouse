@@ -53,6 +53,11 @@ TODOs
 
 * Write more tests
 
+  * test migrations under south
+  * test migrations under django1.7
+  * test ensure_installation
+  
+
 * Create an example project (maybe part of tests?)
 
 * Enable support for django-devserver: we currently get an infinite recursion when both of us are installed.

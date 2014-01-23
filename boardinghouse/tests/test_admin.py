@@ -31,9 +31,6 @@ class TestAdminAdditions(TestCase):
     
     def test_schema_aware_models_when_no_schema_selected(self):
         Schema.objects.mass_create('a','b','c')
-        # Schema.objects.get(name='a').activate()
-        # AwareModel.objects.create(name="foo")
-        # Schema().deactivate()
         
         user = User.objects.create_superuser(
             username="su",
