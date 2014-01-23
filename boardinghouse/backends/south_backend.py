@@ -9,13 +9,9 @@ def is_model_aware(table):
     data = [x for x in models.get_models() if x._meta.db_table == table]
     if data:
         return data[0]._is_schema_aware
-    return False
 
 def wrap(name):
-    if isinstance(name, basestring):
-        function = getattr(postgresql_psycopg2.DatabaseOperations, name)
-    else:
-        function = name
+    function = getattr(postgresql_psycopg2.DatabaseOperations, name)
     
     def apply_to_all(self, table, *args, **kwargs):
         # Need a late import to prevent circular importing error.
@@ -54,9 +50,16 @@ class DatabaseOperations(postgresql_psycopg2.DatabaseOperations):
     @generic.invalidate_table_constraints
     def alter_column(self, table_name, *args, **kwargs):
         operation = super(DatabaseOperations, self).alter_column
+        # This is a bit hacky. We look in the call stack for the 
+        # function that called the function that called us, and if
+        # that was add_column, then we just run the operation normally,
+        # as the wrapping is already in-place in the add_column call.
+        # If it is _anything_ else, then we need to wrap it to ensure
+        # it runs for every schema.
         stack = inspect.stack()
         if stack[2][3] != "add_column":
-            return wrap(operation)(table_name, *args, **kwargs)
+            operation = wrap('alter_column')
+            return operation(self, table_name, *args, **kwargs)
         return operation(table_name, *args, **kwargs)
 
     # These deliberately skip our immediate parent.
