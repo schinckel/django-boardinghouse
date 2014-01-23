@@ -69,6 +69,11 @@ if 'django.contrib.admin' in settings.INSTALLED_APPS:
     
     LogEntry.get_admin_url = new_get_admin_url
 
+# We need the user model to have an attribute 'schemata', which is a
+# relationship to Schema. However, this is hard to test, as when we have
+# test data, we don't add that until after.
+
+
 # # Hacks to get dumpdata/loaddata to work a bit better...
 # from django.core.serializers.python import Serializer
 # # django 1.5+

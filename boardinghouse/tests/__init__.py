@@ -1,3 +1,5 @@
+import models
+
 from test_admin import *
 from test_management_commands import *
 from test_middleware import *

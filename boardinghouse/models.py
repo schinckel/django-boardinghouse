@@ -11,13 +11,6 @@ from model_utils import ModelTracker
 import ensure_installation
 import signals
 
-try:
-    User = auth.get_user_model()
-except:
-    # Was getting an error where auth.models could not be found.
-    import django.contrib.auth.models
-    User = auth.models.User
-    
 # This is a bit of fancy trickery to stick the property _is_schema_aware
 # on every model class, returning False, unless it has been explicitly
 # set to True in the model definition (see base.py for examples).
@@ -41,6 +34,11 @@ class SchemaQuerySet(models.query.QuerySet):
     def mass_create(self, *args):
         self.bulk_create([Schema(name=x, schema=x) for x in args])
 
+schema_name_validator = RegexValidator(
+    regex='^[a-z][a-z_]*$',
+    message=_(u'May only contain lowercase letters and underscores. Must start with a letter.')
+)
+
 class Schema(models.Model):
     """
     The Schema model provides an abstraction for a Postgres schema.
@@ -52,13 +50,17 @@ class Schema(models.Model):
     """
     name = models.CharField(max_length=128, unique=True, help_text=_(u'The display name of the schema.'))
     schema = models.CharField(max_length=36, primary_key=True, unique=True,
-        validators=[RegexValidator(
-            regex='^[a-z][a-z_]*$',
-            message=_(u'May only contain lowercase letters and underscores. Must start with a letter.')
-        )],
+        validators=[schema_name_validator],
         help_text=_(u'The internal name of the schema. May not be changed after creation.'),
     )
-    users = models.ManyToManyField(User, blank=True, null=True, related_name='schemata')
+    # # Should this actually be set on the users table?
+    # That will prevent south from pulling in model data from
+    # that model (and any it depends upon), when a model is declared
+    # that references this model.
+    # users = models.ManyToManyField(
+    #     settings.AUTH_USER_MODEL, 
+    #     blank=True, null=True, 
+    #     related_name='schemata')
     
     objects = PassThroughManager.for_queryset_class(SchemaQuerySet)()
     tracker = ModelTracker()

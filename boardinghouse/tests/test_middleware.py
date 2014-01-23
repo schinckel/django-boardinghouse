@@ -1,8 +1,8 @@
 from django.test import TestCase
 
 from ..schema import get_schema
-from ..models import Schema, User
-from .models import AwareModel
+from ..models import Schema
+from .models import AwareModel, User
 
 class TestMiddleware(TestCase):
     def test_view_without_schema_aware_models_works_without_activation(self):
