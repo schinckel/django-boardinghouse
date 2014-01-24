@@ -1,3 +1,4 @@
 MANIFEST
 .tox
 .coverage
+doc/build
