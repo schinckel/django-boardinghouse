@@ -38,8 +38,8 @@ class DatabaseOperations(postgresql_psycopg2.DatabaseOperations):
     clear_table = wrap('clear_table')
     add_column = wrap('add_column')
     create_unique = wrap('create_unique')
-    delete_unique = wrap('delete_unique') # Issues with constraint cache.
-    delete_foreign_key = wrap('delete_foreign_key')
+    delete_unique = wrap('delete_unique')
+    # delete_foreign_key = wrap('delete_foreign_key')
     create_index = wrap('create_index')
     delete_index = wrap('delete_index')
     drop_index = wrap('delete_index')
@@ -53,14 +53,9 @@ class DatabaseOperations(postgresql_psycopg2.DatabaseOperations):
     # # Need custom handling, as this may be called by add_column.
     def alter_column(self, table_name, *args, **kwargs):
         operation = super(DatabaseOperations, self).alter_column
-        # This is a bit hacky. We look in the call stack for the 
-        # function that called the function that called us, and if
-        # that was add_column, then we just run the operation normally,
-        # as the wrapping is already in-place in the add_column call.
-        # If it is _anything_ else, then we need to wrap it to ensure
-        # it runs for every schema.
+        # This is a bit hacky. We look in the call stack for the function that called us, and if that was add_column, then we just run the operation normally, as the wrapping is already in-place in the add_column call. If it is _anything_ else, then we need to wrap it to ensure it runs for every schema.
         stack = inspect.stack()
-        if stack[2][3] != "add_column":
+        if stack[1][3] != "add_column":
             operation = wrap('alter_column')
             return operation(self, table_name, *args, **kwargs)
         return operation(table_name, *args, **kwargs)
