@@ -26,12 +26,6 @@ def get_schema():
     except Schema.DoesNotExist:
         return None
 
-def get_schema_or_template():
-    schema = get_schema()
-    if not schema:
-        return '__template__'
-    return schema.schema
-
 def activate_schema(schema):
     if isinstance(schema, Schema):
         if schema.schema == '__template__':
@@ -45,6 +39,13 @@ def activate_schema(schema):
 def deactivate_schema(schema=None):
     Schema().deactivate()
 
+
+## Internal helper functions.
+def _get_schema_or_template():
+    schema = get_schema()
+    if not schema:
+        return '__template__'
+    return schema.schema
 
 def _install_clone_schema_function():
     clone_schema_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'sql', 'clone_schema.sql')

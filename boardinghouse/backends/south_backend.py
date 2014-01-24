@@ -90,8 +90,8 @@ class DatabaseOperations(postgresql_psycopg2.DatabaseOperations):
     # each command. This may potentially slow things down, but it's also
     # the only way to ensure it is correct.
     def add_deferred_sql(self, sql):
-        from boardinghouse.schema import get_schema_or_template
-        schema = get_schema_or_template()
+        from boardinghouse.schema import _get_schema_or_template
+        schema = _get_schema_or_template()
         sql = "SET search_path TO %s,public; %s; SET search_path TO public;" % (schema, sql)
         self.deferred_sql.append(sql)
     
@@ -101,8 +101,8 @@ class DatabaseOperations(postgresql_psycopg2.DatabaseOperations):
     # cache each time we change schema (which happens a lot).
     def lookup_constraint(self, db_name, table_name, column_name=None):
         if is_model_aware(table_name):
-            from boardinghouse.schema import get_schema_or_template
-            schema = get_schema_or_template()
+            from boardinghouse.schema import _get_schema_or_template
+            schema = _get_schema_or_template()
         else:
             schema = self._get_schema_name()
         
