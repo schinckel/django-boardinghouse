@@ -105,14 +105,14 @@ class SouthMigrate(TestCase):
             ('field1', models.IntegerField()),
             ('field2', models.IntegerField()),
         )
-        field_names = [(field[0],) for field in fields]
+        field_names = sorted([(field[0],) for field in fields])
         test_table_sql = "SELECT column_name FROM information_schema.columns WHERE table_name='boardinghouse_awaremodel' AND table_schema='%s'"
         
         # To test create, we need to actually delete first, as we check the model's _is_schema_aware attribute!
         db.delete_table('boardinghouse_awaremodel')
         for schema in schemata:
             schema.activate()
-            columns = db.execute(test_table_sql % schema.schema)
+            columns = sorted(db.execute(test_table_sql % schema.schema))
             self.assertEquals([], columns)        
         
         db.create_table('boardinghouse_awaremodel', fields)
@@ -120,7 +120,7 @@ class SouthMigrate(TestCase):
         # and all other schemata.
         for schema in schemata:
             schema.activate()
-            columns = db.execute(test_table_sql % schema.schema)
+            columns = sorted(db.execute(test_table_sql % schema.schema))
             self.assertEquals(field_names, columns)
         
         
