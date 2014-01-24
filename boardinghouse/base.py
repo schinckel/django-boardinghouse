@@ -18,9 +18,12 @@ class MultiSchemaMixin(object):
         # We need to inject the schema as an attribute _schema on the query,
         # so we can access it later.
         multi_query = [
-            query.replace('FROM "', 'FROM "%s"."' % schema.schema) for schema in schemata
+            query.replace(
+                'SELECT ', "SELECT '%s' as _schema, "  % schema.schema
+            ).replace(
+                'FROM "', 'FROM "%s"."' % schema.schema
+            ) for schema in schemata
         ]
-        
         
         return self.raw(" UNION ALL ".join(multi_query))
 
