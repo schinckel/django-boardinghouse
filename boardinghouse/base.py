@@ -1,6 +1,7 @@
 from django.db import models
 
-from models import Schema
+from .models import Schema
+from .schema import get_schema
 
 class MultiSchemaMixin(object):
     def from_schemata(self, *schemata):
@@ -12,10 +13,14 @@ class MultiSchemaMixin(object):
         
         if len(schemata) == 1 and hasattr(schemata[0], 'filter'):
             schemata = schemata[0]
-        
+
+        # We want to fetch all objects from selected schemata.
+        # We need to inject the schema as an attribute _schema on the query,
+        # so we can access it later.
         multi_query = [
             query.replace('FROM "', 'FROM "%s"."' % schema.schema) for schema in schemata
         ]
+        
         
         return self.raw(" UNION ALL ".join(multi_query))
 
@@ -29,8 +34,22 @@ class SchemaAwareModel(SchemaAware, models.Model):
     """
     The Base class for models that should be in a seperate schema.
     
-    You could just put `_is_schema_aware = True` on your model class, though.
+    You could just put `_is_schema_aware = True` on your model class, but
+    then you would also need to override __eq__ to get correct behaviour
+    related to objects from different schemata.
     """
 
     class Meta:
         abstract = True
+    
+    def __eq__(self, other):
+        return super(SchemaAwareModel, self).__eq__(other) and self._schema == other._schema
+
+
+def inject_schema_attribute(sender, instance, **kwargs):
+    if not sender._is_schema_aware:
+        return
+    if not getattr(instance, '_schema', None):
+        instance._schema = get_schema()
+
+models.signals.post_init.connect(inject_schema_attribute)
