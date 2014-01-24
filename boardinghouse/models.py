@@ -46,21 +46,12 @@ class Schema(models.Model):
     It will take care of creating a cloned copy of the template_schema
     when it is created, and also has the ability to activate and deactivate
     itself (at the start and end of the request cycle would be a good plan).
-    
     """
     name = models.CharField(max_length=128, unique=True, help_text=_(u'The display name of the schema.'))
     schema = models.CharField(max_length=36, primary_key=True, unique=True,
         validators=[schema_name_validator],
         help_text=_(u'The internal name of the schema. May not be changed after creation.'),
     )
-    # # Should this actually be set on the users table?
-    # That will prevent south from pulling in model data from
-    # that model (and any it depends upon), when a model is declared
-    # that references this model.
-    # users = models.ManyToManyField(
-    #     settings.AUTH_USER_MODEL, 
-    #     blank=True, null=True, 
-    #     related_name='schemata')
     
     objects = PassThroughManager.for_queryset_class(SchemaQuerySet)()
     tracker = ModelTracker()

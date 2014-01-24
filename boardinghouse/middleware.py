@@ -29,8 +29,6 @@ def activate_schema(available_schemata, session):
     """
     if available_schemata.count() == 1:
         schema = available_schemata.get()
-        if schema.schema == '__template__':
-            raise TemplateSchemaActivation()
         session['schema'] = schema.schema
         schema.activate()
         return True
