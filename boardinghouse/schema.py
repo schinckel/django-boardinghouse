@@ -2,17 +2,26 @@ import os
 
 from django.db import models, connection
 
-from .models import Schema
+from .models import Schema, template_schema
 
 def get_schema():
     cursor = connection.cursor()
     cursor.execute('SHOW search_path')
     search_path = cursor.fetchone()[0]
     cursor.close()
+    schema_name = search_path.split(',')[0]
+    if schema_name == '__template__':
+        return template_schema
     try:
-        return Schema.objects.get(schema=search_path.split(',')[0])
+        return Schema.objects.get(schema=schema_name)
     except Schema.DoesNotExist:
         return None
+
+def get_schema_or_template():
+    schema = get_schema()
+    if not schema:
+        return '__template__'
+    return schema.schema
 
 def activate_schema(schema):
     Schema.objects.get(schema=schema).activate()

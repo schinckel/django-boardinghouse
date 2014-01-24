@@ -16,13 +16,19 @@ def wrap(name):
     def apply_to_all(self, table, *args, **kwargs):
         # Need a late import to prevent circular importing error.
         from boardinghouse.models import Schema, template_schema
-        if is_model_aware(table):
-            for schema in Schema.objects.all():
-                schema.activate()
-                function(self, table, *args, **kwargs)
-            template_schema.activate()
+        
+        if not is_model_aware(table):
+            return function(self, table, *args, **kwargs)
+        
+        for schema in Schema.objects.all():
+            schema.activate()
+            function(self, table, *args, **kwargs)
+            schema.deactivate()
+        
+        template_schema.activate()
         function(self, table, *args, **kwargs)
         template_schema.deactivate()
+        
     return apply_to_all
     
 class DatabaseOperations(postgresql_psycopg2.DatabaseOperations):
@@ -31,10 +37,8 @@ class DatabaseOperations(postgresql_psycopg2.DatabaseOperations):
     delete_table = wrap('delete_table')
     clear_table = wrap('clear_table')
     add_column = wrap('add_column')
-    alter_column = wrap('alter_column')
-    # see alter_column below...not sure if it's required yet.
     create_unique = wrap('create_unique')
-    delete_unique = wrap('delete_unique')
+    delete_unique = wrap('delete_unique') # Issues with constraint cache.
     delete_foreign_key = wrap('delete_foreign_key')
     create_index = wrap('create_index')
     delete_index = wrap('delete_index')
@@ -47,7 +51,6 @@ class DatabaseOperations(postgresql_psycopg2.DatabaseOperations):
     create_primary_key = wrap('create_primary_key')
     
     # # Need custom handling, as this may be called by add_column.
-    @generic.invalidate_table_constraints
     def alter_column(self, table_name, *args, **kwargs):
         operation = super(DatabaseOperations, self).alter_column
         # This is a bit hacky. We look in the call stack for the 
@@ -70,7 +73,40 @@ class DatabaseOperations(postgresql_psycopg2.DatabaseOperations):
         return super(postgresql_psycopg2.DatabaseOperations, self)._alter_add_column_mods(*args ,**kwargs)
         
     def add_deferred_sql(self, sql):
-        from boardinghouse.schema import get_schema
-        schema = get_schema().schema if get_schema() else '__template__'
+        from boardinghouse.schema import get_schema_or_template
+        schema = get_schema_or_template()
         sql = "SET search_path TO %s,public; %s; SET search_path TO public;" % (schema, sql)
         self.deferred_sql.append(sql)
+    
+    def lookup_constraint(self, db_name, table_name, column_name=None):
+        if is_model_aware(table_name):
+            from boardinghouse.schema import get_schema_or_template
+            schema = get_schema_or_template()
+        else:
+            schema = self._get_schema_name()
+        
+        constraints = {}
+        ifsc_tables = ["constraint_column_usage", "key_column_usage"]
+
+        for ifsc_table in ifsc_tables:
+            rows = self.execute("""
+                SELECT kc.constraint_name, kc.column_name, c.constraint_type
+                FROM information_schema.%s AS kc
+                JOIN information_schema.table_constraints AS c ON
+                    kc.table_schema = c.table_schema AND
+                    kc.table_name = c.table_name AND
+                    kc.constraint_name = c.constraint_name
+                WHERE
+                    kc.table_schema = %%s AND
+                    kc.table_name = %%s
+            """ % ifsc_table, [schema, table_name])
+            
+            for constraint, column, kind in rows:
+                constraints.setdefault(column, set())
+                constraints[column].add((kind, constraint))
+        
+        if column_name:
+            return constraints.get(column_name, set())
+        
+        return constraints.items()
+    

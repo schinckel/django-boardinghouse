@@ -12,11 +12,6 @@ FROM information_schema.columns
 WHERE table_name = '%(table_name)s' 
 AND column_name = '%(column_name)s';
 """
-GET_INDICES_SQL = """
-SELECT pg_get_indexdef(indexrelid)
-FROM pg_index
-WHERE indrelid = '%(table_name)s'::regclass
-"""
 
 @unittest.skipIf(django.VERSION < (1,7), 'migrate not used with < 1.7')
 class DjangoMigrate(TestCase):
@@ -37,8 +32,6 @@ class SouthMigrate(TestCase):
             'table_name': 'boardinghouse_awaremodel'
         }
         column_sql = COLUMN_SQL % query_data
-        get_indices_sql = GET_INDICES_SQL % query_data
-        index_sql = ('CREATE UNIQUE INDEX boardinghouse_awaremodel_test_column_uniq ON boardinghouse_awaremodel USING btree (test_column)',)
 
         cursor = connection.cursor()
         
@@ -55,23 +48,24 @@ class SouthMigrate(TestCase):
         
         # add a unique
         db.create_unique('boardinghouse_awaremodel', ['test_column'])
+        unique_constraint = 'boardinghouse_awaremodel_test_column_uniq'
         template_schema.activate(cursor)
-        cursor.execute(get_indices_sql)
-        self.assertIn(index_sql, cursor.fetchall())
+        constraints = list(db._constraints_affecting_columns('boardinghouse_awaremodel', ['test_column']))
+        self.assertIn(unique_constraint, constraints)
         for schema in Schema.objects.all():
             schema.activate(cursor)
-            cursor.execute(get_indices_sql)
-            self.assertIn(index_sql, cursor.fetchall())
+            constraints = db._constraints_affecting_columns('boardinghouse_awaremodel', ['test_column'])
+            self.assertIn(unique_constraint, constraints)
         
         # remove the unique
         db.delete_unique('boardinghouse_awaremodel', ['test_column'])
         template_schema.activate(cursor)
-        cursor.execute(get_indices_sql)
-        self.assertIn(index_sql, cursor.fetchall())
+        constraints = list(db._constraints_affecting_columns('boardinghouse_awaremodel', ['test_column']))
+        self.assertNotIn(unique_constraint, constraints)
         for schema in Schema.objects.all():
             schema.activate(cursor)
-            cursor.execute(get_indices_sql)
-            self.assertNotIn(index_sql, cursor.fetchall())
+            constraints = db._constraints_affecting_columns('boardinghouse_awaremodel', ['test_column'])
+            self.assertNotIn(unique_constraint, constraints)
         
         # alter the column type
         db.alter_column('boardinghouse_awaremodel', 'test_column', models.TextField(null=True))
