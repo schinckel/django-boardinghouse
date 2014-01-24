@@ -122,7 +122,27 @@ class SouthMigrate(TestCase):
             schema.activate()
             columns = sorted(db.execute(test_table_sql % schema.schema))
             self.assertEquals(field_names, columns)
+    
+    def test_clear_table(self):
+        a = Schema.objects.create(name='a', schema='a')
+        a.activate()
         
+        AwareModel.objects.create(name='foo')
+        AwareModel.objects.create(name='bar')
+        
+        b = Schema.objects.create(name='b', schema='b')
+        b.activate()
+
+        AwareModel.objects.create(name='foo')
+        AwareModel.objects.create(name='bar')
+        
+        from south.db import db
+        db.clear_table('boardinghouse_awaremodel')
+        
+        for schema in Schema.objects.all():
+            schema.activate()
+            self.assertEquals(0, AwareModel.objects.count())
+
         
     def test_add_remove_column_naive(self):
         from south.db import db
