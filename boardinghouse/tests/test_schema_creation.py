@@ -4,7 +4,9 @@ from django import forms
 
 from ..models import Schema, template_schema
 from ..schema import (
-    get_schema, _get_schema_or_template, activate_schema, deactivate_schema
+    get_schema, _get_schema_or_template, 
+    activate_schema, deactivate_schema,
+    TemplateSchemaActivation
 )
 
 SCHEMA_QUERY = "SELECT schema_name FROM information_schema.schemata WHERE schema_name = %s"
@@ -102,7 +104,7 @@ class TestSchemaClassValidationLogic(TestCase):
         self.assertRaises(forms.ValidationError, schema.save)
 
 
-class TestGetSearchPath(TestCase):
+class TestGetSetSearchPath(TestCase):
     def test_default_search_path(self):
         self.assertEquals(None, get_schema())
 
@@ -126,3 +128,21 @@ class TestGetSearchPath(TestCase):
         
         schema.deactivate()
         self.assertEquals('__template__', _get_schema_or_template())
+    
+    def test_activate_schema_function(self):
+        self.assertRaises(TemplateSchemaActivation, activate_schema, '__template__')
+        self.assertRaises(TemplateSchemaActivation, activate_schema, template_schema)
+    
+        Schema.objects.mass_create('a', 'b')
+        
+        activate_schema('a')
+        self.assertEquals('a', get_schema().schema)
+        
+        activate_schema('b')
+        self.assertEquals('b', get_schema().schema)
+        
+        deactivate_schema()
+        self.assertEquals(None, get_schema())
+        
+        activate_schema(Schema.objects.get(schema='a'))
+        self.assertEquals('a', get_schema().schema)
