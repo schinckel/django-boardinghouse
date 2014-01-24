@@ -3,6 +3,10 @@ from django.db.backends.postgresql_psycopg2.creation import *
 
 class DatabaseCreation(DatabaseCreation):
     def sql_create_model(self, model, style, known_models=set(), schema="__template__"):
+        """
+        Override the creation of a table for a schema-aware model, so that
+        it inserts it into the correct schema.
+        """
         final_output, pending_references = super(DatabaseCreation, self).sql_create_model(model, style, known_models)
         if model._is_schema_aware:
             for i in range(len(final_output)):

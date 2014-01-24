@@ -1,9 +1,25 @@
+"""
+.. autoclass:: MultiSchemaMixin
+.. autoclass:: MultiSchemaManager
+.. autoclass:: SchemaAware
+.. autoclass:: SchemaAwareModel
+
+"""
 from django.db import models
 
 from .models import Schema
 from .schema import get_schema
 
 class MultiSchemaMixin(object):
+    """
+    A mixin that allows for fetching objects from multiple
+    schemata in the one request.
+    
+    Consider this experimental.
+    
+    .. note:: You probably don't want want this on your QuerySet, just
+        on your Manager.
+    """
     def from_schemata(self, *schemata):
         """
         Perform these queries across several schemata.
@@ -28,9 +44,15 @@ class MultiSchemaMixin(object):
         return self.raw(" UNION ALL ".join(multi_query))
 
 class MultiSchemaManager(MultiSchemaMixin, models.Manager):
-    pass
+    """
+    A Manager that allows for fetching objects from multiple schemata
+    in the one request.
+    """
 
 class SchemaAware(object):
+    """
+    A mixin that tags an object as schema aware.
+    """
     _is_schema_aware = True
 
 class SchemaAwareModel(SchemaAware, models.Model):
@@ -50,6 +72,13 @@ class SchemaAwareModel(SchemaAware, models.Model):
 
 
 def inject_schema_attribute(sender, instance, **kwargs):
+    """
+    A signal listener that injects the current schema on the object
+    just after it is instantiated.
+    
+    You may use this in conjunction with :class:`MultiSchemaMixin`, it will
+    respect any value that has already been set on the instance.
+    """
     if not sender._is_schema_aware:
         return
     if not getattr(instance, '_schema', None):

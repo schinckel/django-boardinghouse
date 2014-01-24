@@ -1,3 +1,9 @@
+"""
+.. autoclass:: SchemaQuerySet
+.. autoclass:: Schema
+
+"""
+
 from django.conf import settings
 from django.contrib import auth
 from django.db import models, connection, transaction
@@ -19,10 +25,10 @@ class ClassProperty(property):
     def __get__(self, cls, owner):
         return self.fget.__get__(None, owner)()
 
-def is_schema_aware(cls):
+def _is_schema_aware(cls):
     return cls._meta.auto_created and cls._meta.auto_created._is_schema_aware
 
-models.Model._is_schema_aware = ClassProperty(classmethod(is_schema_aware))
+models.Model._is_schema_aware = ClassProperty(classmethod(_is_schema_aware))
 
 class SchemaQuerySet(models.query.QuerySet):
     def bulk_create(self, *args, **kwargs):
