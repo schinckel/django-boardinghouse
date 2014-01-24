@@ -3,7 +3,9 @@ from django.db import connection
 from django import forms
 
 from ..models import Schema, template_schema
-from ..schema import get_schema, activate_schema, deactivate_schema
+from ..schema import (
+    get_schema, get_schema_or_template, activate_schema, deactivate_schema
+)
 
 SCHEMA_QUERY = "SELECT schema_name FROM information_schema.schemata WHERE schema_name = %s"
 TABLE_QUERY = "SELECT table_name FROM information_schema.tables WHERE table_schema = %s AND table_name = %s"
@@ -114,3 +116,13 @@ class TestGetSearchPath(TestCase):
         schema.activate()
         schema.deactivate()
         self.assertEquals(None, get_schema())
+    
+    def test_get_schema_or_template_helper(self):
+        schema = Schema.objects.create(name='a', schema='a')
+        self.assertEquals('__template__', get_schema_or_template())
+        
+        schema.activate()
+        self.assertEquals('a', get_schema_or_template())
+        
+        schema.deactivate()
+        self.assertEquals('__template__', get_schema_or_template())
