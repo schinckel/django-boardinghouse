@@ -14,11 +14,12 @@ import re
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import DatabaseError, transaction
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import redirect
 from django.utils.translation import ugettext_lazy as _
 
-from models import Schema, template_schema
+from .models import Schema, template_schema
+from .schema import TemplateSchemaActivation
 
 logger = logging.getLogger('boardinghouse')
 
@@ -28,11 +29,15 @@ def activate_schema(available_schemata, session):
     """
     if available_schemata.count() == 1:
         schema = available_schemata.get()
+        if schema.schema == '__template__':
+            raise TemplateSchemaActivation()
         session['schema'] = schema.schema
         schema.activate()
         return True
     
     if session.get('schema', None):
+        if session['schema'] == '__template__':
+            raise TemplateSchemaActivation()
         try:
             available_schemata.get(pk=session['schema']).activate()
         except ObjectDoesNotExist:
@@ -85,15 +90,22 @@ class SchemaMiddleware:
         
         # Ways of changing the schema.
         # 1. URL /__change_schema__/<name>/
+        # This will return a whole page.
         if request.path.startswith('/__change_schema__/'):
             request.session['schema'] = request.path.split('/')[2]
-            activate_schema(available_schemata, request.session)
+            try:
+                activate_schema(available_schemata, request.session)
+            except TemplateSchemaActivation:
+                return HttpResponseForbidden(_('You may not select that schema'))
+            
             if request.session.get('schema'):
                 response = _('Schema changed to %s') % request.session['schema']
             else:
                 response = _("No schema found: schema deselected.")
             return HttpResponse(response)
         # 2. GET querystring ...?__schema=<name>
+        # This will change the query, and then redirect to the page
+        # without the schema name included.
         elif request.GET.get('__schema', None) is not None:
             request.session['schema'] = request.GET['__schema']
             if request.method == "GET":
@@ -106,7 +118,10 @@ class SchemaMiddleware:
         elif 'HTTP_X_CHANGE_SCHEMA' in request.META:
             request.session['schema'] = request.META['HTTP_X_CHANGE_SCHEMA']
         
-        activate_schema(available_schemata, request.session)
+        try:
+            activate_schema(available_schemata, request.session)
+        except TemplateSchemaActivation:
+            return HttpResponseForbidden(_('You may not select that schema'))
 
 
     def process_exception(self, request, exception):
@@ -115,4 +130,6 @@ class SchemaMiddleware:
                 # TODO: make this styleable?
                 transaction.rollback()
                 return HttpResponse(_("You must select a schema to access this resource"), status=449)
-        
+        if isinstance(exception, TemplateSchemaActivation):
+            request.session.pop('schema', None)
+            return HttpResponseForbidden(_('You may not select that schema'))

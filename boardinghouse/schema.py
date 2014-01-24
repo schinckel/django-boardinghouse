@@ -4,6 +4,15 @@ from django.db import models, connection
 
 from .models import Schema, template_schema
 
+class Forbidden(Exception):
+    pass
+
+class TemplateSchemaActivation(Forbidden):
+    def __init__(self, *args, **kwargs):
+        super(TemplateSchemaActivation, self).__init__(
+            'Activating template schema forbidden.', *args, **kwargs
+        )
+
 def get_schema():
     cursor = connection.cursor()
     cursor.execute('SHOW search_path')
@@ -24,7 +33,14 @@ def get_schema_or_template():
     return schema.schema
 
 def activate_schema(schema):
-    Schema.objects.get(schema=schema).activate()
+    if isinstance(schema, Schema):
+        if schema.schema == '__template__':
+            raise TemplateSchemaActivation()
+        schema.activate()
+    else:
+        if schema == '__template__':
+            raise TemplateSchemaActivation()
+        Schema.objects.get(schema=schema).activate()
 
 def deactivate_schema(schema=None):
     Schema().deactivate()

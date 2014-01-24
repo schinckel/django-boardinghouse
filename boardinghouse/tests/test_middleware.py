@@ -1,8 +1,13 @@
 from django.test import TestCase
 
-from ..schema import get_schema
+from ..schema import get_schema, TemplateSchemaActivation
 from ..models import Schema
 from .models import AwareModel, User
+
+CREDENTIALS = {
+    'username': 'test',
+    'password': 'test'
+}
 
 class TestMiddleware(TestCase):
     def test_view_without_schema_aware_models_works_without_activation(self):
@@ -82,8 +87,8 @@ class TestMiddleware(TestCase):
     
     def test_non_superuser_schemata(self):
         Schema.objects.mass_create('a','b','c')
-        user = User.objects.create_user(username='test',password='test',email='test@example.com')
-        self.client.login(username='test',password='test')
+        user = User.objects.create_user(**CREDENTIALS)
+        self.client.login(**CREDENTIALS)
         resp = self.client.get('/', {'__schema': 'a'}, follow=True)
         self.assertEquals('None', resp.content)
         
@@ -100,14 +105,27 @@ class TestMiddleware(TestCase):
         AwareModel.objects.create(name='foo')
         AwareModel.objects.create(name='bar')
         
-        user = User.objects.create_user(username='test',password='test',email='test@example.com')
-        self.client.login(username='test',password='test')
+        user = User.objects.create_user(**CREDENTIALS)
+        self.client.login(**CREDENTIALS)
         resp = self.client.get('/')
         self.assertEquals('None', resp.content)
         
         resp = self.client.get('/aware/')
         self.assertEquals(449, resp.status_code)
+    
+    def test_attempt_to_activate_template_schema(self):
+        user = User.objects.create_user(**CREDENTIALS)
+        self.client.login(**CREDENTIALS)
         
+        resp = self.client.get('/', {'__schema': '__template__'}, follow=True)
+        self.assertEquals(403, resp.status_code)
+        
+        resp = self.client.get('/__change_schema__/__template__/')
+        self.assertEquals(403, resp.status_code)
+        
+        resp = self.client.get('/', HTTP_X_CHANGE_SCHEMA='__template__')
+        self.assertEquals(403, resp.status_code)
+                
 class TestContextProcessor(TestCase):
     def setUp(self):
         Schema.objects.mass_create('a','b','c')
@@ -118,10 +136,10 @@ class TestContextProcessor(TestCase):
         self.assertNotIn('selected_schema', response.context)
     
     def test_schemata_in_context(self):
-        user = User.objects.create_user(username='test',password='test',email='test@example.com')
+        user = User.objects.create_user(**CREDENTIALS)
         schemata = Schema.objects.exclude(schema='b')
         user.schemata.add(*schemata)
-        self.client.login(username='test',password='test')
+        self.client.login(**CREDENTIALS)
         resp = self.client.get('/change/')
         self.assertEquals(2, len(resp.context['schemata']))
         self.assertIn(schemata[0], resp.context['schemata'])
@@ -135,8 +153,8 @@ class TestContextProcessor(TestCase):
         self.assertEquals('a', resp.context['selected_schema'])
     
     def user_has_no_schemata(self):
-        user = User.objects.create_user(username='test',password='test',email='test@example.com')
-        self.client.login(username='test',password='test')
+        user = User.objects.create_user(**CREDENTIALS)
+        self.client.login(**CREDENTIALS)
         resp = self.client.get('/change/')
         self.assertEquals([], list(resp.context['schemata']))
         
