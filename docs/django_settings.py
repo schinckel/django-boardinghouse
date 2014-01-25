@@ -103,9 +103,9 @@ COVERAGE_REPORT_HTML_OUTPUT_DIR = os.path.join(BASE_DIR, '.coverage')
 COVERAGE_USE_STDOUT = True
 COVERAGE_PATH_EXCLUDES = ['.hg', 'templates', 'tests', 'sql', '__pycache__']
 
-if os.environ.get('COVERAGE', None):
-    from django_coverage import coverage_runner
-    test_runner = coverage_runner.CoverageRunner
-else:
-    from django.test.utils import get_runner
-    test_runner = get_runner(global_settings)
+# if os.environ.get('COVERAGE', None):
+#     from django_coverage import coverage_runner
+#     test_runner = coverage_runner.CoverageRunner
+# else:
+#     from django.test.utils import get_runner
+#     test_runner = get_runner(global_settings)

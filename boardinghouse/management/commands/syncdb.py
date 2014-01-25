@@ -1,3 +1,6 @@
+"""
+
+"""
 import os.path
 
 from django.core.management.commands import syncdb
