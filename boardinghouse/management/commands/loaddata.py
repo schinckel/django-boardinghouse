@@ -10,7 +10,6 @@ class Command(loaddata.Command):
     option_list = loaddata.Command.option_list + (
         make_option('--schema', action='store', dest='schema',
             help='Specify which schema to load schema-aware models to',
-            default='__template__',
         ),
     )
     
@@ -21,7 +20,7 @@ class Command(loaddata.Command):
             # we should raise an exception if we are going to be
             # writing any schema-aware objects.
             schema = None
-        else:
+        elif schema_name:
             try:
                 schema = Schema.objects.get(schema=options.get('schema'))
             except Schema.DoesNotExist:
@@ -31,7 +30,7 @@ class Command(loaddata.Command):
         
         super(Command, self).handle(*app_labels, **options)
 
-        if schema:
+        if schema_name and schema:
             schema.deactivate()
         
         # Ensure we create any schemata that are new.

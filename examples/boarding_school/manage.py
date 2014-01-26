@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#! .boarding-school/bin/python
 import os
 import sys
 

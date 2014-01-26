@@ -18,6 +18,7 @@ Contents:
 
    philosophy
    installation
+   example
    development
    todo
       

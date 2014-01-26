@@ -10,9 +10,9 @@ install-packages:
 
 load-data:
 	./manage.py syncdb
-	./manage.py loaddata school/fixtures/schools.json
-	./manage.py loaddata --schema hamilton schools/fixtures/hamilton.json
-	./manage.py loaddata --schema naracoorte_hs schools/fixtures/naracoorte_hs.json
+	./manage.py loaddata schools
+	./manage.py loaddata --schema hamilton hamilton
+	./manage.py loaddata --schema naracoorte_hs naracoorte_hs
 
 clean:
 	dropdb school-demo
