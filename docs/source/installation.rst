@@ -1,8 +1,9 @@
+==================
 Installation/Usage
 ==================
 
 Requirements
-------------
+============
 
 * Django_
 * Postgres_
@@ -17,7 +18,7 @@ Postgres is required to allow schema to be used. psycopg2_ is required as per no
 django-model-utils_ is used for ``PassThroughManager``, which, under Django 1.7 will be replaced by `QuerySet.as_manager() <https://docs.djangoproject.com/en/dev/topics/db/managers/#creating-manager-with-queryset-methods>`_. However, the ``Tracker`` feature is also used to track changes on the :class:`boardinghouse.models.Schema` model, to prevent modification of the `schema` attribute.
 
 Installing
-----------
+==========
 
 Install it using your favourite installer: mine is `pip`::
 
@@ -45,25 +46,26 @@ You will probably want to modify your ``User`` model so it contains a relationsh
 It's probably much easier to start using ``django-boardinghouse`` right from the beginning of a project: trying to split an existing database may be possible, but is not supported at this stage.
 
 Usage
------
+=====
 
 Management commands
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
 Once django-boardinghouse hase been installed correctly, it will override some commands related to database access. For instance, in Django <1.7, the ``syncdb`` command is replaced with a version that applies the changes to every known schema. South's ``migrate`` command is likewise overriden.
 
 ``loaddata`` and ``dumpdata`` are also overridden. They may take an optional ``--schema`` argument, that will activate that schema before running the command.
 
 Middleware
-~~~~~~~~~~
+----------
 
+.. autoclass:: boardinghouse.middleware.SchemaMiddleware
 
 
 Template Variables
-~~~~~~~~~~~~~~~~~~
+------------------
 
 Changing Schema
-~~~~~~~~~~~~~~~
+---------------
 
 
 

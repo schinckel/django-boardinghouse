@@ -9,13 +9,6 @@ TODO
 
 * Use the ``schema`` attribute on serialised objects to load them into the correct schema. I think this is possible.
 
-* Write more tests
-
-  * test migrations under south
-  * test migrations under django1.7
-  * test ensure_installation
-  
-
 * Create an example project (maybe part of tests?)
 
 * Enable support for django-devserver: we currently get an infinite recursion when both of us are installed.
@@ -27,3 +20,14 @@ TODO
     https://example.com/photos/223/
 
   And then changing schema, it probably should show the list of photos, rather than photo with that id in the new schema.
+
+Tests to write
+--------------
+
+* Test middleware handling of :py:exception:`TemplateSchemaActivated`.
+
+* :py:method:`boardinghouse.backends.south_backend.DatabaseOperations.add_deferred_sql`
+
+* :py:method:`boardinghouse.backends.south_backend.DatabaseOperations.lookup_constraint`, when columns is provided.
+
+* :py:mod:`boardinghouse.ensure_installation` - this is pretty hard to test automatically without having multiple projects.

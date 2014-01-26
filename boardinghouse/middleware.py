@@ -1,13 +1,3 @@
-"""
-Middleware to automatically set the schema (namespace).
-
-if request.user.is_staff, then look for a ?__schema=XXX and set the schema to that.
-
-Otherwise, set the schema to the one associated with the logged in user.
-
-
-"""
-
 import logging
 import re
 
@@ -21,8 +11,19 @@ from django.utils.translation import ugettext_lazy as _
 from .models import Schema, template_schema
 from .schema import TemplateSchemaActivation
 
-logger = logging.getLogger('boardinghouse')
+logger = logging.getLogger('boardinghouse.middleware')
 
+def change_schema(request, schema):
+    """
+    Change the schema for the current request's session.
+    """
+    session = request.session
+    
+    # Ensure this user may view this schema.
+    
+    session['schema'] = schema.schema
+    
+    
 def activate_schema(available_schemata, session):
     """
     Activate the session's schema.
@@ -55,27 +56,37 @@ class SchemaMiddleware:
     The schema that will be used is stored in the session. A lookup will
     occur (but this could easily be cached) on each request.
     
-    To change schema, simply request a page with a querystring of:
+    There are three ways to change the schema as part of a request.
+    
+    1. Request a page with a querystring containg a ``__schema`` value::
     
         https://example.com/page/?__schema=<schema-name>
     
-    The schema will be changed (or cleared, if this user cannot view 
-    that schema), and the page will be re-loaded (if it was a GET).
+      The schema will be changed (or cleared, if this user cannot view 
+      that schema), and the page will be re-loaded (if it was a GET).
+      
+      This type of schema change request should not be done with a POST
+      request.
     
-    Alternatively, you may add a request header:
+    2. Add a request header::
     
         X-Change-Schema: <schema-name>
     
-    This will not cause a redirect to the same page without query string. It
-    is the preferred method, because of that.
-    
-    There is also an injected url route:
+      This will not cause a redirect to the same page without query string. It
+      is the only way to do a schema change within a POST request, but could
+      be used for any request type.
+      
+    3. Use a specific request::
     
         https://example.com/__change_schema__/<schema-name>/
     
-    This is designed to be used from AJAX requests, or as part of
-    an API call, as it returns a status code (and a short message) 
-    about the schema change request.
+      This is designed to be used from AJAX requests, or as part of
+      an API call, as it returns a status code (and a short message) 
+      about the schema change request. If you were storing local data,
+      and did one of these, you are probably going to have to invalidate
+      much of that.
+      
+    You could also come up with other methods.
     
     """
     def process_request(self, request):
