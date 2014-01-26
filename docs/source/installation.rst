@@ -10,8 +10,9 @@ Requirements
 * psycopg2_
 * django-model-utils_
 
-This application requires, and depends upon Django_ being installed. Currently, versions from 1.4 are supported. Migration support for 1.7 is under development.
-Using Django 1.6 and below with South is also supported.
+This application requires, and depends upon Django_ being installed. Currently, versions from 1.4 to 1.6 are supported, along with South_ for migrations. 
+
+Support for 1.7 is under development. Migrations have changed, so this is not a small task to change.
 
 Postgres is required to allow schema to be used. psycopg2_ is required as per normal Django/Postgres integration.
 
