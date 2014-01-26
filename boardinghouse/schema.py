@@ -1,5 +1,6 @@
 import os
 
+import django
 from django.db import models, connection
 
 import settings
@@ -22,8 +23,7 @@ def get_schema():
     """
     Get the currently active schema.
     
-    This requires a database query to ask it what the current `search_path`
-    is.
+    This requires a database query to ask it what the current `search_path` is.
     """
     cursor = connection.cursor()
     cursor.execute('SHOW search_path')
@@ -59,6 +59,12 @@ def deactivate_schema(schema=None):
     """
     Schema().deactivate()
 
+def _auto_or_fk_to_shared(field):
+    if field.primary_key:
+        return True
+    if field.rel:
+        return is_shared_model(field.rel.get_related_field().model)
+    
 def is_shared_model(model):
     """
     Is the model (or instance of a model) one that should be in the
@@ -67,9 +73,28 @@ def is_shared_model(model):
     if model._is_shared_model:
         return True
     
-    app_model = '%s.%s' % (model._meta.app_label, model._meta.model_name)
+    if django.VERSION < (1, 6):
+        app_model = '%s.%s' % (
+            model._meta.app_label,
+            model._meta.object_name.lower()
+        )
+    else:
+        app_model = '%s.%s' % (
+            model._meta.app_label, 
+            model._meta.model_name
+        )
     
-    return app_model in settings.SHARED_MODELS
+    if app_model in settings.SHARED_MODELS:
+        return True
+    
+    # if all fields are either autofield or foreignkey, and all fk fields
+    # point to shared models, then we must be a shored model.
+    if all([
+        _auto_or_fk_to_shared(field) for field in model._meta.fields
+    ]):
+        return True
+    
+    return False
 
 ## Internal helper functions.
 def _get_schema_or_template():

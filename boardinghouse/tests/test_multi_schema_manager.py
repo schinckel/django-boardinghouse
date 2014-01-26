@@ -41,4 +41,4 @@ class TestMultiSchemaManager(TestCase):
         objects = list(AwareModel.objects.from_schemata(a, b))
         self.assertEquals(2, len(objects))
         self.assertEquals(objects[0], objects[0])
-        self.assertNotEquals(objects[0], objects[1], 'MultiSchemaManager should tag _schema attribute on models.')
+        self.assertNotEquals(objects[0]._schema, objects[1]._schema, 'MultiSchemaManager should tag _schema attribute on models.')

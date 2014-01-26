@@ -6,6 +6,8 @@ SHARED_MODELS = [
     'auth.group',
     'sites.site',
     'sessions.session',
+    'contenttypes.contenttype',
+    'admin.logentry',
 ]
 
 SCHEMA_MODEL = [

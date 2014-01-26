@@ -63,9 +63,10 @@ __old_eq__ = models.Model.__eq__
 def __eq__(self, other):
     from .schema import is_shared_model
     if is_shared_model(self):
-        return __old_eq__(self, other) and self._schema == other._schema
-    return __old_eq__(self, other)
+        return __old_eq__(self, other)
+    return __old_eq__(self, other) and self._schema == other._schema
 
+models.Model.__eq__ = __eq__
 
 def inject_schema_attribute(sender, instance, **kwargs):
     """

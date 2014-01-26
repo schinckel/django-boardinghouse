@@ -16,8 +16,10 @@ else:
         Look up in the django model list for the model with this
         table name, and find out if it is a shared model or not.
         """
-        data = [x for x in models.get_models() if x._meta.db_table == table]
+        data = [x for x in models.get_models() if x._meta.db_table == table and not x._meta.proxy]
         # Ensure we have exactly one matching model.
+        assert data, 'Unable to find matching model for %s' % table
+        assert len(data) == 1, 'Found more than one matching model for %s' % table
         return is_shared_model(data[0])
 
     def wrap(name):
@@ -31,7 +33,7 @@ else:
         def apply_to_all(self, table, *args, **kwargs):
             # If this model is naive, then we only want to run the wrapped
             # function normally.
-            if is_shared_model(table):
+            if is_shared_table(table):
                 return function(self, table, *args, **kwargs)
         
             # If we are already in a schema loop, like when one wrapped method
@@ -85,9 +87,10 @@ else:
         delete_column = wrap('delete_column')
         delete_index = wrap('delete_index')
         delete_primary_key = wrap('delete_primary_key')
-        # Hmm. I'm not sure we want to wrap these two, but may as well try.
-        execute = wrap('execute')
-        execute_many = wrap('execute_many')
+        # We can't wrap these, as we don't know if they should apply
+        # to every schema or not!
+        # execute = wrap('execute')
+        # execute_many = wrap('execute_many')
         rename_column = wrap('rename_column')
         rename_table = wrap('rename_table')
         
@@ -114,7 +117,7 @@ else:
         # database each time, but that is better than trying to invalidate the
         # cache each time we change schema (which happens a lot).
         def lookup_constraint(self, db_name, table_name, column_name=None):
-            if is_shared_model(table_name):
+            if is_shared_table(table_name):
                 schema = self._get_schema_name()
             else:
                 from boardinghouse.schema import _get_schema_or_template
