@@ -3,7 +3,6 @@
 from django.db import models
 
 from .models import Schema
-from .schema import get_schema
 
 class MultiSchemaMixin(object):
     """
@@ -57,29 +56,3 @@ class SharedSchemaModel(models.Model):
     class Meta:
         abstract = True
 
-__old_eq__ = models.Model.__eq__
-    
-# We need to monkey-patch __eq__ on models.Model
-def __eq__(self, other):
-    from .schema import is_shared_model
-    if is_shared_model(self):
-        return __old_eq__(self, other)
-    return __old_eq__(self, other) and self._schema == other._schema
-
-models.Model.__eq__ = __eq__
-
-def inject_schema_attribute(sender, instance, **kwargs):
-    """
-    A signal listener that injects the current schema on the object
-    just after it is instantiated.
-    
-    You may use this in conjunction with :class:`MultiSchemaMixin`, it will
-    respect any value that has already been set on the instance.
-    """
-    from .schema import is_shared_model
-    if is_shared_model(sender):
-        return
-    if not getattr(instance, '_schema', None):
-        instance._schema = get_schema()
-
-models.signals.post_init.connect(inject_schema_attribute)
