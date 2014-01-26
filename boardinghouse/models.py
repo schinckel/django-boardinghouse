@@ -22,10 +22,10 @@ class ClassProperty(property):
     def __get__(self, cls, owner):
         return self.fget.__get__(None, owner)()
 
-def _is_schema_aware(cls):
-    return cls._meta.auto_created and cls._meta.auto_created._is_schema_aware
+def _is_shared_model(cls):
+    return cls._meta.auto_created and cls._meta.auto_created._is_shared_model
 
-models.Model._is_schema_aware = ClassProperty(classmethod(_is_schema_aware))
+models.Model._is_shared_model = ClassProperty(classmethod(_is_shared_model))
 
 class SchemaQuerySet(models.query.QuerySet):
     def bulk_create(self, *args, **kwargs):

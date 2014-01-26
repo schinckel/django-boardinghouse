@@ -44,20 +44,15 @@ class MultiSchemaManager(MultiSchemaMixin, models.Manager):
     in the one request.
     """
 
-class SchemaAware(object):
+class SharedModel(models.Model):
     """
-    A mixin that tags an object as schema aware.
-    """
-    _is_schema_aware = True
-
-class SchemaAwareModel(SchemaAware, models.Model):
-    """
-    The Base class for models that should be in a seperate schema.
+    A Base class for models that should be in the shared schema.
     
-    You could just put `_is_schema_aware = True` on your model class, but
+    You could just put `_is_shared_model = True` on your model class, but
     then you would also need to override __eq__ to get correct behaviour
     related to objects from different schemata.
     """
+    _is_shared_model = True
 
     class Meta:
         abstract = True
@@ -74,8 +69,9 @@ def inject_schema_attribute(sender, instance, **kwargs):
     You may use this in conjunction with :class:`MultiSchemaMixin`, it will
     respect any value that has already been set on the instance.
     """
-    if not sender._is_schema_aware:
+    if sender._is_shared_model:
         return
+    # Also, if 'app.model' is in settings.SHARED_MODELS
     if not getattr(instance, '_schema', None):
         instance._schema = get_schema()
 
