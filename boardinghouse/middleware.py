@@ -25,7 +25,10 @@ logger = logging.getLogger('boardinghouse')
 
 def activate_schema(available_schemata, session):
     """
-    Activate the session's schema
+    Activate the session's schema.
+    
+    If the session's schema is set to __template__, then we will
+    raise a :class:`TemplateSchemaActivation` exception.
     """
     if available_schemata.count() == 1:
         schema = available_schemata.get()
@@ -35,6 +38,7 @@ def activate_schema(available_schemata, session):
     
     if session.get('schema', None):
         if session['schema'] == '__template__':
+            session.pop('schema', None)
             raise TemplateSchemaActivation()
         try:
             available_schemata.get(pk=session['schema']).activate()
@@ -123,6 +127,15 @@ class SchemaMiddleware:
 
 
     def process_exception(self, request, exception):
+        """
+        In the case a request returned a DatabaseError, and there was no
+        schema set on ``request.session``, then look and see if the error
+        that was provided by the database may indicate that we should have
+        been looking inside a schema.
+        
+        In the case we had a :class:`TemplateSchemaActivation` exception,
+        then we want to remove that key from the session.
+        """
         if isinstance(exception, DatabaseError) and not request.session.get('schema'):
             if re.search('relation ".*" does not exist', exception.message):
                 # TODO: make this styleable?

@@ -2,6 +2,10 @@ from django.db.backends.postgresql_psycopg2.creation import *
 
 
 class DatabaseCreation(DatabaseCreation):
+    """
+    The only change we make to the original Postgres `DatabaseCreation`
+    class is to allow a schema name.
+    """
     def sql_create_model(self, model, style, known_models=set(), schema="__template__"):
         """
         Override the creation of a table for a schema-aware model, so that

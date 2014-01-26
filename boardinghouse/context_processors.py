@@ -1,6 +1,10 @@
 from models import Schema
 
 def schemata(request):
+    """
+    A Django context_processor. This provides access to the
+    logged-in user's visible schemata, and selected schema.
+    """
     if request.user.is_anonymous():
         return {}
     

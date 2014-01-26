@@ -59,6 +59,15 @@ else:
 
 
     class DatabaseOperations(postgresql_psycopg2.DatabaseOperations):
+        """
+        We need to wrap all of the calls to our methods in a wrapper that
+        will call the method [NUM_SCHEMAS+1] times (including the special
+        __template__ schema).
+        
+        However, if the method is being called by another sibling method,
+        then we don't want to have the duplicate calls.
+        
+        """
         add_column = wrap('add_column')
         alter_column = wrap('alter_column')
         clear_table = wrap('clear_table')

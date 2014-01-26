@@ -8,6 +8,9 @@ django-boardinghouse
 
 Multi-tenancy for Django applications, using Postgres Schemas.
 
+.. image:: https://drone.io/bitbucket.org/schinckel/django-boardinghouse/status.png
+.. image:: https://drone.io/bitbucket.org/schinckel/django-boardinghouse/files/.coverage/coverage_status.png
+
 Contents:
 
 .. toctree::
@@ -17,7 +20,6 @@ Contents:
    installation
    development
    todo
-   code/modules
       
 Indices and tables
 ==================

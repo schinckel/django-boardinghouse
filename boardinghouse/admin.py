@@ -1,7 +1,4 @@
 """
-.. autoclass:: SchemaAdmin
-.. autofunction:: schemata
-
 """
 from django.contrib import admin
 

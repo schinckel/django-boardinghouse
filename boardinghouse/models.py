@@ -1,7 +1,4 @@
 """
-.. autoclass:: SchemaQuerySet
-.. autoclass:: Schema
-
 """
 
 from django.conf import settings

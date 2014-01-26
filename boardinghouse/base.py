@@ -1,9 +1,4 @@
 """
-.. autoclass:: MultiSchemaMixin
-.. autoclass:: MultiSchemaManager
-.. autoclass:: SchemaAware
-.. autoclass:: SchemaAwareModel
-
 """
 from django.db import models
 
