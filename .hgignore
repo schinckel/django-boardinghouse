@@ -3,3 +3,4 @@ MANIFEST
 .coverage
 doc/build
 .venv
+examples/.school

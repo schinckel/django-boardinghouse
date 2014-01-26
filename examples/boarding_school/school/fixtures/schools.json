@@ -1,0 +1,16 @@
+[
+{
+  "pk": "hamilton", 
+  "model": "boardinghouse.schema", 
+  "fields": {
+    "name": "Hamilton College"
+  }
+},
+{
+  "pk": "naracoorte_hs", 
+  "model": "boardinghouse.schema", 
+  "fields": {
+    "name": "Naracoorte High School"
+  }
+}
+]
