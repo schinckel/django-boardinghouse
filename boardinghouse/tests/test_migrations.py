@@ -4,6 +4,11 @@ import django
 from django.db import connection
 from django.test import TestCase
 
+try:
+    from south.db import db
+except:
+    db = None
+
 from ..models import Schema, template_schema
 from .models import AwareModel
 
@@ -20,9 +25,11 @@ class DjangoMigrate(TestCase):
     pass
 
 @unittest.skipIf(django.VERSION > (1,7), "South migrate not used with 1.7+")
+@unittest.skipIf(db is None, "South migrate not tested if not install")
 class SouthMigrate(TestCase):
     def test_south_module_imports_correctly(self):
         from boardinghouse.backends.south_backend import DatabaseOperations
+        from boardinghouse.management.commands import migrate
     
     def test_add_remove_column_aware(self):
         from south.db import db
