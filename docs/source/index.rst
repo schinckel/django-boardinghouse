@@ -17,7 +17,7 @@ Contents:
    installation
    development
    todo
-   code
+   code/modules
       
 Indices and tables
 ==================
