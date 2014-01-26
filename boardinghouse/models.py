@@ -14,7 +14,7 @@ from model_utils import ModelTracker
 import ensure_installation
 import signals
 
-# This is a bit of fancy trickery to stick the property _is_schema_aware
+# This is a bit of fancy trickery to stick the property _is_shared_model
 # on every model class, returning False, unless it has been explicitly
 # set to True in the model definition (see base.py for examples).
 
@@ -50,6 +50,8 @@ class Schema(models.Model):
     when it is created, and also has the ability to activate and deactivate
     itself (at the start and end of the request cycle would be a good plan).
     """
+    _is_shared_model = True
+    
     name = models.CharField(max_length=128, unique=True, help_text=_(u'The display name of the schema.'))
     schema = models.CharField(max_length=36, primary_key=True, unique=True,
         validators=[schema_name_validator],

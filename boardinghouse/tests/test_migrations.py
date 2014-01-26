@@ -108,7 +108,9 @@ class SouthMigrate(TestCase):
         field_names = sorted([(field[0],) for field in fields])
         test_table_sql = "SELECT column_name FROM information_schema.columns WHERE table_name='boardinghouse_awaremodel' AND table_schema='%s'"
         
-        # To test create, we need to actually delete first, as we check the model's _is_schema_aware attribute!
+        # To test create, we need to actually delete first. Our migration
+        # handling code will only repeat create actions if the table name
+        # matches that of an aware model.
         db.delete_table('boardinghouse_awaremodel')
         for schema in schemata:
             schema.activate()

@@ -1,12 +1,15 @@
-# Settings we look for.
+from django.conf import settings
 
 SHARED_MODELS = [
-    'auth.User',
-    'auth.Permission',
-    'auth.Group',
-    'sites.Site',
+    'auth.user',
+    'auth.permission',
+    'auth.group',
+    'sites.site',
+    'sessions.session',
 ]
 
 SCHEMA_MODEL = [
-    'boardinghouse.Schema',
+    'boardinghouse.schema',
 ]
+
+locals().update(getattr(settings, 'BOARDINGHOUSE', {}))

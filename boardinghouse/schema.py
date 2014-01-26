@@ -2,6 +2,7 @@ import os
 
 from django.db import models, connection
 
+import settings
 from .models import Schema, template_schema
 
 class Forbidden(Exception):
@@ -58,6 +59,17 @@ def deactivate_schema(schema=None):
     """
     Schema().deactivate()
 
+def is_shared_model(model):
+    """
+    Is the model (or instance of a model) one that should be in the
+    public/shared schema?
+    """
+    if model._is_shared_model:
+        return True
+    
+    app_model = '%s.%s' % (model._meta.app_label, model._meta.model_name)
+    
+    return app_model in settings.SHARED_MODELS
 
 ## Internal helper functions.
 def _get_schema_or_template():

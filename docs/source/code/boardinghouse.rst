@@ -70,6 +70,14 @@ boardinghouse.schema module
     :undoc-members:
     :show-inheritance:
 
+boardinghouse.settings module
+-----------------------------
+
+.. automodule:: boardinghouse.settings
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 boardinghouse.signals module
 ----------------------------
 

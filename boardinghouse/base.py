@@ -44,7 +44,7 @@ class MultiSchemaManager(MultiSchemaMixin, models.Manager):
     in the one request.
     """
 
-class SharedModel(models.Model):
+class SharedSchemaModel(models.Model):
     """
     A Base class for models that should be in the shared schema.
     
@@ -56,9 +56,15 @@ class SharedModel(models.Model):
 
     class Meta:
         abstract = True
+
+__old_eq__ = models.Model.__eq__
     
-    def __eq__(self, other):
-        return super(SchemaAwareModel, self).__eq__(other) and self._schema == other._schema
+# We need to monkey-patch __eq__ on models.Model
+def __eq__(self, other):
+    from .schema import is_shared_model
+    if is_shared_model(self):
+        return __old_eq__(self, other) and self._schema == other._schema
+    return __old_eq__(self, other)
 
 
 def inject_schema_attribute(sender, instance, **kwargs):
@@ -69,9 +75,9 @@ def inject_schema_attribute(sender, instance, **kwargs):
     You may use this in conjunction with :class:`MultiSchemaMixin`, it will
     respect any value that has already been set on the instance.
     """
-    if sender._is_shared_model:
+    from .schema import is_shared_model
+    if is_shared_model(sender):
         return
-    # Also, if 'app.model' is in settings.SHARED_MODELS
     if not getattr(instance, '_schema', None):
         instance._schema = get_schema()
 

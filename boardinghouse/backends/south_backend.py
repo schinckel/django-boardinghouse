@@ -3,21 +3,22 @@ import sys
 
 from django.db import models
 
+from ..schema import is_shared_model
+
 try:
     from south.db import postgresql_psycopg2, generic
 except ImportError:
     # We only need to do anything if south is installed.
     pass
 else:
-    def is_model_aware(table):
+    def is_shared_table(table):
         """
         Look up in the django model list for the model with this
-        table name, and find out if it has the _is_schema_aware
-        attribute set.
+        table name, and find out if it is a shared model or not.
         """
         data = [x for x in models.get_models() if x._meta.db_table == table]
-        if data:
-            return data[0]._is_schema_aware
+        # Ensure we have exactly one matching model.
+        return is_shared_model(data[0])
 
     def wrap(name):
         # This is the main guts of the changes we need to make.
@@ -30,7 +31,7 @@ else:
         def apply_to_all(self, table, *args, **kwargs):
             # If this model is naive, then we only want to run the wrapped
             # function normally.
-            if not is_model_aware(table):
+            if is_shared_model(table):
                 return function(self, table, *args, **kwargs)
         
             # If we are already in a schema loop, like when one wrapped method
@@ -113,11 +114,11 @@ else:
         # database each time, but that is better than trying to invalidate the
         # cache each time we change schema (which happens a lot).
         def lookup_constraint(self, db_name, table_name, column_name=None):
-            if is_model_aware(table_name):
+            if is_shared_model(table_name):
+                schema = self._get_schema_name()
+            else:
                 from boardinghouse.schema import _get_schema_or_template
                 schema = _get_schema_or_template()
-            else:
-                schema = self._get_schema_name()
         
             constraints = {}
             ifsc_tables = ["constraint_column_usage", "key_column_usage"]
