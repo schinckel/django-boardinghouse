@@ -3,7 +3,7 @@ import sys
 
 from django.db import models
 
-from ..schema import is_shared_model
+from ..schema import is_shared_table
 
 try:
     from south.db import postgresql_psycopg2, generic
@@ -11,16 +11,6 @@ except ImportError:
     # We only need to do anything if south is installed.
     pass
 else:
-    def is_shared_table(table):
-        """
-        Look up in the django model list for the model with this
-        table name, and find out if it is a shared model or not.
-        """
-        data = [x for x in models.get_models() if x._meta.db_table == table and not x._meta.proxy]
-        # Ensure we have exactly one matching model.
-        assert data, 'Unable to find matching model for %s' % table
-        assert len(data) == 1, 'Found more than one matching model for %s' % table
-        return is_shared_model(data[0])
 
     def wrap(name):
         # This is the main guts of the changes we need to make.

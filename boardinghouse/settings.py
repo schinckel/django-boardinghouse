@@ -8,6 +8,7 @@ SHARED_MODELS = [
     'sessions.session',
     'contenttypes.contenttype',
     'admin.logentry',
+    'south.migrationhistory'
 ]
 
 SCHEMA_MODEL = [

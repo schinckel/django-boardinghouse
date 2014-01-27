@@ -96,6 +96,37 @@ def is_shared_model(model):
     
     return False
 
+def is_shared_table(table):
+    """
+    Is the model from the provided database table name shared?
+    
+    We may need to look and see if we can work out which models
+    this table joins.
+    """
+    # Get a mapping of all table names to models.
+    table_map = dict([
+        (x._meta.db_table, x) for x in models.get_models()
+        if not x._meta.proxy
+    ])
+    
+    # If we have a match, see if that one is shared.
+    if table in table_map:
+        return is_shared_model(table_map[table])
+    
+    # It may be a join table.
+    prefixes = [
+        (db_table, model) for db_table, model in table_map.items()
+        if table.startswith(db_table)
+    ]
+    
+    if len(prefixes) == 1:
+        db_table, model = prefixes[0]
+        rel_model = model._meta.get_field_by_name(
+            table.replace(db_table, '').lstrip('_')
+        )[0].rel.get_related_field().model
+    
+    return is_shared_model(model) and is_shared_model(rel_model)
+    
 ## Internal helper functions.
 def _get_schema_or_template():
     """
