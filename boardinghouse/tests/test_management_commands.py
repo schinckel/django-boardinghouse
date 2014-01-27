@@ -10,10 +10,11 @@ from django.db import connection, DatabaseError
 from django.db import transaction
 from django.test import TestCase
 
-from ..models import Schema
-from ..schema import get_schema
+from ..schema import get_schema, get_schema_model
 
 from .models import AwareModel, NaiveModel
+
+Schema = get_schema_model()
 
 SCHEMA_QUERY = "SELECT schema_name FROM information_schema.schemata WHERE schema_name = %s"
 

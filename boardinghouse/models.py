@@ -14,18 +14,6 @@ from model_utils import ModelTracker
 import ensure_installation
 import signals
 
-# This is a bit of fancy trickery to stick the property _is_shared_model
-# on every model class, returning False, unless it has been explicitly
-# set to True in the model definition (see base.py for examples).
-
-class ClassProperty(property):
-    def __get__(self, cls, owner):
-        return self.fget.__get__(None, owner)()
-
-def _is_shared_model(cls):
-    return cls._meta.auto_created and cls._meta.auto_created._is_shared_model
-
-models.Model._is_shared_model = ClassProperty(classmethod(_is_shared_model))
 
 class SchemaQuerySet(models.query.QuerySet):
     def bulk_create(self, *args, **kwargs):
@@ -122,13 +110,23 @@ class Schema(models.Model):
         cursor.execute('SET search_path TO "$user",public')
         signals.schema_post_activate.send(sender=self, schema=None)
 
-# An in-memory only template schema.
-template_schema = Schema(name="Template Schema", schema="__template__")
 
+# This is a bit of fancy trickery to stick the property _is_shared_model
+# on every model class, returning False, unless it has been explicitly
+# set to True in the model definition (see base.py for examples).
 
+class ClassProperty(property):
+    def __get__(self, cls, owner):
+        return self.fget.__get__(None, owner)()
+
+def _is_shared_model(cls):
+    return cls._meta.auto_created and cls._meta.auto_created._is_shared_model
+
+models.Model._is_shared_model = ClassProperty(classmethod(_is_shared_model))
+
+# We need to monkey-patch __eq__ on models.Model
 __old_eq__ = models.Model.__eq__
     
-# We need to monkey-patch __eq__ on models.Model
 def __eq__(self, other):
     from .schema import is_shared_model
     if is_shared_model(self):

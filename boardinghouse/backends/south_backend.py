@@ -3,7 +3,10 @@ import sys
 
 from django.db import models
 
-from ..schema import is_shared_table
+from ..schema import (
+    is_shared_table, _get_schema_or_template,
+    get_schema_model, get_template_schema
+)
 
 try:
     from south.db import postgresql_psycopg2, generic
@@ -21,6 +24,9 @@ else:
         function = getattr(postgresql_psycopg2.DatabaseOperations, name)
     
         def apply_to_all(self, table, *args, **kwargs):
+            template_schema = get_template_schema()
+            Schema = get_schema_model()
+            
             # If this model is naive, then we only want to run the wrapped
             # function normally.
             if is_shared_table(table):
@@ -35,9 +41,6 @@ else:
             # the original function call.
             if 'apply_to_all' in [x[3] for x in inspect.stack()[1:]]:
                 return function(self, table, *args, **kwargs)
-        
-            # Need a late import to prevent circular importing error.
-            from boardinghouse.models import Schema, template_schema
         
             for schema in Schema.objects.all():
                 schema.activate()
@@ -97,7 +100,6 @@ else:
         # each command. This may potentially slow things down, but it's also
         # the only way to ensure it is correct.
         def add_deferred_sql(self, sql):
-            from boardinghouse.schema import _get_schema_or_template
             schema = _get_schema_or_template()
             sql = "SET search_path TO %s,public; %s; SET search_path TO public;" % (schema, sql)
             self.deferred_sql.append(sql)
@@ -110,7 +112,6 @@ else:
             if is_shared_table(table_name):
                 schema = self._get_schema_name()
             else:
-                from boardinghouse.schema import _get_schema_or_template
                 schema = _get_schema_or_template()
         
             constraints = {}

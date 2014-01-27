@@ -1,7 +1,9 @@
 from django.test import TestCase
 
-from ..models import Schema
+from ..schema import get_schema_model
 from .models import AwareModel, NaiveModel
+
+Schema = get_schema_model()
 
 class TestMultiSchemaManager(TestCase):
     def test_multi_schema_fetches_objects_correctly(self):

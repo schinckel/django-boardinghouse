@@ -1,7 +1,9 @@
 from django.test import TestCase
 
-from ..models import Schema
+from ..schema import get_schema_model
 from .models import AwareModel, NaiveModel
+
+Schema = get_schema_model()
 
 class TestPartitioning(TestCase):
     def test_aware_objects_are_created_in_active_schema(self):

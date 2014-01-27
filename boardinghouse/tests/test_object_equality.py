@@ -1,8 +1,9 @@
 from django.test import TestCase
 
-from ..models import Schema
+from ..schema import get_schema_model
 from .models import AwareModel, NaiveModel
 
+Schema = get_schema_model()
 
 class TestObjectEquality(TestCase):
     def test_objects_from_different_schema_differ(self):

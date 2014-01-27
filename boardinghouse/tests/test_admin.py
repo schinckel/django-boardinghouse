@@ -4,9 +4,10 @@ from django.test import TestCase
 from django.contrib import admin, auth
 from django.core.urlresolvers import reverse
 
-from ..schema import get_schema
-from ..models import Schema
+from ..schema import get_schema_model
 from .models import AwareModel, NaiveModel, User
+
+Schema = get_schema_model()
 
 class TestAdminAdditions(TestCase):
     def test_ensure_schema_schema_is_not_editable(self):

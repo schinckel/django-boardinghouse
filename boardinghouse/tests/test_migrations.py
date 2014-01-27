@@ -9,8 +9,11 @@ try:
 except:
     db = None
 
-from ..models import Schema, template_schema
+from ..schema import get_schema_model, get_template_schema
 from .models import AwareModel
+
+Schema = get_schema_model()
+template_schema = get_template_schema()
 
 COLUMN_SQL = """
 SELECT column_name, data_type

@@ -2,13 +2,16 @@ from django.test import TestCase
 from django.db import connection
 from django import forms
 
-from ..models import Schema, template_schema
 from ..schema import (
     get_schema, _get_schema_or_template, 
     activate_schema, deactivate_schema,
     TemplateSchemaActivation,
     is_shared_model,
+    get_schema_model, get_template_schema,
 )
+
+Schema = get_schema_model()
+template_schema = get_template_schema()
 
 SCHEMA_QUERY = "SELECT schema_name FROM information_schema.schemata WHERE schema_name = %s"
 TABLE_QUERY = "SELECT table_name FROM information_schema.tables WHERE table_schema = %s AND table_name = %s"
