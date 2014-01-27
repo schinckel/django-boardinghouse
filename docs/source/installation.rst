@@ -49,6 +49,15 @@ It's probably much easier to start using ``django-boardinghouse`` right from the
 Usage
 =====
 
+Shared Models
+-------------
+
+If a model class contains the attribute ``_is_shared_model`` with a truthy value, then it will be deemed to be a shared model, and will be installed into the default (public) schema.
+
+If a model is listed in the ``settings.BOARDINGHOUSE.SHARED_MODELS`` list, then it is deemed to be a shared model.
+
+All other models are deemed to be schema-specific models, and will be put into each schema that is created.
+
 Management commands
 -------------------
 

@@ -53,3 +53,9 @@ Within the system, there is a special model: :class:`boardinghouse.models.Schema
 Whenever Django changes the table structure (for instance, using ``syncdb``, or ``migrate`` from South), the DDL changes are applied to each known schema in turn.
 
 Whenever a request comes in, :class:`boardinghouse.middleware.SchemaMiddleware` determines which schema should be active, and sets the Postgres ``search_path`` accordingly. If a user may change schema, they may request a schema activation for one of their other available schemata, and any future requests will only present data from that schema.
+
+Models will, by default, only live in a non-shared schema, unless they:
+
+* are explicitly marked within their definition as shared, by subclassing :class:`boardinghouse.base.SharedSchemaModel`, or by having the attribute ``_is_shared_model`` set to ``True``.
+
+* are listed in ``settings.BOARDINGHOUSE.SHARED_MODELS``.
