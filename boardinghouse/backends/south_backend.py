@@ -3,21 +3,14 @@ import sys
 
 from django.db import models
 
+from ..schema import is_shared_table
+
 try:
     from south.db import postgresql_psycopg2, generic
 except ImportError:
     # We only need to do anything if south is installed.
     pass
 else:
-    def is_model_aware(table):
-        """
-        Look up in the django model list for the model with this
-        table name, and find out if it has the _is_schema_aware
-        attribute set.
-        """
-        data = [x for x in models.get_models() if x._meta.db_table == table]
-        if data:
-            return data[0]._is_schema_aware
 
     def wrap(name):
         # This is the main guts of the changes we need to make.
@@ -30,7 +23,7 @@ else:
         def apply_to_all(self, table, *args, **kwargs):
             # If this model is naive, then we only want to run the wrapped
             # function normally.
-            if not is_model_aware(table):
+            if is_shared_table(table):
                 return function(self, table, *args, **kwargs)
         
             # If we are already in a schema loop, like when one wrapped method
@@ -84,9 +77,10 @@ else:
         delete_column = wrap('delete_column')
         delete_index = wrap('delete_index')
         delete_primary_key = wrap('delete_primary_key')
-        # Hmm. I'm not sure we want to wrap these two, but may as well try.
-        execute = wrap('execute')
-        execute_many = wrap('execute_many')
+        # We can't wrap these, as we don't know if they should apply
+        # to every schema or not!
+        # execute = wrap('execute')
+        # execute_many = wrap('execute_many')
         rename_column = wrap('rename_column')
         rename_table = wrap('rename_table')
         
@@ -113,11 +107,11 @@ else:
         # database each time, but that is better than trying to invalidate the
         # cache each time we change schema (which happens a lot).
         def lookup_constraint(self, db_name, table_name, column_name=None):
-            if is_model_aware(table_name):
+            if is_shared_table(table_name):
+                schema = self._get_schema_name()
+            else:
                 from boardinghouse.schema import _get_schema_or_template
                 schema = _get_schema_or_template()
-            else:
-                schema = self._get_schema_name()
         
             constraints = {}
             ifsc_tables = ["constraint_column_usage", "key_column_usage"]

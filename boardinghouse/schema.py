@@ -1,7 +1,9 @@
 import os
 
+import django
 from django.db import models, connection
 
+import settings
 from .models import Schema, template_schema
 
 class Forbidden(Exception):
@@ -21,8 +23,7 @@ def get_schema():
     """
     Get the currently active schema.
     
-    This requires a database query to ask it what the current `search_path`
-    is.
+    This requires a database query to ask it what the current `search_path` is.
     """
     cursor = connection.cursor()
     cursor.execute('SHOW search_path')
@@ -58,7 +59,74 @@ def deactivate_schema(schema=None):
     """
     Schema().deactivate()
 
+def _auto_or_fk_to_shared(field):
+    if field.primary_key:
+        return True
+    if field.rel:
+        return is_shared_model(field.rel.get_related_field().model)
+    
+def is_shared_model(model):
+    """
+    Is the model (or instance of a model) one that should be in the
+    public/shared schema?
+    """
+    if model._is_shared_model:
+        return True
+    
+    if django.VERSION < (1, 6):
+        app_model = '%s.%s' % (
+            model._meta.app_label,
+            model._meta.object_name.lower()
+        )
+    else:
+        app_model = '%s.%s' % (
+            model._meta.app_label, 
+            model._meta.model_name
+        )
+    
+    if app_model in settings.SHARED_MODELS:
+        return True
+    
+    # if all fields are either autofield or foreignkey, and all fk fields
+    # point to shared models, then we must be a shored model.
+    if all([
+        _auto_or_fk_to_shared(field) for field in model._meta.fields
+    ]):
+        return True
+    
+    return False
 
+def is_shared_table(table):
+    """
+    Is the model from the provided database table name shared?
+    
+    We may need to look and see if we can work out which models
+    this table joins.
+    """
+    # Get a mapping of all table names to models.
+    table_map = dict([
+        (x._meta.db_table, x) for x in models.get_models()
+        if not x._meta.proxy
+    ])
+    
+    # If we have a match, see if that one is shared.
+    if table in table_map:
+        return is_shared_model(table_map[table])
+    
+    # It may be a join table.
+    prefixes = [
+        (db_table, model) for db_table, model in table_map.items()
+        if table.startswith(db_table)
+    ]
+    
+    if len(prefixes) == 1:
+        db_table, model = prefixes[0]
+        rel_model = model._meta.get_field_by_name(
+            table.replace(db_table, '').lstrip('_')
+        )[0].rel.get_related_field().model
+    
+    return is_shared_model(model) and is_shared_model(rel_model)
+    
 ## Internal helper functions.
 def _get_schema_or_template():
     """

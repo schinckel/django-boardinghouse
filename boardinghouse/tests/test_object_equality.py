@@ -33,7 +33,8 @@ class TestObjectEquality(TestCase):
     
     def test_compare_aware_and_naive_objects(self):
         Schema.objects.create(name='schema', schema='schema').activate()
-        aware = AwareModel.objects.create(name='foo')
-        naive = NaiveModel.objects.create(name='foo')
+        aware = AwareModel.objects.create(name='foo', id=1)
+        naive = NaiveModel.objects.create(name='foo', id=1)
         
+        self.assertEqual(aware.pk, naive.pk)
         self.assertNotEqual(aware, naive)

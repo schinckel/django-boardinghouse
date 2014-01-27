@@ -1,8 +1,6 @@
 TODO
 ====
 
-* Change over to 'by default siloed, require explicit shared' approach.
-
 * Cache schema queryset so we don't have to load it each request. We would need to invalidate this cache when a new schema is added.
 
 * Cache request.user.schemata queryset (as above).
@@ -13,7 +11,7 @@ TODO
 
 * Enable support for django-devserver: we currently get an infinite recursion when both of us are installed.
 
-* Prevent admin access to pages requiring schema selection when no schema is selected.
+* Prevent admin access to pages requiring schema selection when no schema is selected. Currently gives an error page.
 
 * Bounce to a reasonable page when a schema change event is processed, and the current page is no longer valid in the new schema. For instance, if viewing schema aware data at:
 
@@ -31,3 +29,8 @@ Tests to write
 * :py:method:`boardinghouse.backends.south_backend.DatabaseOperations.lookup_constraint`, when columns is provided.
 
 * :py:mod:`boardinghouse.ensure_installation` - this is pretty hard to test automatically without having multiple projects.
+
+Example Project
+---------------
+
+* include user and log-entry data in fixtures

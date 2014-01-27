@@ -41,7 +41,7 @@ if 'django.contrib.admin' in settings.INSTALLED_APPS:
     from django.contrib.admin.models import LogEntry
     from django.db import models
     from django.dispatch import receiver
-    
+        
     LogEntry.add_to_class(
         'object_schema', 
         models.CharField(max_length=36, blank=True, null=True)
@@ -52,9 +52,11 @@ if 'django.contrib.admin' in settings.INSTALLED_APPS:
     @receiver(models.signals.pre_save, sender=LogEntry)
     def update_object_schema(sender, instance, **kwargs):
         obj = instance.get_edited_object()
-        if obj._is_schema_aware:
-            from schema import get_schema
-            instance.object_schema = get_schema().schema
+        from schema import is_shared_model
+
+        if not is_shared_model(obj):
+            # I think we may have an attribute schema on the object?
+            instance.object_schema = obj._schema
             
     
     # ...so we can add that bit to the url, and have links in the admin

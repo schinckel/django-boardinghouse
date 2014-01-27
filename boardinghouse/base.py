@@ -3,7 +3,6 @@
 from django.db import models
 
 from .models import Schema
-from .schema import get_schema
 
 class MultiSchemaMixin(object):
     """
@@ -44,39 +43,14 @@ class MultiSchemaManager(MultiSchemaMixin, models.Manager):
     in the one request.
     """
 
-class SchemaAware(object):
-    """
-    A mixin that tags an object as schema aware.
-    """
-    _is_schema_aware = True
-
-class SchemaAwareModel(SchemaAware, models.Model):
-    """
-    The Base class for models that should be in a seperate schema.
+class SharedSchemaMixin(object):
+    _is_shared_model = True
     
-    You could just put `_is_schema_aware = True` on your model class, but
-    then you would also need to override __eq__ to get correct behaviour
-    related to objects from different schemata.
+class SharedSchemaModel(SharedSchemaMixin, models.Model):
+    """
+    A Base class for models that should be in the shared schema.
     """
 
     class Meta:
         abstract = True
-    
-    def __eq__(self, other):
-        return super(SchemaAwareModel, self).__eq__(other) and self._schema == other._schema
 
-
-def inject_schema_attribute(sender, instance, **kwargs):
-    """
-    A signal listener that injects the current schema on the object
-    just after it is instantiated.
-    
-    You may use this in conjunction with :class:`MultiSchemaMixin`, it will
-    respect any value that has already been set on the instance.
-    """
-    if not sender._is_schema_aware:
-        return
-    if not getattr(instance, '_schema', None):
-        instance._schema = get_schema()
-
-models.signals.post_init.connect(inject_schema_attribute)

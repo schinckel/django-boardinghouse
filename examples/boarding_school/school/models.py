@@ -1,21 +1,18 @@
 from django.db import models
 
-from boardinghouse.base import SchemaAwareModel
 from boardinghouse.models import Schema
-
 
 class School(Schema):
     pass
 
-
-class StaffMember(SchemaAwareModel):
+class StaffMember(models.Model):
     name = models.CharField(max_length=64)
     staff_id = models.CharField(unique=True, max_length=16)
     
     def __unicode__(self):
         return u"%s (%s)" % (self.name, self.staff_id)
 
-class Student(SchemaAwareModel):
+class Student(models.Model):
     name = models.CharField(max_length=64)
     student_id = models.CharField(unique=True, max_length=16)
 
@@ -23,7 +20,7 @@ class Student(SchemaAwareModel):
         return u"%s (%s)" % (self.name, self.student_id)
 
 
-class Subject(SchemaAwareModel):
+class Subject(models.Model):
     name = models.CharField(unique=True, max_length=64)
 
     def __unicode__(self):
@@ -48,7 +45,7 @@ GRADES = (
 )
 
 
-class Enrolment(SchemaAwareModel):
+class Enrolment(models.Model):
     student = models.ForeignKey(Student, related_name='enrolments')
     subject = models.ForeignKey(Subject, related_name='enrolments')
     enrolment_date = models.DateField()

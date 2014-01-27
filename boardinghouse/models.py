@@ -14,7 +14,7 @@ from model_utils import ModelTracker
 import ensure_installation
 import signals
 
-# This is a bit of fancy trickery to stick the property _is_schema_aware
+# This is a bit of fancy trickery to stick the property _is_shared_model
 # on every model class, returning False, unless it has been explicitly
 # set to True in the model definition (see base.py for examples).
 
@@ -22,10 +22,10 @@ class ClassProperty(property):
     def __get__(self, cls, owner):
         return self.fget.__get__(None, owner)()
 
-def _is_schema_aware(cls):
-    return cls._meta.auto_created and cls._meta.auto_created._is_schema_aware
+def _is_shared_model(cls):
+    return cls._meta.auto_created and cls._meta.auto_created._is_shared_model
 
-models.Model._is_schema_aware = ClassProperty(classmethod(_is_schema_aware))
+models.Model._is_shared_model = ClassProperty(classmethod(_is_shared_model))
 
 class SchemaQuerySet(models.query.QuerySet):
     def bulk_create(self, *args, **kwargs):
@@ -50,6 +50,8 @@ class Schema(models.Model):
     when it is created, and also has the ability to activate and deactivate
     itself (at the start and end of the request cycle would be a good plan).
     """
+    _is_shared_model = True
+    
     name = models.CharField(max_length=128, unique=True, help_text=_(u'The display name of the schema.'))
     schema = models.CharField(max_length=36, primary_key=True, unique=True,
         validators=[schema_name_validator],
@@ -122,3 +124,31 @@ class Schema(models.Model):
 
 # An in-memory only template schema.
 template_schema = Schema(name="Template Schema", schema="__template__")
+
+
+__old_eq__ = models.Model.__eq__
+    
+# We need to monkey-patch __eq__ on models.Model
+def __eq__(self, other):
+    from .schema import is_shared_model
+    if is_shared_model(self):
+        return __old_eq__(self, other)
+    return __old_eq__(self, other) and self._schema == other._schema
+
+models.Model.__eq__ = __eq__
+
+def inject_schema_attribute(sender, instance, **kwargs):
+    """
+    A signal listener that injects the current schema on the object
+    just after it is instantiated.
+    
+    You may use this in conjunction with :class:`MultiSchemaMixin`, it will
+    respect any value that has already been set on the instance.
+    """
+    from .schema import is_shared_model, get_schema
+    if is_shared_model(sender):
+        return
+    if not getattr(instance, '_schema', None):
+        instance._schema = get_schema()
+
+models.signals.post_init.connect(inject_schema_attribute)

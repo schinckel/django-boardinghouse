@@ -5,6 +5,7 @@ from django.db import models
 from optparse import make_option
 
 from ...models import Schema, template_schema
+from ...schema import is_shared_model
 
 class Command(dumpdata.Command):
     option_list = dumpdata.Command.option_list + (
@@ -28,7 +29,7 @@ class Command(dumpdata.Command):
         # raise an exception if we weren't handed a schema.
         get_model = models.get_model
         aware_required = any([
-            get_model(*label.split('.'))._is_schema_aware
+            not is_shared_model(get_model(*label.split('.')))
             for label in app_labels if '.' in label
             and get_model(*label.split('.'))
         ])

@@ -6,7 +6,8 @@ from ..models import Schema, template_schema
 from ..schema import (
     get_schema, _get_schema_or_template, 
     activate_schema, deactivate_schema,
-    TemplateSchemaActivation
+    TemplateSchemaActivation,
+    is_shared_model,
 )
 
 SCHEMA_QUERY = "SELECT schema_name FROM information_schema.schemata WHERE schema_name = %s"
@@ -76,8 +77,8 @@ class TestPostgresSchemaCreation(TestCase):
     
 class TestSchemaClassValidationLogic(TestCase):
     def test_ensure_schema_model_is_not_schema_aware(self):
-        self.assertFalse(Schema._is_schema_aware)
-        self.assertFalse(Schema()._is_schema_aware)
+        self.assertTrue(is_shared_model(Schema))
+        self.assertTrue(is_shared_model(Schema()))
     
     def test_schema_schema_validation_rejects_invalid_chars(self):
         self.assertRaises(forms.ValidationError, Schema.objects.create, schema='_foo', name="1")
@@ -112,6 +113,9 @@ class TestGetSetSearchPath(TestCase):
         schema = Schema.objects.create(name='a', schema='a')
         schema.activate()
         self.assertEquals(schema, get_schema())
+        
+        template_schema.activate()
+        self.assertEquals(template_schema, get_schema())
     
     def test_deactivate_schema_resets_search_path(self):
         schema = Schema.objects.create(name='a', schema='a')
