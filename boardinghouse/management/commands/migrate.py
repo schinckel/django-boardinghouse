@@ -7,7 +7,8 @@ Will apply the
 from django.db import connection
 
 from ...schema import (
-    _install_clone_schema_function, deactivate_schema,
+    _install_clone_schema_function,
+    deactivate_schema,
     get_template_schema,
 )
 

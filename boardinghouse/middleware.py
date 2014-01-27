@@ -10,7 +10,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from .schema import (
     TemplateSchemaActivation,
-    get_schema_model, get_template_schema,
+    get_schema_model,
     deactivate_schema,
 )
 

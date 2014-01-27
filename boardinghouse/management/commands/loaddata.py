@@ -32,8 +32,7 @@ class Command(loaddata.Command):
         
         super(Command, self).handle(*app_labels, **options)
 
-        if schema_name and schema:
-            schema.deactivate()
+        Schema().deactivate()
         
         # Ensure we create any schemata that are new.
         for schema in Schema.objects.all():

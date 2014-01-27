@@ -30,6 +30,7 @@ schema_name_validator = RegexValidator(
     message=_(u'May only contain lowercase letters and underscores. Must start with a letter.')
 )
 
+
 class Schema(models.Model):
     """
     The Schema model provides an abstraction for a Postgres schema.

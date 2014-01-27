@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+from boardinghouse import settings
 from ..base import SharedSchemaModel, MultiSchemaManager
 from boardinghouse import settings
 

@@ -12,8 +12,9 @@ except ImportError:
     pass
 
 from ...schema import (
-    _install_clone_schema_function, 
-    get_schema_model, get_template_schema,
+    _install_clone_schema_function,
+    get_schema_model,
+    get_template_schema,
 )
 
 class Command(syncdb.Command):
