@@ -62,14 +62,6 @@ boardinghouse.models module
     :undoc-members:
     :show-inheritance:
 
-boardinghouse.monkey_patches module
------------------------------------
-
-.. automodule:: boardinghouse.monkey_patches
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 boardinghouse.schema module
 ---------------------------
 

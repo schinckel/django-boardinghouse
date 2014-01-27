@@ -43,15 +43,13 @@ class MultiSchemaManager(MultiSchemaMixin, models.Manager):
     in the one request.
     """
 
+class SharedSchemaMixin(object):
+    _is_shared_model = True
+    
 class SharedSchemaModel(models.Model):
     """
     A Base class for models that should be in the shared schema.
-    
-    You could just put `_is_shared_model = True` on your model class, but
-    then you would also need to override __eq__ to get correct behaviour
-    related to objects from different schemata.
     """
-    _is_shared_model = True
 
     class Meta:
         abstract = True
