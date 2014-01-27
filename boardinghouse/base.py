@@ -2,6 +2,7 @@
 """
 from django.db import models
 
+# Why do we get a weird error if we don't import this?
 from .models import Schema
 
 class MultiSchemaMixin(object):

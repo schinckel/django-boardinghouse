@@ -3,7 +3,7 @@
 from django.contrib import admin
 
 from .models import Schema
-from .schema import get_schema, is_shared_model
+from .schema import get_schema, is_shared_model, get_schema_model
 
 class SchemaAdmin(admin.ModelAdmin):
     """
@@ -14,7 +14,8 @@ class SchemaAdmin(admin.ModelAdmin):
             return ('schema',)
         return ()
 
-admin.site.register(Schema, SchemaAdmin)
+if get_schema_model() == Schema:
+    admin.site.register(Schema, SchemaAdmin)
 
 def schemata(obj):
     """

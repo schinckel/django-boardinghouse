@@ -1,8 +1,7 @@
 from django.db import models, connection
 from django.core.management.color import no_style
 
-from boardinghouse.models import Schema
-from boardinghouse.schema import is_shared_model
+from boardinghouse.schema import is_shared_model, get_schema_model
 
 def post_syncdb_duplicator(sender, **kwargs):
     # See if any of the newly created models are schema-aware
@@ -13,7 +12,7 @@ def post_syncdb_duplicator(sender, **kwargs):
     ]
     if schema_aware_models:
         cursor = connection.cursor()
-        for schema in Schema.objects.all():
+        for schema in get_schema_model().objects.all():
             schema.activate(cursor)
             tables = connection.introspection.table_names()
             pending_references = {}
