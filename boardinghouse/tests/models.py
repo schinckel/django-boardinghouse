@@ -1,10 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+from boardinghouse import settings
 from ..base import SharedSchemaModel, MultiSchemaManager
 
 User.add_to_class('schemata', models.ManyToManyField(
-    'boardinghouse.Schema',
+    settings.SCHEMA_MODEL,
     null=True, blank=True,
     related_name='users',
 ))

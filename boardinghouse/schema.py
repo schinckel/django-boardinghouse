@@ -4,7 +4,6 @@ import django
 from django.db import models, connection
 
 import settings
-from .models import Schema, template_schema
 
 class Forbidden(Exception):
     pass
@@ -19,6 +18,12 @@ class TemplateSchemaActivation(Forbidden):
             'Activating template schema forbidden.', *args, **kwargs
         )
 
+def get_schema_model():
+    return models.get_model(*settings.SCHEMA_MODEL.split('.'))
+
+def get_template_schema():
+    return get_schema_model()(schema='__template__')
+
 def get_schema():
     """
     Get the currently active schema.
@@ -31,7 +36,10 @@ def get_schema():
     cursor.close()
     schema_name = search_path.split(',')[0]
     if schema_name == '__template__':
-        return template_schema
+        return get_template_schema()
+        
+    Schema = get_schema_model()
+    
     try:
         return Schema.objects.get(schema=schema_name)
     except Schema.DoesNotExist:
@@ -44,6 +52,8 @@ def activate_schema(schema):
     This will raise a :class:`TemplateSchemaActivation` exception if
     the __template__ schema is attempted to be activated.
     """
+    Schema = get_schema_model()
+    
     if isinstance(schema, Schema):
         if schema.schema == '__template__':
             raise TemplateSchemaActivation()
@@ -57,7 +67,7 @@ def deactivate_schema(schema=None):
     """
     Deactivate the provided (or current) schema.
     """
-    Schema().deactivate()
+    get_template_schema().deactivate()
 
 def _auto_or_fk_to_shared(field):
     if field.primary_key:

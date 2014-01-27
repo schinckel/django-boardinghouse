@@ -4,8 +4,7 @@ from django.db import models
 
 from optparse import make_option
 
-from ...models import Schema, template_schema
-from ...schema import is_shared_model
+from ...schema import is_shared_model, get_schema_model, get_template_schema
 
 class Command(dumpdata.Command):
     option_list = dumpdata.Command.option_list + (
@@ -16,6 +15,8 @@ class Command(dumpdata.Command):
     )
     
     def handle(self, *app_labels, **options):
+        Schema = get_schema_model()
+        
         schema_name = options.get('schema')
         if schema_name == '__template__':
             schema = template_schema
@@ -34,7 +35,7 @@ class Command(dumpdata.Command):
             and get_model(*label.split('.'))
         ])
         
-        if aware_required and schema == template_schema:
+        if aware_required and schema == get_template_schema():
             raise CommandError('You must pass a schema when an explicit model is aware.')
         
         schema.activate()

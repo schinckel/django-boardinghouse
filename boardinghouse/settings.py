@@ -11,8 +11,6 @@ SHARED_MODELS = [
     'south.migrationhistory'
 ]
 
-SCHEMA_MODEL = [
-    'boardinghouse.schema',
-]
+SCHEMA_MODEL = 'boardinghouse.schema'
 
 locals().update(getattr(settings, 'BOARDINGHOUSE', {}))

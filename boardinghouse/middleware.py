@@ -8,8 +8,11 @@ from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import redirect
 from django.utils.translation import ugettext_lazy as _
 
-from .models import Schema, template_schema
-from .schema import TemplateSchemaActivation
+from .schema import (
+    TemplateSchemaActivation,
+    get_schema_model,
+    deactivate_schema,
+)
 
 logger = logging.getLogger('boardinghouse.middleware')
 
@@ -90,7 +93,8 @@ class SchemaMiddleware:
     
     """
     def process_request(self, request):
-        template_schema.deactivate()
+        Schema = get_schema_model()
+        deactivate_schema()
         available_schemata = Schema.objects.none()
         if request.user.is_anonymous():
             request.session['schema'] = None

@@ -2,8 +2,6 @@
 """
 from django.db import models
 
-from .models import Schema
-
 class MultiSchemaMixin(object):
     """
     A mixin that allows for fetching objects from multiple

@@ -4,7 +4,7 @@ from django.db import DatabaseError
 
 from optparse import make_option
 
-from ...models import Schema, template_schema
+from ...schema import get_schema_model
 
 class Command(loaddata.Command):
     option_list = loaddata.Command.option_list + (
@@ -14,6 +14,8 @@ class Command(loaddata.Command):
     )
     
     def handle(self, *app_labels, **options):
+        Schema = get_schema_model()
+        
         schema_name = options.get('schema')
         if schema_name == '__template__':
             # Hmm, we don't want to accidentally write data to this, so
@@ -30,8 +32,7 @@ class Command(loaddata.Command):
         
         super(Command, self).handle(*app_labels, **options)
 
-        if schema_name and schema:
-            schema.deactivate()
+        Schema().deactivate()
         
         # Ensure we create any schemata that are new.
         for schema in Schema.objects.all():

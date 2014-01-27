@@ -6,8 +6,11 @@ Will apply the
 """
 from django.db import connection
 
-from ...models import template_schema
-from ...schema import _install_clone_schema_function, deactivate_schema
+from ...schema import (
+    _install_clone_schema_function,
+    deactivate_schema,
+    get_template_schema,
+)
 
 try:
     from django.core.management.commands import migrate
@@ -27,7 +30,7 @@ else:
     class Command(migrate.Command):
         def handle(self, *args, **options):
             _install_clone_schema_function()
-            template_schema.create_schema()
+            get_template_schema().create_schema()
             
             cursor = connection.cursor()
             cursor.execute("SET search_path TO public,__template__;")
