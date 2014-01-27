@@ -46,7 +46,7 @@ class MultiSchemaManager(MultiSchemaMixin, models.Manager):
 class SharedSchemaMixin(object):
     _is_shared_model = True
     
-class SharedSchemaModel(models.Model):
+class SharedSchemaModel(SharedSchemaMixin, models.Model):
     """
     A Base class for models that should be in the shared schema.
     """

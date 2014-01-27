@@ -149,7 +149,7 @@ class SchemaMiddleware:
         """
         if isinstance(exception, DatabaseError) and not request.session.get('schema'):
             if re.search('relation ".*" does not exist', exception.message):
-                # TODO: make this styleable?
+                # TODO: make this styleable? Maybe use a template?
                 transaction.rollback()
                 return HttpResponse(_("You must select a schema to access this resource"), status=449)
         if isinstance(exception, TemplateSchemaActivation):
