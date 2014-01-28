@@ -4,6 +4,14 @@ import unittest
 import doctest
 import django
 
+south = ()
+try:
+    if django.VERSION < (1,7):
+        import south
+        south = ('south',)
+except ImportError:
+    pass
+
 BASE_PATH = os.path.dirname(__file__)
 
 def main():
@@ -19,7 +27,7 @@ def main():
         'django.contrib.auth',
         'django.contrib.contenttypes',
         'django.contrib.sessions',
-    ) + (('south', ) if django.VERSION < 1.7 else ()) + (
+    ) + south + (
         'boardinghouse',
         'django.contrib.admin',
     )
