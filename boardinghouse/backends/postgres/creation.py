@@ -1,6 +1,6 @@
-from django.db.backends.postgresql_psycopg2.creation import *
+from django.db.backends.postgresql_psycopg2 import creation
 
-class DatabaseCreation(DatabaseCreation):
+class DatabaseCreation(creation.DatabaseCreation):
     """
     The only change we make to the original Postgres `DatabaseCreation`
     class is to allow a schema name.

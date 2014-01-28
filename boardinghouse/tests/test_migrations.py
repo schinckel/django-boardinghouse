@@ -1,12 +1,17 @@
 import unittest
 
 import django
-from django.db import connection
+from django.conf import settings
+from django.db import connection, models
 from django.test import TestCase
 
-try:
-    from south.db import db
-except:
+if django.VERSION < (1,7):
+    try:
+        from south.db import db
+    except ImportError:
+        db = None
+else:
+    from django.db import migrations
     db = None
 
 from ..schema import get_schema_model, get_template_schema
@@ -25,19 +30,47 @@ AND column_name = '%(column_name)s';
 
 @unittest.skipIf(django.VERSION < (1,7), 'migrate not used with < 1.7')
 class DjangoMigrate(TestCase):
-    pass
+    def assertTableExists(self, table, schema):
+        schema.activate()
+        self.assertIn(table, connection.introspection.get_table_list(connection.cursor()))
+    
+    def assertTableNotExists(self, table, schema):
+        schema.activate()
+        self.assertNotIn(table, connection.introspection.get_table_list(connection.cursor()))
+    
+    def test_create_model(self):
+        from django.db import migrations
+        
+        operation = migrations.CreateModel("AwareModel", [
+            ('id', models.AutoField(primary_key=True)),
+            ('status', models.BooleanField(default=False)),
+        ])
+        
+        project_state = migrations.state.ProjectState()
+        new_state = project_state.clone()
+        operation.state_forwards('boardinghouse', new_state)
+        
+        with connection.schema_editor() as editor:
+            operation.database_forwards('boardinghouse', editor, new_state, project_state)
+        
+        for schema in Schema.objects.all():
+            self.assertTableExists('boardinghouse_awaremodel', schema)
+
+        with connection.schema_editor() as editor:
+            operation.database_backwards('boardinghouse', editor, new_state, project_state)
+        
+        for schema in Schema.objects.all():
+            self.assertTableNotExists('boardinghouse_awaremodel', schema)
+        
 
 @unittest.skipIf(django.VERSION > (1,7), "South migrate not used with 1.7+")
-@unittest.skipIf(db is None, "South migrate not tested if not install")
+@unittest.skipIf(not db, "South migrate not tested if not installed")
 class SouthMigrate(TestCase):
     def test_south_module_imports_correctly(self):
         from boardinghouse.backends.south_backend import DatabaseOperations
         from boardinghouse.management.commands import migrate
     
     def test_add_remove_column_aware(self):
-        from south.db import db
-        from django.db import models
-        
         Schema.objects.mass_create('a', 'b')
         
         Schema.objects.get(name='a').activate()
@@ -104,9 +137,6 @@ class SouthMigrate(TestCase):
             self.assertEquals([], columns)
         
     def test_table_operations(self):
-        from south.db import db
-        from django.db import models
-        
         Schema.objects.mass_create('a', 'b')
         schemata = list(Schema.objects.all()) + [template_schema]
         
@@ -148,7 +178,6 @@ class SouthMigrate(TestCase):
         AwareModel.objects.create(name='foo')
         AwareModel.objects.create(name='bar')
         
-        from south.db import db
         db.clear_table('boardinghouse_awaremodel')
         
         for schema in Schema.objects.all():
@@ -157,9 +186,6 @@ class SouthMigrate(TestCase):
 
         
     def test_add_remove_column_naive(self):
-        from south.db import db
-        from django.db import models
-        
         Schema.objects.mass_create('a','b')
         
         column_sql = COLUMN_SQL % {

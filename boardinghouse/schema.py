@@ -163,3 +163,18 @@ def _install_clone_schema_function():
     cursor = connection.cursor()
     cursor.execute(clone_schema_function)
     cursor.close()
+
+def _wrap_command(command):
+    def inner(self, *args, **kwargs):
+        _install_clone_schema_function()
+        get_template_schema().create_schema()
+        
+        cursor = connection.cursor()
+        cursor.execute('SET search_path TO public,__template__;')
+        cursor.close()
+        
+        command(self, *args, **kwargs)
+        
+        deactivate_schema()
+    
+    return inner
