@@ -1,6 +1,6 @@
-from django.conf import settings
+from django.conf import global_settings
 
-SHARED_MODELS = [
+global_settings.SHARED_MODELS = [
     'auth.user',
     'auth.permission',
     'auth.group',
@@ -11,6 +11,4 @@ SHARED_MODELS = [
     'south.migrationhistory'
 ]
 
-SCHEMA_MODEL = 'boardinghouse.schema'
-
-locals().update(getattr(settings, 'BOARDINGHOUSE', {}))
+global_settings.SCHEMA_MODEL = 'boardinghouse.schema'

@@ -1,9 +1,8 @@
 import os
 
 import django
+from django.conf import settings
 from django.db import models, connection
-
-import settings
 
 class Forbidden(Exception):
     pass
@@ -22,7 +21,7 @@ def get_schema_model():
     return models.get_model(*settings.SCHEMA_MODEL.split('.'))
 
 def get_template_schema():
-    return get_schema_model()(name="Template Schema", schema="__template__")
+    return get_schema_model()(schema="__template__")
 
 def get_schema():
     """

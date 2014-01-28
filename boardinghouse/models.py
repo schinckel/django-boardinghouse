@@ -1,6 +1,7 @@
 """
 """
 
+import django
 from django.conf import settings
 from django.contrib import auth
 from django.db import models, connection, transaction
@@ -8,8 +9,10 @@ from django.utils.translation import ugettext_lazy as _
 from django.core.validators import RegexValidator
 from django.forms import ValidationError
 
-from model_utils.managers import PassThroughManager
-from model_utils import ModelTracker
+if django.VERSION < (1,7):
+    from model_utils.managers import PassThroughManager
+else:
+    pass
 
 import ensure_installation
 import signals
@@ -25,13 +28,14 @@ class SchemaQuerySet(models.query.QuerySet):
     def mass_create(self, *args):
         self.bulk_create([Schema(name=x, schema=x) for x in args])
 
+
 schema_name_validator = RegexValidator(
     regex='^[a-z][a-z_]*$',
     message=_(u'May only contain lowercase letters and underscores. Must start with a letter.')
 )
 
 
-class Schema(models.Model):
+class AbstractBaseSchema(models.Model):
     """
     The Schema model provides an abstraction for a Postgres schema.
     
@@ -41,46 +45,46 @@ class Schema(models.Model):
     """
     _is_shared_model = True
     
-    name = models.CharField(max_length=128, unique=True, help_text=_(u'The display name of the schema.'))
     schema = models.CharField(max_length=36, primary_key=True, unique=True,
         validators=[schema_name_validator],
         help_text=_(u'The internal name of the schema. May not be changed after creation.'),
     )
     
-    objects = PassThroughManager.for_queryset_class(SchemaQuerySet)()
-    tracker = ModelTracker()
+    if django.VERSION < (1,7):
+        objects = PassThroughManager.for_queryset_class(SchemaQuerySet)()
+    else:
+        objects = SchemaQuerySet.as_manager()
     
     class Meta:
-        app_label = 'boardinghouse'
-        verbose_name_plural = 'schemata'
+        abstract = True
     
+    def __init__(self, *args, **kwargs):
+        super(AbstractBaseSchema, self).__init__(*args, **kwargs)
+        self._initial_schema = self.schema
+
     def __unicode__(self):
-        return self.name
+        return self.schema
     
     def save(self, *args, **kwargs):
         self._meta.get_field_by_name('schema')[0].run_validators(self.schema)
         
-        if self.tracker.previous('schema') is None or 'force_insert' in kwargs:
+        # We want to prevent someone creating a new schema with
+        # the same internal name as an existing one. We assume if we
+        # were 'initialised' then we were loaded from the database
+        # with those values.
+        if self._initial_schema is None or 'force_insert' in kwargs:
             try:
-                Schema.objects.get(schema=self.schema)
-            except Schema.DoesNotExist:
+                self.__class__.objects.get(schema=self.schema)
+            except self.__class__.DoesNotExist:
                 pass
             else:
                 raise ValidationError(_('Schema %s already in use') % self.schema)
-            
-            try:
-                Schema.objects.get(name=self.name)
-            except Schema.DoesNotExist:
-                pass
-            else:
-                raise ValidationError(_('Schema name %s already in use') % self.name)
-        else:
-            if self.tracker.has_changed('schema'):
-                raise ValidationError(_('May not change schema after creation'))
+        elif self.schema != self._initial_schema:
+            raise ValidationError(_('may not change schema after creation.'))
 
         self.create_schema()
         
-        return super(Schema, self).save(*args, **kwargs)
+        return super(AbstractBaseSchema, self).save(*args, **kwargs)
         
     def create_schema(self, cursor=None):
         if not cursor:
@@ -111,6 +115,20 @@ class Schema(models.Model):
         cursor.execute('SET search_path TO "$user",public')
         signals.schema_post_activate.send(sender=self, schema=None)
 
+
+if settings.SCHEMA_MODEL.lower() == 'boardinghouse.schema':
+    class Schema(AbstractBaseSchema):
+        name = models.CharField(max_length=128, unique=True, help_text=_(u'The display name of the schema.'))
+    
+        # tracker = FieldTracker(fields=['schema'])
+        
+        class Meta:
+            app_label = 'boardinghouse'
+            verbose_name_plural = 'schemata'
+    
+        def __unicode__(self):
+            return self.name
+    
 
 # This is a bit of fancy trickery to stick the property _is_shared_model
 # on every model class, returning False, unless it has been explicitly

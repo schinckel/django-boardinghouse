@@ -1,9 +1,8 @@
-from django.db import models
+from django.conf import settings
 from django.contrib.auth.models import User
+from django.db import models
 
-from boardinghouse import settings
 from ..base import SharedSchemaModel, MultiSchemaManager
-from boardinghouse import settings
 
 User.add_to_class('schemata', models.ManyToManyField(
     settings.SCHEMA_MODEL,

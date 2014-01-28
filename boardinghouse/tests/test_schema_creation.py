@@ -95,9 +95,9 @@ class TestSchemaClassValidationLogic(TestCase):
         Schema.objects.create(schema='a'*36, name="Foo 2")
         Schema.objects.create(schema='foo_bar', name="Foo 3")
     
-    def test_schema_rejects_duplicate_values(self):
+    def test_schema_rejects_duplicate_schema(self):
         Schema.objects.create(schema='foo', name="Foo")
-        self.assertRaises(forms.ValidationError, Schema.objects.create, schema='foo_bar', name="Foo")
+        #self.assertRaises(forms.ValidationError, Schema.objects.create, schema='foo_bar', name="Foo")
         self.assertRaises(forms.ValidationError, Schema.objects.create, schema='foo', name="Foo 2")
     
     def test_schema_rejects_schema_change(self):
