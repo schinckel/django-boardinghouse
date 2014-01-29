@@ -115,7 +115,6 @@ class AbstractBaseSchema(models.Model):
         cursor.execute('SET search_path TO "$user",public')
         signals.schema_post_activate.send(sender=self, schema=None)
 
-
 if settings.SCHEMA_MODEL.lower() == 'boardinghouse.schema':
     class Schema(AbstractBaseSchema):
         name = models.CharField(max_length=128, unique=True, help_text=_(u'The display name of the schema.'))

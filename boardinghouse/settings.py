@@ -1,6 +1,9 @@
-from django.conf import global_settings
+# The name of the model that shall be used for storing the schema.
+SCHEMA_MODEL = 'boardinghouse.schema'
 
-global_settings.SHARED_MODELS = [
+# Models that should be in the public/shared schema, rather than in
+# each tenant's schema.
+SHARED_MODELS = [
     'auth.user',
     'auth.permission',
     'auth.group',
@@ -11,5 +14,3 @@ global_settings.SHARED_MODELS = [
     'south.migrationhistory',
     'migrations.migration',
 ]
-
-global_settings.SCHEMA_MODEL = 'boardinghouse.schema'

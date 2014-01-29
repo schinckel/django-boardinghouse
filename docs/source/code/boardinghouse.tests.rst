@@ -76,6 +76,14 @@ boardinghouse.tests.test_schema_creation module
     :undoc-members:
     :show-inheritance:
 
+boardinghouse.tests.test_settings module
+----------------------------------------
+
+.. automodule:: boardinghouse.tests.test_settings
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 boardinghouse.tests.test_template_tag module
 --------------------------------------------
 
