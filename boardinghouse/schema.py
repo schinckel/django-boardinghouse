@@ -176,5 +176,8 @@ def _wrap_command(command):
         command(self, *args, **kwargs)
         
         deactivate_schema()
+        
+        for schema in get_schema_model().objects.all():
+            schema.create_schema()
     
     return inner

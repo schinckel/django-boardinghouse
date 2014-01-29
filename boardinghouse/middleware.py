@@ -66,7 +66,12 @@ class SchemaMiddleware:
         https://example.com/page/?__schema=<schema-name>
     
       The schema will be changed (or cleared, if this user cannot view 
-      that schema), and the page will be re-loaded (if it was a GET).
+      that schema), and the page will be re-loaded (if it was a GET). This
+      method of changing schema allows you to have a link that changes the
+      current schema and then loads the data with the new schema active.
+
+      It is used within the admin for having a link to data from an
+      arbitrary schema in the ``LogEntry`` history.
       
       This type of schema change request should not be done with a POST
       request.

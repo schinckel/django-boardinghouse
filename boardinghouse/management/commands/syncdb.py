@@ -1,23 +1,23 @@
 """
+:mod:`boardinghouse.management.commands.syncdb`
+
+This wraps the previously installed `syncdb` command to ensure:
+
+* the clone_schema function is installed into the database.
+* the ``__template__`` schema is created.
+* the search path to ``public,__template__``, which is a special case
+  used only during DDL statements.
+* when the command is complete, all currently existing schemata in the
+  SCHEMA_MODEL table exist as schemata in the database.
 
 """
-import os.path
 
-from django.core.management.commands import syncdb
-from django.db import models, connection, transaction
+from django.core.management.commands.syncdb import Command
 
 try:
-    from south.management.commands import syncdb
+    from south.management.commands.syncdb import Command
 except ImportError:
     pass
 
 from ...schema import get_schema_model, _wrap_command
-
-class Command(syncdb.Command):
-    @_wrap_command
-    def handle_noargs(self, **options):
-        super(Command, self).handle_noargs(**options)
-        
-        # Ensure all existing schemata exist (in case they were created using RAW SQL or something, as loaddata creates any that are missing).
-        for schema in get_schema_model().objects.all():
-            schema.create_schema()
+Command.handle_noargs = _wrap_command(Command.handle_noargs)

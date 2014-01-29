@@ -40,9 +40,12 @@ If you are using South, add the following to your settings::
         'boardinghouse.backends.postgres': 'boardinghouse.backends.south_backend',
     }
 
-You will probably want to modify your ``User`` model so it contains a relationship to :class:`boardinghouse.models.Schema`. The type of relationship depends on your business logic.
+You will probably want to modify your ``User`` model so it contains a relationship to :ref:`settings.SCHEMA_MODEL`. The type of relationship depends on your business logic::
 
-``django-boardinghouse`` automatically installs a class to your middleware, and a context processor. If you have the admin installed, it adds a column to the admin :class:`django.contrib.admin.models.LogEntry` class, to store the object schema when applicable.
+  class User(AbstractBaseUser):
+      schema = models.ForeignKey(settings.SCHEMA_MODEL)
+
+``django-boardinghouse`` automatically installs a class to your middleware (see :ref:`middleware`), and a context processor (see :ref:`template_variables`). If you have the admin installed, it adds a column to the admin :class:`django.contrib.admin.models.LogEntry` class, to store the object schema when applicable.
 
 It's probably much easier to start using ``django-boardinghouse`` right from the beginning of a project: trying to split an existing database may be possible, but is not supported at this stage.
 
@@ -54,28 +57,73 @@ Shared Models
 
 If a model class contains the attribute ``_is_shared_model`` with a truthy value, then it will be deemed to be a shared model, and will be installed into the default (public) schema.
 
-If a model is listed in the ``settings.BOARDINGHOUSE.SHARED_MODELS`` list, then it is deemed to be a shared model.
+If a model is listed in the :const:`settings.SHARED_MODELS` list, then it is deemed to be a shared model.
 
 All other models are deemed to be schema-specific models, and will be put into each schema that is created.
+
+The default shared models can be seen in:
+
+.. autodata:: boardinghouse.settings.SHARED_MODELS
+  :noindex:
+
+.. _settings.SCHEMA_MODEL:
+
+settings.SCHEMA_MODEL
+---------------------
+
+The default schema model is :class:`boardinghouse.models.Schema`, you can override this by using ``settings.SCHEMA_MODEL``. Use the ``app_label.model_name`` syntax that you see in django custom user models.
+
+When you are creating
 
 Management commands
 -------------------
 
-Once django-boardinghouse hase been installed correctly, it will override some commands related to database access. For instance, in Django <1.7, the ``syncdb`` command is replaced with a version that applies the changes to every known schema. South's ``migrate`` command is likewise overriden.
+When ``django-boardinghouse`` has been installed, it will override the following commands:
 
-``loaddata`` and ``dumpdata`` are also overridden. They may take an optional ``--schema`` argument, that will activate that schema before running the command.
+.. automodule:: boardinghouse.management.commands.syncdb
+  :noindex:
+
+.. automodule:: boardinghouse.management.commands.migrate
+  :noindex:
+
+.. automodule:: boardinghouse.management.commands.flush
+  :noindex:
+
+.. automodule:: boardinghouse.management.commands.loaddata
+  :noindex:
+
+.. automodule:: boardinghouse.management.commands.dumpdata
+  :noindex:
+
+
+.. _middleware:
 
 Middleware
 ----------
 
-.. autoclass:: boardinghouse.middleware.SchemaMiddleware
+The included middleware is always installed:
 
+.. autoclass:: boardinghouse.middleware.SchemaMiddleware
+  :noindex:
+
+.. _template_variables:
 
 Template Variables
 ------------------
 
+There is an included ``CONTEXT_PROCESSOR`` that is always added to the
+settings for a project using django-boardinghouse.
+
+.. autofunction:: boardinghouse.context_processors.schemata
+  :noindex:
+
 Changing Schema
 ---------------
+
+As outlined in :ref:`middleware`, there are three ways to change the schema: a ``__schema`` querystring, a request header and a specific request.
+
+These all work without any required additions to your ``urls.py``.
+
 
 
 

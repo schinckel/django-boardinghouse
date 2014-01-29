@@ -1,8 +1,17 @@
 """
-Override migrate command for django-boardinghouse.
+:mod:`boardinghouse.management.commands.migrate`
+    
+If south is installed, then the south migrate command is left untouched.
 
-Will apply the 
+If django 1.7 or greater is installed, we wrap the django migrate
+command to ensure:
 
+* the clone_schema function is installed into the database.
+* the ``__template__`` schema is created.
+* the search path to ``public,__template__``, which is a special case
+  used only during DDL statements.
+* when the command is complete, all currently existing schemata in the
+  SCHEMA_MODEL table exist as schemata in the database.
 """
 from django.db import connection
 

@@ -1,3 +1,14 @@
+"""
+:mod:`boardinghouse.management.commands.loaddata`
+
+This replaces the ``loaddata`` command with one that takes a new
+option: ``--schema``. This is required when non-shared-models are
+included in the file(s) to be loaded, and the schema with this name
+will be used as a target.
+
+After completing the load, we ensure that any schemata that were
+loaded as part of this process exist as schemata in the database.
+"""
 from django.core.management.commands import loaddata
 from django.core.management.base import CommandError
 from django.db import DatabaseError

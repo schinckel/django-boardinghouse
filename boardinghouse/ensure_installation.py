@@ -24,7 +24,11 @@ for name in settings.DATABASES:
 if BOARDINGHOUSE_MIDDLEWARE not in settings.MIDDLEWARE_CLASSES:
     settings.MIDDLEWARE_CLASSES += (BOARDINGHOUSE_MIDDLEWARE,)
 # Should it be at the top? Is there anything it must be before?
+# Anything it needs to be after? - authentication?
 
+# We currently install this automatically, but it only makes sense to 
+# install it if <user-model>.schemata exists. Perhaps we should supply
+# several, and work out which one to install?
 if BOARDINGHOUSE_CONTEXT_PROCESSOR not in settings.TEMPLATE_CONTEXT_PROCESSORS:
     settings.TEMPLATE_CONTEXT_PROCESSORS += (BOARDINGHOUSE_CONTEXT_PROCESSOR,)
 

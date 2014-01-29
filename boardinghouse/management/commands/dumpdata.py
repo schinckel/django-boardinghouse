@@ -1,3 +1,15 @@
+"""
+:mod:`boardinghouse.management.commands.dumpdata`
+
+Replaces the ``dumpdata`` command.
+
+If the ``--schema`` option is supplied, that schema is used for the
+source of the data. If it is not supplied, then the ``__template__``
+schema will be used (which will not contain any data).
+
+If any models are supplied as arguments (using the ``app_label.model_name`` 
+notation) that are not shared models, it is an error to fail to pass a schema.
+"""
 from django.core.management.commands import dumpdata
 from django.core.management.base import CommandError
 from django.db import models
