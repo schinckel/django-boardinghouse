@@ -18,10 +18,10 @@ Postgres is required to allow schema to be used. psycopg2_ is required as per no
 
 django-model-utils_ is used for ``PassThroughManager``, which, under Django 1.7 will be replaced by `QuerySet.as_manager() <https://docs.djangoproject.com/en/dev/topics/db/managers/#creating-manager-with-queryset-methods>`_. However, the ``Tracker`` feature is also used to track changes on the :class:`boardinghouse.models.Schema` model, to prevent modification of the `schema` attribute.
 
-Installing
-==========
+Installation and Configuration
+==============================
 
-Install it using your favourite installer: mine is `pip`::
+Install it using your favourite installer: mine is `pip`_::
 
     pip install django-boardinghouse
 
@@ -29,7 +29,7 @@ You will need to add ``boardinghouse`` to your ``settings.INSTALLED_APPS``.
 
 If you use South_, you must put it after ``south``. If you use the Django admin, put it before ``django.contrib.admin``. [Check this is still correct under 1.7].
 
-You will need to use the provided database engine::
+You will need to use the provided database engine in your ``settings.DATABASES``::
 
     'boardinghouse.backends.postgres'
 
@@ -126,7 +126,7 @@ These all work without any required additions to your ``urls.py``.
 
 
 
-
+.. _pip: https://pip-installer.org/
 .. _Django: https://www.djangoproject.com/
 .. _Postgres: http://www.postgresql.org/
 .. _PostgresApp: http://postgresapp.com/

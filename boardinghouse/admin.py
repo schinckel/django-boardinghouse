@@ -1,15 +1,13 @@
-"""
-"""
 from django.contrib import admin
 
 from .models import Schema
 from .schema import get_schema, is_shared_model, get_schema_model
 
 class SchemaAdmin(admin.ModelAdmin):
-    """
-    prevents `schema` from being editable once created.
-    """
     def get_readonly_fields(self, request, obj=None):
+        """
+        Prevents `schema` from being editable once created.
+        """
         if obj is not None:
             return ('schema',)
         return ()
@@ -19,13 +17,20 @@ if get_schema_model() == Schema:
 
 def schemata(obj):
     """
-    Usable function for adding schemata representation to admin
+    Useful function for adding schemata representation to admin
     list view.
     """
-    return '<br>'.join(obj.schemata.values_list('name', flat=True))
+    return '<br>'.join(obj.schemata.values_list('name' , flat=True))
 schemata.allow_tags = True
 
 def get_inline_instances(self, request, obj=None):
+    """
+    Prevent the display of non-shared inline objects associated
+    with _every_ model if no schema is currently selected.
+    
+    If we don't patch this, then a ``DatabaseError`` will occur because
+    the tables could not be found.
+    """
     schema = get_schema()
     return [
         inline for inline in self.inlines

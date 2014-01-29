@@ -59,3 +59,5 @@ Models will, by default, only live in a non-shared schema, unless they:
 * are explicitly marked within their definition as shared, by subclassing :class:`boardinghouse.base.SharedSchemaModel`, or by having the attribute ``_is_shared_model`` set to ``True``.
 
 * are listed in ``settings.BOARDINGHOUSE.SHARED_MODELS``.
+
+There is an :doc:`example project <example>`.

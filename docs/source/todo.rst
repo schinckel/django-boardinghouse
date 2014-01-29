@@ -11,7 +11,7 @@ TODO
 
 * Enable support for django-devserver: we currently get an infinite recursion when both of us are installed.
 
-* Prevent admin access to pages requiring schema selection when no schema is selected. Currently gives an error page.
+* Prevent admin access to pages requiring schema selection when no schema is selected. Currently gives an error page. For instance, the object list page for a non-shared model.
 
 * Bounce to a reasonable page when a schema change event is processed, and the current page is no longer valid in the new schema. For instance, if viewing schema aware data at:
 
@@ -22,15 +22,16 @@ TODO
 Tests to write
 --------------
 
-* Test middleware handling of :py:exception:`TemplateSchemaActivated`.
+* Test middleware handling of :exc:`boardinghouse.schema.TemplateSchemaActivated`.
 
-* :py:method:`boardinghouse.backends.south_backend.DatabaseOperations.add_deferred_sql`
+* :meth:`boardinghouse.backends.south_backend.DatabaseOperations.add_deferred_sql`
 
-* :py:method:`boardinghouse.backends.south_backend.DatabaseOperations.lookup_constraint`, when columns is provided.
+* :meth:`boardinghouse.backends.south_backend.DatabaseOperations.lookup_constraint`, when columns is provided.
 
-* :py:mod:`boardinghouse.ensure_installation` - this is pretty hard to test automatically without having multiple projects.
+* :mod:`boardinghouse.ensure_installation` - this is pretty hard to test automatically without having multiple projects.
 
 Example Project
 ---------------
 
 * include user and log-entry data in fixtures
+* write some non-admin views and templates

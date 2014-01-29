@@ -21,6 +21,7 @@ Contents:
    example
    development
    todo
+   code
       
 Indices and tables
 ==================
