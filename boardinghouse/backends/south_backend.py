@@ -39,8 +39,9 @@ else:
             # frame, and then we look at the fourth item in each element.
             # If we come across apply_to_all, that means we can just execute
             # the original function call.
-            if 'apply_to_all' in [x[3] for x in inspect.stack()[1:]]:
-                return function(self, table, *args, **kwargs)
+            for frame in inspect.stack()[1:]:
+                if frame[3] == 'apply_to_all':
+                    return function(self, table, *args, **kwargs)
         
             for schema in Schema.objects.all():
                 schema.activate()
@@ -86,15 +87,7 @@ else:
         # execute_many = wrap('execute_many')
         rename_column = wrap('rename_column')
         rename_table = wrap('rename_table')
-        
-        # These deliberately skip our immediate parent.
-        # I wish I had commented why.
-        def _db_type_for_alter_column(self, field):
-            return super(postgresql_psycopg2.DatabaseOperations, self)._db_type_for_alter_column(field)
-
-        def _alter_add_column_mods(self, *args, **kwargs):
-            return super(postgresql_psycopg2.DatabaseOperations, self)._alter_add_column_mods(*args ,**kwargs)
-    
+            
         # This gets called within an existing command, so we just want to make
         # it so it sets the search path correctly before and after running
         # each command. This may potentially slow things down, but it's also
