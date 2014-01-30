@@ -124,7 +124,7 @@ class SouthMigrate(TestCase):
             schema.activate()
             columns = db.execute(build_column_query(schema))
             self.assertEquals([('test_column', 'text')], columns)
-        
+                
         # Remove that column
         db.drop_column('boardinghouse_awaremodel', 'test_column')
         # Check that the column no longer exists on all of the schemata.        
@@ -153,7 +153,6 @@ class SouthMigrate(TestCase):
         # matches that of an aware model.
         db.delete_table('boardinghouse_awaremodel')
         for schema in schemata:
-            schema.activate()
             columns = sorted(db.execute(test_table_sql % schema.schema))
             self.assertEquals([], columns)        
         
@@ -161,7 +160,6 @@ class SouthMigrate(TestCase):
         # Ensure the table has been created in the template_schema,
         # and all other schemata.
         for schema in schemata:
-            schema.activate()
             columns = sorted(db.execute(test_table_sql % schema.schema))
             self.assertEquals(field_names, columns)
     
@@ -184,7 +182,49 @@ class SouthMigrate(TestCase):
             schema.activate()
             self.assertEquals(0, AwareModel.objects.count())
 
+    
+    def test_add_column_with_check(self):
+        Schema.objects.mass_create('a', 'b')
         
+        db.add_column(
+            'boardinghouse_awaremodel', 
+            'test_column', 
+            models.PositiveSmallIntegerField(default=1, db_index=True),
+            keep_default=False
+        )
+        
+        cursor = connection.cursor()
+
+        for schema in Schema.objects.all():
+            cursor.execute(COLUMN_SQL % {
+                'column_name': 'test_column',
+                'table_name': 'boardinghouse_awaremodel',
+                'table_schema': schema.schema
+            })
+            self.assertEquals(('test_column', 'smallint'), cursor.fetchone())
+
+        schema = template_schema
+        cursor.execute(COLUMN_SQL % {
+            'column_name': 'test_column',
+            'table_name': 'boardinghouse_awaremodel',
+            'table_schema': '__template__'
+        })
+        self.assertEquals(('test_column', 'smallint'), cursor.fetchone())
+        
+        db.add_column(
+            'boardinghouse_naivemodel', 
+            'test_column', 
+            models.PositiveSmallIntegerField(default=1, db_index=True),
+            keep_default=False
+        )
+        
+        cursor.execute(COLUMN_SQL % {
+            'column_name': 'test_column',
+            'table_name': 'boardinghouse_naivemodel',
+            'table_schema': 'public'
+        })
+        self.assertEquals(('test_column', 'smallint'), cursor.fetchone())
+    
     def test_add_remove_column_naive(self):
         Schema.objects.mass_create('a','b')
         
