@@ -72,7 +72,7 @@ class AbstractBaseSchema(models.Model):
         # the same internal name as an existing one. We assume if we
         # were 'initialised' then we were loaded from the database
         # with those values.
-        if self._initial_schema is None or 'force_insert' in kwargs:
+        if self._initial_schema in [None, ''] or 'force_insert' in kwargs:
             try:
                 self.__class__.objects.get(schema=self.schema)
             except self.__class__.DoesNotExist:

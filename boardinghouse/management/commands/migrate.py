@@ -62,6 +62,9 @@ except ImportError:
                     for schema in get_schema_model().objects.all():
                         schema.activate()
                         function(self, migration, database)
+                    # If this is django-reversion migrating, we want to apply
+                    # the migrations to the public schema as well.
+                    
                     self.record = record
                     get_template_schema().activate()
                     function(self, migration, database)
