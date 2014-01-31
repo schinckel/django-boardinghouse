@@ -4,12 +4,6 @@ from django.db import models
 
 from ..base import SharedSchemaModel, MultiSchemaManager
 
-User.add_to_class('schemata', models.ManyToManyField(
-    'boardinghouse.schema',
-    null=True, blank=True,
-    related_name='users',
-))
-
 class AwareModel(models.Model):
     name = models.CharField(max_length=10, unique=True)
     status = models.BooleanField(default=False)

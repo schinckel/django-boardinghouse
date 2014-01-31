@@ -17,6 +17,7 @@ else:
 import ensure_installation
 import signals
 
+UserModel = getattr(settings, 'AUTH_USER_MODEL', 'auth.user')
 
 class SchemaQuerySet(models.query.QuerySet):
     def bulk_create(self, *args, **kwargs):
@@ -59,7 +60,7 @@ class Schema(models.Model):
     is_active = models.BooleanField(default=True,
         help_text=_(u'Use this instead of deleting schemata.')
     )
-    users = models.ManyToManyField(settings.AUTH_USER_MODEL,
+    users = models.ManyToManyField(UserModel,
         null=True, blank=True, related_name='schemata',
         help_text=_(u'Which users may access data from this schema.')
     )
