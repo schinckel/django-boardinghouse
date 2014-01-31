@@ -60,7 +60,7 @@ if 'django.contrib.admin' in settings.INSTALLED_APPS:
 
         if not is_shared_model(obj):
             # I think we may have an attribute schema on the object?
-            instance.object_schema = obj._schema
+            instance.object_schema = obj._schema.schema
             
     
     # ...so we can add that bit to the url, and have links in the admin
