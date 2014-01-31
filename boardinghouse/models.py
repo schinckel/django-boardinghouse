@@ -168,3 +168,42 @@ def inject_schema_attribute(sender, instance, **kwargs):
         instance._schema = get_schema()
 
 models.signals.post_init.connect(inject_schema_attribute)
+
+if 'django.contrib.admin' in settings.INSTALLED_APPS:
+    # Patch LogEntry to store reference to Schema if applicable.
+    from django.contrib.admin.models import LogEntry
+    from django.db import models
+    from django.dispatch import receiver
+    
+    from .schema import is_shared_model
+    
+    LogEntry.add_to_class(
+        'object_schema',
+        # Can't use an FK, as we may get a not installed error at this
+        # point in time.
+        models.CharField(max_length=36, blank=True, null=True)
+        #models.ForeignKey(settings.SCHEMA_MODEL, blank=True, null=True)
+    )
+        
+    # Now, when we have an object that gets saved in the admin, we
+    # want to store the schema in the log, ...
+    @receiver(models.signals.pre_save, sender=LogEntry)
+    def update_object_schema(sender, instance, **kwargs):
+        obj = instance.get_edited_object()
+
+        if not is_shared_model(obj):
+            # I think we may have an attribute schema on the object?
+            instance.object_schema = obj._schema.schema
+            
+    
+    # ...so we can add that bit to the url, and have links in the admin
+    # that will automatically change the schema for us.
+    get_admin_url = LogEntry.get_admin_url
+    
+    def new_get_admin_url(self):
+        if self.object_schema:
+            return get_admin_url(self) + '?__schema=%s' % self.object_schema
+        
+        return get_admin_url(self)
+    
+    LogEntry.get_admin_url = new_get_admin_url

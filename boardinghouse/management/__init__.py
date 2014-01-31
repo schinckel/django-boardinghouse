@@ -1,17 +1,20 @@
 from django.db import models, connection
+from django.conf import settings
 from django.core.management.color import no_style
 
 from boardinghouse.schema import is_shared_model, get_schema_model
 
 def post_syncdb_duplicator(sender, **kwargs):
+    cursor = connection.cursor()
+    
     # See if any of the newly created models are schema-aware
     schema_aware_models = [
         m for m in kwargs['created_models'] 
         if not is_shared_model(m) 
         and kwargs['app'].__name__ == m.__module__
     ]
+    
     if schema_aware_models:
-        cursor = connection.cursor()
         for schema in get_schema_model().objects.all():
             schema.activate(cursor)
             tables = connection.introspection.table_names()
@@ -36,6 +39,17 @@ def post_syncdb_duplicator(sender, **kwargs):
                 for statement in output:
                     cursor.execute(statement)
                 tables.append(connection.introspection.table_name_converter(model._meta.db_table))
-        cursor.close()
+    
+    # Ensure we have the column in django_admin_log if applicable.
+    if 'django.contrib.admin' in settings.INSTALLED_APPS:
+        # We only want to do this _after_ a syncdb.
+        # Perhaps this belongs in there?
+        cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_name='django_admin_log' AND column_name='object_schema';")
+        if cursor.fetchone() != ('object_schema',):
+            cursor.execute("ALTER TABLE django_admin_log ADD COLUMN object_schema VARCHAR(36);")
+    
+    cursor.close()
+    
 
+# Do we need a different listener if we are under django 1.7?
 models.signals.post_syncdb.connect(post_syncdb_duplicator)

@@ -39,41 +39,6 @@ if 'south' in settings.INSTALLED_APPS:
 if 'django.contrib.admin' in settings.INSTALLED_APPS:
     if settings.INSTALLED_APPS.index('django.contrib.admin') < settings.INSTALLED_APPS.index('boardinghouse'):
         raise ImproperlyConfigured('You must have "django.contrib.admin" in INSTALLED_APPS after "boardinghouse".')
-    
-    # Patch LogEntry to store reference to Schema if applicable.
-    # We will assume that the LogEntry table does not exist.
-    from django.contrib.admin.models import LogEntry
-    from django.db import models
-    from django.dispatch import receiver
-        
-    LogEntry.add_to_class(
-        'object_schema', 
-        models.CharField(max_length=36, blank=True, null=True)
-    )
-    
-    # Now, when we have an object that gets saved in the admin, we
-    # want to store the schema in the log, ...
-    @receiver(models.signals.pre_save, sender=LogEntry)
-    def update_object_schema(sender, instance, **kwargs):
-        obj = instance.get_edited_object()
-        from schema import is_shared_model
-
-        if not is_shared_model(obj):
-            # I think we may have an attribute schema on the object?
-            instance.object_schema = obj._schema.schema
-            
-    
-    # ...so we can add that bit to the url, and have links in the admin
-    # that will automatically change the schema for us.
-    get_admin_url = LogEntry.get_admin_url
-    
-    def new_get_admin_url(self):
-        if self.object_schema:
-            return get_admin_url(self) + '?__schema=%s' % self.object_schema
-        
-        return get_admin_url(self)
-    
-    LogEntry.get_admin_url = new_get_admin_url
 
 # We need the user model to have an attribute 'schemata', which is a
 # relationship to Schema. However, this is hard to test, as when we have

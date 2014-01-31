@@ -56,3 +56,27 @@ class TestAdminAdditions(TestCase):
         
         user.schemata.add(*Schema.objects.all())
         self.assertEquals('a<br>b<br>c', schemata(user))
+    
+    def test_admin_log_includes_schema(self):
+        from django.contrib.admin.models import LogEntry, ADDITION
+        from django.contrib.contenttypes.models import ContentType
+        
+        Schema.objects.mass_create('a')
+        schema = Schema.objects.get(name='a')
+        schema.activate()
+        
+        aware = AwareModel.objects.create(name='foo')
+        user = User.objects.create_user(username='test', password='test')
+        
+        LogEntry.objects.log_action(
+            user_id=user.pk,
+            content_type_id=ContentType.objects.get_for_model(aware).pk,
+            object_id=aware.pk,
+            object_repr=unicode(aware),
+            change_message='test',
+            action_flag=ADDITION,
+        )
+        
+        entry = LogEntry.objects.get()
+        
+        self.assertEquals(schema.schema, entry.object_schema)
