@@ -38,7 +38,7 @@ def get_inline_instances(self, request, obj=None):
     """
     schema = get_schema()
     return [
-        inline for inline in self.inlines
+        inline(self.model, self.admin_site) for inline in self.inlines
         if schema or is_shared_model(inline.model)
     ]
 
