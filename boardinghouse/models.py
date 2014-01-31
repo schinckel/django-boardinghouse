@@ -35,7 +35,7 @@ schema_name_validator = RegexValidator(
 )
 
 
-class AbstractBaseSchema(models.Model):
+class Schema(models.Model):
     """
     The Schema model provides an abstraction for a Postgres schema.
     
@@ -49,6 +49,13 @@ class AbstractBaseSchema(models.Model):
         validators=[schema_name_validator],
         help_text=_(u'The internal name of the schema. May not be changed after creation.'),
     )
+    name = models.CharField(max_length=128, unique=True, 
+        help_text=_(u'The display name of the schema.')
+    )
+    
+    is_active = models.BooleanField(default=True,
+        help_text=_(u'Use this instead of deleting schemata.')
+    )
     
     if django.VERSION < (1,7):
         objects = PassThroughManager.for_queryset_class(SchemaQuerySet)()
@@ -56,14 +63,15 @@ class AbstractBaseSchema(models.Model):
         objects = SchemaQuerySet.as_manager()
     
     class Meta:
-        abstract = True
+        app_label = 'boardinghouse'
+        verbose_name_plural = 'schemata'
     
     def __init__(self, *args, **kwargs):
-        super(AbstractBaseSchema, self).__init__(*args, **kwargs)
+        super(Schema, self).__init__(*args, **kwargs)
         self._initial_schema = self.schema
 
     def __unicode__(self):
-        return self.schema
+        return u'%s (%s)' % (self.name, self.schema)
     
     def save(self, *args, **kwargs):
         self._meta.get_field_by_name('schema')[0].run_validators(self.schema)
@@ -84,7 +92,7 @@ class AbstractBaseSchema(models.Model):
 
         self.create_schema()
         
-        return super(AbstractBaseSchema, self).save(*args, **kwargs)
+        return super(Schema, self).save(*args, **kwargs)
         
     def create_schema(self, cursor=None):
         if not cursor:
@@ -114,19 +122,6 @@ class AbstractBaseSchema(models.Model):
         signals.schema_pre_activate.send(sender=self, schema=None)
         cursor.execute('SET search_path TO "$user",public')
         signals.schema_post_activate.send(sender=self, schema=None)
-
-if settings.SCHEMA_MODEL.lower() == 'boardinghouse.schema':
-    class Schema(AbstractBaseSchema):
-        name = models.CharField(max_length=128, unique=True, help_text=_(u'The display name of the schema.'))
-    
-        # tracker = FieldTracker(fields=['schema'])
-        
-        class Meta:
-            app_label = 'boardinghouse'
-            verbose_name_plural = 'schemata'
-    
-        def __unicode__(self):
-            return self.name
     
 
 # This is a bit of fancy trickery to stick the property _is_shared_model

@@ -1,6 +1,3 @@
-# The name of the model that shall be used for storing the schema.
-SCHEMA_MODEL = 'boardinghouse.schema'
-
 SHARED_MODELS = [
     'auth.user',
     'auth.permission',

@@ -6,19 +6,18 @@ from .schema import get_schema, is_shared_model, get_schema_model
 # We only want to install our SchemaAdmin if our schema model is the
 # one that is used: otherwise it's up to the project developer to 
 # add it to the admin, if they want it.
-if settings.SCHEMA_MODEL.lower() == 'boardinghouse.schema':
-    from .models import Schema
+from .models import Schema
     
-    class SchemaAdmin(admin.ModelAdmin):
-        def get_readonly_fields(self, request, obj=None):
-            """
-            Prevents `schema` from being editable once created.
-            """
-            if obj is not None:
-                return ('schema',)
-            return ()
+class SchemaAdmin(admin.ModelAdmin):
+    def get_readonly_fields(self, request, obj=None):
+        """
+        Prevents `schema` from being editable once created.
+        """
+        if obj is not None:
+            return ('schema',)
+        return ()
 
-    admin.site.register(Schema, SchemaAdmin)
+admin.site.register(Schema, SchemaAdmin)
 
 def schemata(obj):
     """

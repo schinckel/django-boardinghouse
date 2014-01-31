@@ -150,7 +150,7 @@ class TestSyncDB(TestCase):
         Doing a syncdb will always fix this.
         """
         cursor = connection.cursor()
-        cursor.execute("INSERT INTO boardinghouse_schema (name, schema) VALUES ('a', 'a')")
+        cursor.execute("INSERT INTO boardinghouse_schema (name, schema, is_active) VALUES ('a', 'a', true)")
         cursor.execute(SCHEMA_QUERY, ['a'])
         self.assertEquals(None, cursor.fetchone())
         

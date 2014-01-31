@@ -5,7 +5,7 @@ from django.db import models
 from ..base import SharedSchemaModel, MultiSchemaManager
 
 User.add_to_class('schemata', models.ManyToManyField(
-    settings.SCHEMA_MODEL,
+    'boardinghouse.schema',
     null=True, blank=True,
     related_name='users',
 ))

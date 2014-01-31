@@ -18,7 +18,7 @@ class TemplateSchemaActivation(Forbidden):
         )
 
 def get_schema_model():
-    return models.get_model(*settings.SCHEMA_MODEL.split('.'))
+    return models.get_model('boardinghouse','schema')
 
 def get_template_schema():
     return get_schema_model()(schema="__template__")
