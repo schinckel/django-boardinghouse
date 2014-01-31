@@ -53,7 +53,7 @@ except ImportError:
         from south.v2 import DataMigration
         
         def wrap(function):
-            def apply_to_all(self, migration, database):
+            def inner(self, migration, database):
                 if isinstance(migration.migration_instance(), DataMigration):
                     # Prevent the migration being recorded until we have
                     # done all schemata.
@@ -70,7 +70,7 @@ except ImportError:
                     function(self, migration, database)
                 else:
                     function(self, migration, database)
-            return apply_to_all
+            return inner
         
         Migrator.run = wrap(Migrator.run)
         

@@ -31,7 +31,7 @@ else:
             # function normally.
             if is_shared_table(table):
                 return function(self, table, *args, **kwargs)
-        
+            
             # If we are already in a schema loop, like when one wrapped method
             # calls another one, we don't want to loop again in the inside
             # method (that's the one we are in now).

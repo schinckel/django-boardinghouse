@@ -52,7 +52,6 @@ class Schema(models.Model):
     name = models.CharField(max_length=128, unique=True, 
         help_text=_(u'The display name of the schema.')
     )
-    
     is_active = models.BooleanField(default=True,
         help_text=_(u'Use this instead of deleting schemata.')
     )
