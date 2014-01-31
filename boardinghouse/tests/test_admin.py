@@ -79,4 +79,4 @@ class TestAdminAdditions(TestCase):
         
         entry = LogEntry.objects.get()
         
-        self.assertEquals(schema.schema, entry.object_schema)
+        self.assertEquals(schema.schema, entry.object_schema.pk)

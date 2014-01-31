@@ -176,8 +176,8 @@ if 'django.contrib.admin' in settings.INSTALLED_APPS:
         'object_schema',
         # Can't use an FK, as we may get a not installed error at this
         # point in time.
-        models.CharField(max_length=36, blank=True, null=True)
-        #models.ForeignKey(settings.SCHEMA_MODEL, blank=True, null=True)
+        # models.CharField(max_length=36, blank=True, null=True)
+        models.ForeignKey('boardinghouse.schema', blank=True, null=True)
     )
         
     # Now, when we have an object that gets saved in the admin, we
@@ -188,7 +188,7 @@ if 'django.contrib.admin' in settings.INSTALLED_APPS:
 
         if not is_shared_model(obj):
             # I think we may have an attribute schema on the object?
-            instance.object_schema = obj._schema.schema
+            instance.object_schema_id = obj._schema.schema
             
     
     # ...so we can add that bit to the url, and have links in the admin
@@ -197,7 +197,7 @@ if 'django.contrib.admin' in settings.INSTALLED_APPS:
     
     def new_get_admin_url(self):
         if self.object_schema:
-            return get_admin_url(self) + '?__schema=%s' % self.object_schema
+            return get_admin_url(self) + '?__schema=%s' % self.object_schema_id
         
         return get_admin_url(self)
     
