@@ -5,8 +5,6 @@ def schemata(request):
     """
     A Django context_processor that provides access to the
     logged-in user's visible schemata, and selected schema.
-    
-    This assumes you have an attribute ``schemata`` on ``request.user``.
     """
     if request.user.is_anonymous():
         return {}

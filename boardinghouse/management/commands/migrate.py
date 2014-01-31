@@ -41,8 +41,6 @@ Command = None
 try:
     from django.core.management.commands.migrate import Command
 except ImportError:
-    # South migrations that use the db api should all work. This should
-    # be the case for 
     try:
         from south.management.commands.migrate import Command
     except ImportError:

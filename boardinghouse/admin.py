@@ -16,6 +16,8 @@ class SchemaAdmin(admin.ModelAdmin):
         if obj is not None:
             return ('schema',)
         return ()
+    
+    filter_horizontal = ('users',)
 
 admin.site.register(Schema, SchemaAdmin)
 

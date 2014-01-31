@@ -47,13 +47,21 @@ class Schema(models.Model):
     
     schema = models.CharField(max_length=36, primary_key=True, unique=True,
         validators=[schema_name_validator],
-        help_text=_(u'The internal name of the schema. May not be changed after creation.'),
+        help_text='<br>'.join([
+            u'The internal name of the schema.',
+            unicode(schema_name_validator.message),
+            u'May not be changed after creation.',
+        ]),
     )
     name = models.CharField(max_length=128, unique=True, 
         help_text=_(u'The display name of the schema.')
     )
     is_active = models.BooleanField(default=True,
         help_text=_(u'Use this instead of deleting schemata.')
+    )
+    users = models.ManyToManyField(settings.AUTH_USER_MODEL,
+        null=True, blank=True, related_name='schemata',
+        help_text=_(u'Which users may access data from this schema.')
     )
     
     if django.VERSION < (1,7):

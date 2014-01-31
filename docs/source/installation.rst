@@ -40,11 +40,6 @@ If you are using South, add the following to your settings::
         'boardinghouse.backends.postgres': 'boardinghouse.backends.south_backend',
     }
 
-You will probably want to modify your ``User`` model so it contains a relationship to :ref:`settings.SCHEMA_MODEL`. The type of relationship depends on your business logic::
-
-  class User(AbstractBaseUser):
-      schema = models.ForeignKey(settings.SCHEMA_MODEL)
-
 ``django-boardinghouse`` automatically installs a class to your middleware (see :ref:`middleware`), and a context processor (see :ref:`template_variables`). If you have the admin installed, it adds a column to the admin :class:`django.contrib.admin.models.LogEntry` class, to store the object schema when applicable.
 
 It's probably much easier to start using ``django-boardinghouse`` right from the beginning of a project: trying to split an existing database may be possible, but is not supported at this stage.
@@ -66,14 +61,6 @@ The default shared models can be seen in:
 .. autodata:: boardinghouse.settings.SHARED_MODELS
   :noindex:
 
-.. _settings.SCHEMA_MODEL:
-
-settings.SCHEMA_MODEL
----------------------
-
-The default schema model is :class:`boardinghouse.models.Schema`, you can override this by using ``settings.SCHEMA_MODEL``. Use the ``app_label.model_name`` syntax that you see in django custom user models.
-
-When you are creating
 
 Management commands
 -------------------
