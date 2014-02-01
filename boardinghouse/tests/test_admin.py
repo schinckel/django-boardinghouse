@@ -79,4 +79,30 @@ class TestAdminAdditions(TestCase):
         
         entry = LogEntry.objects.get()
         
-        self.assertEquals(schema.schema, entry.object_schema.pk)
+        self.assertEquals('a', entry.object_schema.pk)
+        
+        self.assertEquals('?__schema=a', entry.get_admin_url()[-11:])
+    
+    def test_admin_log_naive_object_no_schema(self):
+        from django.contrib.admin.models import LogEntry, ADDITION
+        from django.contrib.contenttypes.models import ContentType
+        
+        Schema.objects.mass_create('a')
+        schema = Schema.objects.get(name='a')
+        schema.activate()
+        
+        naive = NaiveModel.objects.create(name='foo')
+        user = User.objects.create_user(username='test', password='test')
+        
+        LogEntry.objects.log_action(
+            user_id=user.pk,
+            content_type_id=ContentType.objects.get_for_model(naive).pk,
+            object_id=naive.pk,
+            object_repr=unicode(naive),
+            change_message='test',
+            action_flag=ADDITION,
+        )
+        
+        entry = LogEntry.objects.get()
+        
+        self.assertEquals(None, entry.object_schema_id)
