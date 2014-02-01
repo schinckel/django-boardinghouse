@@ -9,7 +9,7 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
 DB_ENGINES = ['boardinghouse.backends.postgres']
-BOARDINGHOUSE_MIDDLEWARE = 'boardinghouse.middleware.SchemaMiddleware'
+BOARDINGHOUSE_MIDDLEWARE = 'boardinghouse.middleware.SchemaChangeMiddleware'
 BOARDINGHOUSE_CONTEXT_PROCESSOR = 'boardinghouse.context_processors.schemata'
 
 for name in settings.DATABASES:
@@ -22,7 +22,7 @@ for name in settings.DATABASES:
         ))
 
 if BOARDINGHOUSE_MIDDLEWARE not in settings.MIDDLEWARE_CLASSES:
-    settings.MIDDLEWARE_CLASSES += (BOARDINGHOUSE_MIDDLEWARE,)
+    settings.MIDDLEWARE_CLASSES += (BOARDINGHOUSE_MIDDLEWARE, 'boardinghouse.middleware.SchemaActivationMiddleware')
 # Should it be at the top? Is there anything it must be before?
 # Anything it needs to be after? - authentication?
 

@@ -1,6 +1,8 @@
 TODO
 ====
 
+* Add in a hook when a user is about to activate a schema, so we can have a listener that may reject it.
+
 * Cache schema queryset so we don't have to load it each request. We would need to invalidate this cache when a new schema is added.
 
 * Cache request.user.schemata queryset (as above).

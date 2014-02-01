@@ -9,10 +9,11 @@ from django.shortcuts import redirect
 from django.utils.translation import ugettext_lazy as _
 
 from .schema import (
-    TemplateSchemaActivation,
+    TemplateSchemaActivation, Forbidden,
     get_schema_model,
-    deactivate_schema,
+    activate_schema, deactivate_schema,
 )
+from .signals import session_requesting_schema_change
 
 logger = logging.getLogger('boardinghouse.middleware')
 
@@ -21,38 +22,35 @@ def change_schema(request, schema):
     Change the schema for the current request's session.
     """
     session = request.session
+    user = request.user
     
-    # Ensure this user may view this schema.
+    if user.is_anonymous():
+        session.pop('schema', None)
+        raise Forbidden()
     
+    if isinstance(schema, basestring):
+        if schema == '__template__':
+            raise TemplateSchemaActivation()
+
+        Schema = get_schema_model()
+        try:
+            schema = Schema.objects.get(schema=schema)
+        except Schema.DoesNotExist:
+            raise Forbidden()
+    
+    if schema.schema == '__template__':
+        raise TemplateSchemaActivation()
+    
+    if not (user.is_superuser or user.is_staff):
+        if schema not in user.schemata.all():
+            raise Forbidden()
+    
+    # Allow exceptions to prevent this occurring.
+    session_requesting_schema_change.send(sender=request, schema=schema)
     session['schema'] = schema.schema
     
-    
-def activate_schema(available_schemata, session):
-    """
-    Activate the session's schema.
-    
-    If the session's schema is set to __template__, then we will
-    raise a :class:`TemplateSchemaActivation` exception.
-    """
-    if available_schemata.count() == 1:
-        schema = available_schemata.get()
-        session['schema'] = schema.schema
-        schema.activate()
-        return True
-    
-    if session.get('schema', None):
-        if session['schema'] == '__template__':
-            session.pop('schema', None)
-            raise TemplateSchemaActivation()
-        try:
-            available_schemata.get(pk=session['schema']).activate()
-        except ObjectDoesNotExist:
-            logger.warning(
-                _(u'Unable to find Schema matching query: %s') % session['schema']
-            )
-            session.pop('schema')
 
-class SchemaMiddleware:
+class SchemaChangeMiddleware:
     """
     Middleware to set the postgres schema for the current request.
     
@@ -98,37 +96,31 @@ class SchemaMiddleware:
     
     """
     def process_request(self, request):
-        Schema = get_schema_model()
-        deactivate_schema()
-        available_schemata = Schema.objects.none()
-        if request.user.is_anonymous():
-            request.session['schema'] = None
-            return None
-        if request.user.is_staff or request.user.is_superuser:
-            available_schemata = Schema.objects
-        else:
-            available_schemata = request.user.schemata
-        
+        FORBIDDEN = HttpResponseForbidden(_('You may not select that schema'))
         # Ways of changing the schema.
         # 1. URL /__change_schema__/<name>/
         # This will return a whole page.
+        # We don't need to activate, that happens on the next request.
         if request.path.startswith('/__change_schema__/'):
-            request.session['schema'] = request.path.split('/')[2]
+            schema = request.path.split('/')[2]
             try:
-                activate_schema(available_schemata, request.session)
-            except TemplateSchemaActivation:
-                return HttpResponseForbidden(_('You may not select that schema'))
+                change_schema(request, schema)
+            except Forbidden:
+                return FORBIDDEN
             
-            if request.session.get('schema'):
-                response = _('Schema changed to %s') % request.session['schema']
-            else:
-                response = _("No schema found: schema deselected.")
-            return HttpResponse(response)
+            return HttpResponse(
+                _('Schema changed to %s') % request.session['schema']
+            )
         # 2. GET querystring ...?__schema=<name>
         # This will change the query, and then redirect to the page
         # without the schema name included.
         elif request.GET.get('__schema', None) is not None:
-            request.session['schema'] = request.GET['__schema']
+            schema = request.GET['__schema']
+            try:
+                change_schema(request, schema)
+            except Forbidden:
+                return FORBIDDEN
+            
             if request.method == "GET":
                 data = request.GET.copy()
                 data.pop('__schema')
@@ -137,13 +129,29 @@ class SchemaMiddleware:
                 return redirect(request.path)
         # 3. Header "X-Change-Schema: <name>"
         elif 'HTTP_X_CHANGE_SCHEMA' in request.META:
-            request.session['schema'] = request.META['HTTP_X_CHANGE_SCHEMA']
+            schema = request.META['HTTP_X_CHANGE_SCHEMA']
+            try:
+                change_schema(request, schema)
+            except Forbidden:
+                return FORBIDDEN
+        elif request.user.schemata.count() == 1:
+            change_schema(request, request.user.schemata.get())
         
-        try:
-            activate_schema(available_schemata, request.session)
-        except TemplateSchemaActivation:
-            return HttpResponseForbidden(_('You may not select that schema'))
 
+
+class SchemaActivationMiddleware:
+    """
+    Middleware that actually activates the schema from the session.
+    """
+    def process_request(self, request):
+        deactivate_schema()
+        
+        if 'schema' in request.session:
+            try:
+                activate_schema(request.session['schema'])
+            except TemplateSchemaActivation:
+                request.session.pop('schema', None)
+                return HttpResponseForbidden(_('You may not select that schema'))
 
     def process_exception(self, request, exception):
         """

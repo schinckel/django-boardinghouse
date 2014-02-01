@@ -22,7 +22,7 @@ class TestMiddleware(TestCase):
         second = Schema.objects.create(name='second', schema='second')
         
         resp = self.client.get('/', HTTP_X_CHANGE_SCHEMA='first')
-        self.assertEquals('None', resp.content)
+        self.assertEquals(403, resp.status_code)
         
     
     def test_invalid_schema(self):
@@ -37,26 +37,24 @@ class TestMiddleware(TestCase):
         self.client.login(username='su', password='su')
         
         resp = self.client.get('/', HTTP_X_CHANGE_SCHEMA='third')
-        self.assertEquals('None', resp.content)
+        self.assertEquals(403, resp.status_code)
         
         resp = self.client.get('/', HTTP_X_CHANGE_SCHEMA='second')
         self.assertEquals('second', resp.content)
         
-        self.client.get('/__change_schema__/third/')
-        resp = self.client.get('/')
-        self.assertEquals('None', resp.content)
-    
+        resp = self.client.get('/__change_schema__/third/')
+        self.assertEquals(403, resp.status_code)
     
     def test_only_one_available_schema(self):
         first = Schema.objects.create(name='first', schema='first')
         self.assertEquals(1, Schema.objects.count())
         
-        user = User.objects.create_superuser(
-            username="su",
-            password="su",
-            email="su@example.com"
+        user = User.objects.create_user(
+            username="test",
+            password="test",
         )
-        self.client.login(username='su', password='su')
+        user.schemata.add(first)
+        self.client.login(username='test', password='test')
         resp = self.client.get('/')
         self.assertEquals('first', resp.content)
 
@@ -91,7 +89,7 @@ class TestMiddleware(TestCase):
         user = User.objects.create_user(**CREDENTIALS)
         self.client.login(**CREDENTIALS)
         resp = self.client.get('/', {'__schema': 'a'}, follow=True)
-        self.assertEquals('None', resp.content)
+        self.assertEquals(403, resp.status_code)
         
         user.schemata.add(Schema.objects.get(schema='a'))
         resp = self.client.get('/')
@@ -109,6 +107,7 @@ class TestMiddleware(TestCase):
         user = User.objects.create_user(**CREDENTIALS)
         self.client.login(**CREDENTIALS)
         resp = self.client.get('/')
+        self.assertEquals(200, resp.status_code)
         self.assertEquals('None', resp.content)
         
         resp = self.client.get('/aware/')

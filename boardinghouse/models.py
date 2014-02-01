@@ -210,3 +210,7 @@ if 'django.contrib.admin' in settings.INSTALLED_APPS:
         return get_admin_url(self)
     
     LogEntry.get_admin_url = new_get_admin_url
+
+if 'django.contrib.auth' in settings.INSTALLED_APPS:
+    from django.contrib.auth.models import AnonymousUser
+    AnonymousUser.schemata = Schema.objects.none()
