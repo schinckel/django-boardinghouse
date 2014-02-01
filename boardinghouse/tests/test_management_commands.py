@@ -1,7 +1,9 @@
-import unittest
+import json
 import sys
-from cStringIO import StringIO
+import unittest
+
 from contextlib import contextmanager
+from cStringIO import StringIO
 
 import django
 from django.core.management import call_command
@@ -120,10 +122,19 @@ class TestDumpData(TestCase):
         Schema.objects.mass_create('a', 'b')
         Schema.objects.get(schema='a').activate()
         AwareModel.objects.create(name='foo')
+        
         with capture(call_command, 'dumpdata', 'boardinghouse', schema='a') as output:
-            self.assertIn('{"status": false, "name": "foo"}', output)
+            data = json.loads(output)
+            self.assertEquals(3, len(data))
+            self.assertEquals('boardinghouse.schema', data[0]['model'])
+            self.assertEquals('boardinghouse.schema', data[1]['model'])
+            self.assertEquals({"status": False, "name": "foo"}, data[2]['fields'])
+            
         with capture(call_command, 'dumpdata', 'boardinghouse', schema='b') as output:
-            self.assertNotIn('{"status": false, "name": "foo"}', output)
+            data = json.loads(output)
+            self.assertEquals(2, len(data))
+            self.assertEquals('boardinghouse.schema', data[0]['model'])
+            self.assertEquals('boardinghouse.schema', data[1]['model'])
     
     @unittest.skipIf(django.VERSION < (1,5), "CommandError used here")
     def test_dumpdata_on_aware_model_requires_schema(self):
