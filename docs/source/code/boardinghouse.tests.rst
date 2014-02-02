@@ -92,6 +92,14 @@ boardinghouse.tests.test_template_tag module
     :undoc-members:
     :show-inheritance:
 
+boardinghouse.tests.test_utility_functions module
+-------------------------------------------------
+
+.. automodule:: boardinghouse.tests.test_utility_functions
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 boardinghouse.tests.urls module
 -------------------------------
 

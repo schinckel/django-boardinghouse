@@ -33,6 +33,9 @@ if BOARDINGHOUSE_CONTEXT_PROCESSOR not in settings.TEMPLATE_CONTEXT_PROCESSORS:
     settings.TEMPLATE_CONTEXT_PROCESSORS += (BOARDINGHOUSE_CONTEXT_PROCESSOR,)
 
 if 'south' in settings.INSTALLED_APPS:
+    # I'm not convinced this is the right place to do this.
+    from south.models import MigrationHistory
+    MigrationHistory._is_shared_model = True
     if settings.INSTALLED_APPS.index('south') > settings.INSTALLED_APPS.index('boardinghouse'):
         raise ImproperlyConfigured('You must have "south" in INSTALLED_APPS before "boardinghouse".')
 

@@ -22,7 +22,7 @@ def inject_app_defaults():
         from django.core.exceptions import ImproperlyConfigured
     except ImportError:
         return
-
+    
     for key in dir(app_settings):
         if key.isupper():
             value = getattr(app_settings, key)

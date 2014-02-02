@@ -30,3 +30,21 @@ class SelfReferentialModel(models.Model):
     
     class Meta:
         app_label = 'boardinghouse'
+
+
+# If you have two models that _only_ have foreign keys, and they happen
+# to include references to one another, then you could get an infinite
+# recursion. However, I can't see that this model structure makes sense.
+class CoReferentialModelA(models.Model):
+    name = models.CharField(max_length=10, unique=True)
+    other = models.ForeignKey('boardinghouse.CoReferentialModelB', related_name='model_a', null=True, blank=True)
+    
+    class Meta:
+        app_label = 'boardinghouse'
+
+class CoReferentialModelB(models.Model):
+    name = models.CharField(max_length=10, unique=True)
+    other = models.ForeignKey('boardinghouse.CoReferentialModelA', related_name='model_b', null=True, blank=True)
+    
+    class Meta:
+        app_label = 'boardinghouse'

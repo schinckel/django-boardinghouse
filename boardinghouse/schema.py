@@ -68,11 +68,24 @@ def deactivate_schema(schema=None):
     """
     get_template_schema().deactivate()
 
-def _auto_or_fk_to_shared(field):
-    if field.primary_key:
-        return True
-    if field.rel:
-        return is_shared_model(field.rel.get_related_field().model)
+#: These models are required to be shared by the system.
+REQUIRED_SHARED_MODELS = [
+    'auth.user',
+    'auth.permission',
+    'auth.group',
+    'sites.site',
+    'sessions.session',
+    'contenttypes.contenttype',
+    'admin.logentry',
+    'south.migrationhistory',
+    'migrations.migration',
+]
+
+def _is_join_model(model):
+    return all([
+        (field.primary_key or field.rel)
+        for field in model._meta.fields
+    ])
 
 def is_shared_model(model):
     """
@@ -93,17 +106,20 @@ def is_shared_model(model):
             model._meta.model_name
         )
     
+    if app_model in REQUIRED_SHARED_MODELS:
+        return True
+    
     if app_model in settings.SHARED_MODELS:
         return True
     
-    # if all fields are either autofield or foreignkey, and all fk fields
-    # point to shared models, then we must be a shared model.
-    # This is only for through-models, basically.
-    if all([
-        _auto_or_fk_to_shared(field) for field in model._meta.fields
-        if not (field.rel and field.rel.to == model)
-    ]):
-        return True
+    # if all fields are auto or fk, then we are a join model,
+    # and if all related objects are shared, then we must
+    # also be shared.
+    if _is_join_model(model):
+        return all([
+            is_shared_model(field.rel.get_related_field().model)
+            for field in model._meta.fields if field.rel
+        ])
     
     return False
 

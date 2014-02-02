@@ -50,16 +50,18 @@ Usage
 Shared Models
 -------------
 
+Some models are required by the system to be shared: these can be seen in:
+
+.. autodata:: boardinghouse.schema.REQUIRED_SHARED_MODELS
+  :noindex:
+
 If a model class contains the attribute ``_is_shared_model`` with a truthy value, then it will be deemed to be a shared model, and will be installed into the default (public) schema.
 
-If a model is listed in the :const:`settings.SHARED_MODELS` list, then it is deemed to be a shared model.
+If a model is listed in the :const:`settings.SHARED_MODELS` list, then it is deemed to be a shared model. This is how you can define that a 3rd-party application's models should be shared.
+
+If a model contains only foreign keys to other models (and possibly a primary key), then this model will be shared if all linked-to models are shared (or any of the above conditions are true).
 
 All other models are deemed to be schema-specific models, and will be put into each schema that is created.
-
-The default shared models can be seen in:
-
-.. autodata:: boardinghouse.settings.SHARED_MODELS
-  :noindex:
 
 
 Management commands

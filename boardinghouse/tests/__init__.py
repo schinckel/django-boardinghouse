@@ -10,3 +10,4 @@ from test_object_equality import *
 from test_schema_creation import *
 from test_settings import *
 from test_template_tag import *
+from test_utility_functions import *
