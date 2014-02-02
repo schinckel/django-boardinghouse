@@ -73,7 +73,7 @@ def _auto_or_fk_to_shared(field):
         return True
     if field.rel:
         return is_shared_model(field.rel.get_related_field().model)
-    
+
 def is_shared_model(model):
     """
     Is the model (or instance of a model) one that should be in the
@@ -97,9 +97,11 @@ def is_shared_model(model):
         return True
     
     # if all fields are either autofield or foreignkey, and all fk fields
-    # point to shared models, then we must be a shored model.
+    # point to shared models, then we must be a shared model.
+    # This is only for through-models, basically.
     if all([
         _auto_or_fk_to_shared(field) for field in model._meta.fields
+        if not (field.rel and field.rel.to == model)
     ]):
         return True
     
