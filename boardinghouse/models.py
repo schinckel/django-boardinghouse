@@ -29,10 +29,11 @@ class SchemaQuerySet(models.query.QuerySet):
     def mass_create(self, *args):
         self.bulk_create([Schema(name=x, schema=x) for x in args])
 
+SCHEMA_NAME_VALIDATOR_MESSAGE = u'May only contain lowercase letters and underscores. Must start with a letter.'
 
 schema_name_validator = RegexValidator(
     regex='^[a-z][a-z_]*$',
-    message=_(u'May only contain lowercase letters and underscores. Must start with a letter.')
+    message=_(SCHEMA_NAME_VALIDATOR_MESSAGE)
 )
 
 
@@ -50,7 +51,7 @@ class Schema(models.Model):
         validators=[schema_name_validator],
         help_text='<br>'.join([
             u'The internal name of the schema.',
-            unicode(schema_name_validator.message),
+            SCHEMA_NAME_VALIDATOR_MESSAGE,
             u'May not be changed after creation.',
         ]),
     )
@@ -103,11 +104,17 @@ class Schema(models.Model):
         return super(Schema, self).save(*args, **kwargs)
         
     def create_schema(self, cursor=None):
+        # If we weren't passed in a cursor, get one and call ourselves.
         if not cursor:
             cursor = connection.cursor()
             self.create_schema(cursor)
             return cursor.close()
+        
+        # Look and see if this schema already exists. 
         cursor.execute("SELECT schema_name FROM information_schema.schemata WHERE schema_name = %s", [self.schema])
+        # If it doesn't create it. This still actually works even if we
+        # are creating the template schema, even though I thought it might
+        # fail.
         if not cursor.fetchone():
             cursor.execute("SELECT clone_schema('__template__', %s);", [self.schema])
             transaction.commit_unless_managed()

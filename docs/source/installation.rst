@@ -55,7 +55,7 @@ Some models are required by the system to be shared: these can be seen in:
 .. autodata:: boardinghouse.schema.REQUIRED_SHARED_MODELS
   :noindex:
 
-If a model class contains the attribute ``_is_shared_model`` with a truthy value, then it will be deemed to be a shared model, and will be installed into the default (public) schema.
+Other shared classes must subclass :class:`boardinghouse.base.SharedSchemaModel`, or mixin :class:`boardinghouse.base.SharedSchemaMixin`. This is required because the migration creation code will not pick up the ``_is_shared_model`` attribute, and will attempt to create the table in all schemata.
 
 If a model is listed in the :const:`settings.SHARED_MODELS` list, then it is deemed to be a shared model. This is how you can define that a 3rd-party application's models should be shared.
 
