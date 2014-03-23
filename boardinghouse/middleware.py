@@ -24,6 +24,10 @@ def change_schema(request, schema):
     session = request.session
     user = request.user
     
+    if not schema:
+        session.pop('schema', None)
+        return
+    
     if user.is_anonymous():
         session.pop('schema', None)
         raise Forbidden()
