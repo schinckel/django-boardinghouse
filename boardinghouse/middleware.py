@@ -42,6 +42,8 @@ def change_schema(request, schema):
         raise TemplateSchemaActivation()
     
     if not (user.is_superuser or user.is_staff):
+        if not schema.is_active:
+            raise Forbidden()
         if schema not in user.schemata.all():
             raise Forbidden()
     

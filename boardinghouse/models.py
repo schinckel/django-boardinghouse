@@ -29,10 +29,10 @@ class SchemaQuerySet(models.query.QuerySet):
     def mass_create(self, *args):
         self.bulk_create([Schema(name=x, schema=x) for x in args])
 
-SCHEMA_NAME_VALIDATOR_MESSAGE = u'May only contain lowercase letters and underscores. Must start with a letter.'
+SCHEMA_NAME_VALIDATOR_MESSAGE = u'May only contain lowercase letters, digits and underscores. Must start with a letter.'
 
 schema_name_validator = RegexValidator(
-    regex='^[a-z][a-z_]*$',
+    regex='^[a-z][a-z0-9_]*$',
     message=_(SCHEMA_NAME_VALIDATOR_MESSAGE)
 )
 

@@ -87,7 +87,7 @@ class TestSchemaClassValidationLogic(TestCase):
         self.assertRaises(forms.ValidationError, Schema.objects.create, schema='_foo', name="1")
         self.assertRaises(forms.ValidationError, Schema.objects.create, schema='-foo', name="2")
         self.assertRaises(forms.ValidationError, Schema.objects.create, schema='a'*37, name="3")
-        self.assertRaises(forms.ValidationError, Schema.objects.create, schema='foo1', name="4")
+        self.assertRaises(forms.ValidationError, Schema.objects.create, schema='foo-1', name="4")
         self.assertRaises(forms.ValidationError, Schema.objects.create, schema='Foo', name="5")
     
     def test_schema_validation_allows_valid_chars(self):

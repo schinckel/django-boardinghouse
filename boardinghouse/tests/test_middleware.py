@@ -9,6 +9,11 @@ CREDENTIALS = {
     'username': 'test',
     'password': 'test'
 }
+SU_CREDENTIALS = {
+    'username': 'su',
+    'password': 'su',
+    'email': 'su@example.com',
+}
 
 class TestMiddleware(TestCase):
     def test_view_without_schema_aware_models_works_without_activation(self):
@@ -125,7 +130,25 @@ class TestMiddleware(TestCase):
         
         resp = self.client.get('/', HTTP_X_CHANGE_SCHEMA='__template__')
         self.assertEquals(403, resp.status_code)
-                
+    
+    def test_attempt_to_activate_inactive_schema(self):
+        schema = Schema.objects.create(schema='a', name='a', is_active=False)
+        user = User.objects.create_user(**CREDENTIALS)
+        user.schemata.add(schema)
+        
+        self.client.login(**CREDENTIALS)
+        resp = self.client.get('/', {'__schema': 'a'}, follow=True)
+        self.assertEquals(403, resp.status_code, 'Attempt to activate inactive schema succeeded!')
+
+    def test_superuser_allowed_to_activate_inactive_schema(self):
+        schema = Schema.objects.create(schema='a', name='a', is_active=False)
+        superuser = User.objects.create_superuser(email='su@example.com', **CREDENTIALS)
+        superuser.schemata.add(schema)
+        
+        self.client.login(**CREDENTIALS)
+        resp = self.client.get('/', {'__schema': 'a'}, follow=True)
+        self.assertEquals(200, resp.status_code, 'Superuser attempt to activate inactive schema failed!')
+        
 class TestContextProcessor(TestCase):
     def setUp(self):
         Schema.objects.mass_create('a','b','c')
