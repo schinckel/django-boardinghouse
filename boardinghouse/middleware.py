@@ -13,7 +13,7 @@ from .schema import (
     get_schema_model,
     activate_schema, deactivate_schema,
 )
-from .signals import session_requesting_schema_change
+from .signals import session_requesting_schema_change, session_schema_changed
 
 logger = logging.getLogger('boardinghouse.middleware')
 
@@ -24,36 +24,76 @@ def change_schema(request, schema):
     session = request.session
     user = request.user
     
+    # Allow clearing out the current schema.
     if not schema:
         session.pop('schema', None)
         return
     
+    # Anonymous users may not select a schema.
+    # Should this be selectable?
     if user.is_anonymous():
         session.pop('schema', None)
         raise Forbidden()
     
+    # We actually want the schema name, so we can see if we
+    # don't actually need to change the schema at all (if the
+    # session is already set, then we assume that it's all good)
     if isinstance(schema, basestring):
-        if schema == '__template__':
-            raise TemplateSchemaActivation()
-
-        Schema = get_schema_model()
+        schema_name = schema
+    else:
+        schema_name = schema.schema
+    
+    # Don't allow anyone, even superusers, to select the template schema.
+    if schema_name == '__template__':
+        raise TemplateSchemaActivation()
+    
+    # If the schema is already set to this name for this session, then
+    # we can just exit early, saving some db access.
+    if schema_name == session.get('schema', None):
+        return
+    
+    Schema = get_schema_model()
+    
+    if user.is_superuser or user.is_staff:
+        # Just a sanity check: that the schema actually
+        # exists at all.
         try:
             schema = Schema.objects.get(schema=schema)
         except Schema.DoesNotExist:
             raise Forbidden()
-    
-    if schema.schema == '__template__':
-        raise TemplateSchemaActivation()
-    
-    if not (user.is_superuser or user.is_staff):
-        if not schema.is_active:
+    else:
+        # If we were passed in a schema object, rather than a string,
+        # then we can check to see if that schema is active before
+        # having to hit the database.
+        if isinstance(schema, Schema):
+            if not schema.is_active:
+                raise Forbidden()
+        # Ensure that this user has access to this schema,
+        # and that this schema is active. We can do this in
+        # one database hit.
+        if schema_name not in user.schemata.active().schemata():
             raise Forbidden()
-        if schema not in user.schemata.all():
-            raise Forbidden()
     
-    # Allow exceptions to prevent this occurring.
-    session_requesting_schema_change.send(sender=request, schema=schema)
-    session['schema'] = schema.schema
+    # Allow 3rd-party applications to listen for an attempt to change
+    # the schema for a user/session, and prevent it from occurring by
+    # raising an exception. We will just pass that exception up the
+    # call stack.
+    session_requesting_schema_change.send(
+        sender=request,
+        schema=schema_name,
+        user=request.user,
+        session=request.session,
+    )
+    # Actually set the schema on the session.
+    session['schema'] = schema_name
+    # Allow 3rd-party applications to listen for a change, and act upon
+    # it accordingly.
+    session_schema_changed.send(
+        sender=request,
+        schema=schema_name,
+        user=request.user,
+        session=request.session,
+    )
     
 
 class SchemaChangeMiddleware:

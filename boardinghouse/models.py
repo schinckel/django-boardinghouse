@@ -1,5 +1,6 @@
 """
 """
+import logging
 
 import django
 from django.conf import settings
@@ -17,6 +18,7 @@ else:
 import ensure_installation
 import signals
 
+LOGGER = logging.getLogger(__name__)
 UserModel = getattr(settings, 'AUTH_USER_MODEL', 'auth.user')
 
 class SchemaQuerySet(models.query.QuerySet):
@@ -28,6 +30,15 @@ class SchemaQuerySet(models.query.QuerySet):
     
     def mass_create(self, *args):
         self.bulk_create([Schema(name=x, schema=x) for x in args])
+    
+    def active(self):
+        return self.filter(is_active=True)
+    
+    def inactive(self):
+        return self.filter(is_active=False)
+    
+    def schemata(self):
+        return self.values_list('schema', flat=True)
 
 SCHEMA_NAME_VALIDATOR_MESSAGE = u'May only contain lowercase letters, digits and underscores. Must start with a letter.'
 
@@ -102,8 +113,16 @@ class Schema(models.Model):
         self.create_schema()
         
         return super(Schema, self).save(*args, **kwargs)
-        
+    
     def create_schema(self, cursor=None):
+        """
+        This method will create a new postgres schema with the name
+        stored in 'self.schema', if it doesn't already exist in the
+        database.
+        
+        At this stage, we just exit without failure (although log a warning)
+        if the schema was already found in the database.
+        """
         # If we weren't passed in a cursor, get one and call ourselves.
         if not cursor:
             cursor = connection.cursor()
@@ -115,12 +134,25 @@ class Schema(models.Model):
         # If it doesn't create it. This still actually works even if we
         # are creating the template schema, even though I thought it might
         # fail.
-        if not cursor.fetchone():
-            cursor.execute("SELECT clone_schema('__template__', %s);", [self.schema])
-            transaction.commit_unless_managed()
-            signals.schema_created.send(sender=self, schema=self.schema)
+        if cursor.fetchone():
+            LOGGER.warn('Attempt to create an existing schema: %s' % self.schema)
+            return
+        
+        cursor.execute("SELECT clone_schema('__template__', %s);", [self.schema])
+        # transaction.commit_unless_managed()
+        signals.schema_created.send(sender=self, schema=self.schema)
+        LOGGER.info('New schema created: %s' % self.schema)
     
     def activate(self, cursor=None):
+        """
+        Activate the current schema: this will execute, in the database
+        connection, something like:
+        
+            SET search_path TO "foo",public;
+            
+        It sends signals before and after that the schema will be, and was
+        activated.
+        """
         if not cursor:
             cursor = connection.cursor()
             self.activate(cursor)
@@ -129,14 +161,18 @@ class Schema(models.Model):
         cursor.execute('SET search_path TO "%s",public' % self.schema)
         signals.schema_post_activate.send(sender=self, schema=self.schema)
     
-    def deactivate(self, cursor=None):
+    @classmethod
+    def deactivate(cls, cursor=None):
+        """
+        Deactivate the current (or any) schema.
+        """
         if not cursor:
             cursor = connection.cursor()
-            self.deactivate(cursor)
+            cls.deactivate(cursor)
             return cursor.close()
-        signals.schema_pre_activate.send(sender=self, schema=None)
+        signals.schema_pre_activate.send(sender=cls, schema=None)
         cursor.execute('SET search_path TO "$user",public')
-        signals.schema_post_activate.send(sender=self, schema=None)
+        signals.schema_post_activate.send(sender=cls, schema=None)
     
 
 # This is a bit of fancy trickery to stick the property _is_shared_model

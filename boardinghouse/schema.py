@@ -60,6 +60,14 @@ def activate_schema(schema):
     else:
         if schema == '__template__':
             raise TemplateSchemaActivation()
+        # This is a sanity check that the schema actually
+        # exists, but does mean there is a database hit to
+        # get the schema object, then another to set the
+        # schema. Could we just use:
+        #   Schema(schema=schema).activate()
+        # instead? That would save a db hit, but would allow
+        # for setting a search_path without a schema (which could
+        # give bad results).
         Schema.objects.get(schema=schema).activate()
 
 def deactivate_schema(schema=None):
