@@ -12,11 +12,11 @@ Requirements
 
 This application requires, and depends upon Django_ being installed. Currently, versions from 1.4 to 1.6 are supported, along with South_ for migrations. 
 
-Support for 1.7 is under development. Migrations have changed, so this is not a small task to change.
+Support for 1.7 is partial, and not completely tested. Testing of the new django migrations API is not quite as straightforward as South_.
 
 Postgres is required to allow schema to be used. psycopg2_ is required as per normal Django/Postgres integration.
 
-django-model-utils_ is used for ``PassThroughManager``, which, under Django 1.7 will be replaced by `QuerySet.as_manager() <https://docs.djangoproject.com/en/dev/topics/db/managers/#creating-manager-with-queryset-methods>`_. However, the ``Tracker`` feature is also used to track changes on the :class:`boardinghouse.models.Schema` model, to prevent modification of the `schema` attribute.
+django-model-utils_ is used for ``PassThroughManager``, which, under Django 1.7 as be replaced by `QuerySet.as_manager() <https://docs.djangoproject.com/en/dev/topics/db/managers/#creating-manager-with-queryset-methods>`_. However, the ``Tracker`` feature is also used to track changes on the :class:`boardinghouse.models.Schema` model, to prevent modification of the `schema` attribute.
 
 Installation and Configuration
 ==============================
@@ -92,7 +92,7 @@ Middleware
 
 The included middleware is always installed:
 
-.. autoclass:: boardinghouse.middleware.SchemaMiddleware
+.. autoclass:: boardinghouse.middleware.SchemaActivationMiddleware
   :noindex:
 
 .. _template_variables:

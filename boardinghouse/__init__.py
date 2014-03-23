@@ -1,7 +1,7 @@
 """
 """
 __version__ = '0.1'
-__release__ = '0.1a2'
+__release__ = '0.1a3'
 
 def inject_app_defaults():
     """
