@@ -148,6 +148,16 @@ class TestMiddleware(TestCase):
         self.client.login(**CREDENTIALS)
         resp = self.client.get('/', {'__schema': 'a'}, follow=True)
         self.assertEquals(200, resp.status_code, 'Superuser attempt to activate inactive schema failed!')
+    
+    def test_deactivate_schema(self):
+        schema = Schema.objects.create(schema='a', name='a', is_active=False)
+        superuser = User.objects.create_superuser(email='su@example.com', **CREDENTIALS)
+        superuser.schemata.add(schema)
+        
+        self.client.login(**CREDENTIALS)
+        resp = self.client.get('/__change_schema__/a/')
+        resp = self.client.get('/__change_schema__//')
+        self.assertEquals('Schema deselected', resp.content)
         
 class TestContextProcessor(TestCase):
     def setUp(self):

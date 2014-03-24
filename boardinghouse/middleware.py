@@ -154,9 +154,13 @@ class SchemaChangeMiddleware:
             except Forbidden:
                 return FORBIDDEN
             
-            return HttpResponse(
-                _('Schema changed to %s') % request.session['schema']
-            )
+            if 'schema' in request.session:
+                response = _('Schema changed to %s') % request.session['schema']
+            else:
+                response = _('Schema deselected')
+        
+            return HttpResponse(response)
+        
         # 2. GET querystring ...?__schema=<name>
         # This will change the query, and then redirect to the page
         # without the schema name included.
@@ -181,6 +185,7 @@ class SchemaChangeMiddleware:
             except Forbidden:
                 return FORBIDDEN
         elif request.user.schemata.count() == 1:
+            # Can we not require a db hit each request here?
             change_schema(request, request.user.schemata.get())
         
 
