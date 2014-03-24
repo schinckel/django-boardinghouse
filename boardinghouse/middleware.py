@@ -4,7 +4,7 @@ import re
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import DatabaseError, transaction
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import redirect
 from django.utils.translation import ugettext_lazy as _
 
@@ -223,9 +223,20 @@ class SchemaActivationMiddleware:
         """
         if isinstance(exception, DatabaseError) and not request.session.get('schema'):
             if re.search('relation ".*" does not exist', exception.message):
-                # TODO: make this styleable? Maybe use a template?
                 transaction.rollback()
-                return HttpResponse(_("You must select a schema to access this resource"), status=449)
+                # Should we return an error, or redirect? When should we
+                # do one or the other? For an API, we would want an error
+                # but for a regular user, a redirect may be better.
+                
+                # Can we see if there is already a pending message for this
+                # request that has the same content as us?
+                messages.error(request,
+                    _("You must select a schema to access that resource"),
+                    fail_silently=True
+                )
+                return HttpResponseRedirect('..')
+        # I'm not sure we ever really hit this one, but it's worth keeping
+        # here just in case we've missed something.
         if isinstance(exception, TemplateSchemaActivation):
             request.session.pop('schema', None)
             return HttpResponseForbidden(_('You may not select that schema'))

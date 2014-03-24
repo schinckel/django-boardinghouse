@@ -43,7 +43,7 @@ class TestAdminAdditions(TestCase):
         
         response = self.client.get('/admin/boardinghouse/awaremodel/')
         # Should we handle this, and provide feedback?
-        self.assertEquals(449, response.status_code)
+        self.assertEquals(302, response.status_code)
     
     def test_schemata_list(self):
         from boardinghouse.admin import schemata

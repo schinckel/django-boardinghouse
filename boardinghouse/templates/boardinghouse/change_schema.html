@@ -1,20 +1,20 @@
 {% if not selected_schema or schemata.count > 1 %}
-  <label style="font-size: small">Viewing:
+  <label style="font-size: small">
+    Viewing:
   
-  {% comment %}
-  We should make it so that the page we are viewing is able to provide us
-  with a url we should redirect to in the case there is no object at the
-  url when we have changed schema. For now, we have just got a disabled
-  context variable.
-  {% endcomment %}
-  <select {% if disabled %}disabled="disabled"{% endif %} id="__schemalist" onchange="window.location.search = '?__schema=' + document.getElementById('__schemalist').value;">
-    <option value="">No schema. Please select...</option>
-    {% for schema in schemata %}
-      <option value="{{ schema.pk }}" {% if schema.pk|lower == selected_schema %}selected="selected"{% endif %}>
-        {{ schema.name }}
-      </option>
-    {% endfor %}
-  </select>
+    {% comment %}
+      We should make it so that the page we are viewing is able to provide us
+      with a url we should redirect to in the case there is no object at the
+      url when we have changed schema.
+    {% endcomment %}
+    <select {% if disabled %}disabled="disabled"{% endif %} id="__schemalist" onchange="window.location.search = '?__schema=' + document.getElementById('__schemalist').value;">
+      <option value="">No schema. Please select...</option>
+      {% for schema in schemata %}
+        <option value="{{ schema.pk }}" {% if schema.pk|lower == selected_schema %}selected="selected"{% endif %}>
+          {{ schema.name }}
+        </option>
+      {% endfor %}
+    </select>
 
   </label>
 

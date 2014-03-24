@@ -116,7 +116,7 @@ class TestMiddleware(TestCase):
         self.assertEquals('None', resp.content)
         
         resp = self.client.get('/aware/')
-        self.assertEquals(449, resp.status_code)
+        self.assertEquals(302, resp.status_code)
     
     def test_attempt_to_activate_template_schema(self):
         user = User.objects.create_user(**CREDENTIALS)
