@@ -20,6 +20,9 @@ logger = logging.getLogger('boardinghouse.middleware')
 def change_schema(request, schema):
     """
     Change the schema for the current request's session.
+    
+    Note this does not actually _activate_ the schema, it only stores
+    the schema name in the current request's session.
     """
     session = request.session
     user = request.user
@@ -98,7 +101,7 @@ def change_schema(request, schema):
 
 class SchemaChangeMiddleware:
     """
-    Middleware to set the postgres schema for the current request.
+    Middleware to set the postgres schema for the current request's session.
     
     The schema that will be used is stored in the session. A lookup will
     occur (but this could easily be cached) on each request.
@@ -184,7 +187,7 @@ class SchemaChangeMiddleware:
                 change_schema(request, schema)
             except Forbidden:
                 return FORBIDDEN
-        elif request.user.schemata.count() == 1:
+        elif 'schema' not in request.session and request.user.schemata.count() == 1:
             # Can we not require a db hit each request here?
             change_schema(request, request.user.schemata.get())
         
@@ -193,6 +196,10 @@ class SchemaChangeMiddleware:
 class SchemaActivationMiddleware:
     """
     Middleware that actually activates the schema from the session.
+    
+    This middleware does not do any checking for if request.user should
+    have access to the schema: that's up to the :class:``SchemaChangeMiddleware``,
+    which could be replaced or modified.
     """
     def process_request(self, request):
         deactivate_schema()
