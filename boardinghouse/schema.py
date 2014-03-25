@@ -2,6 +2,7 @@ import os
 
 import django
 from django.conf import settings
+from django.core.cache import cache
 from django.db import models, connection
 
 class Forbidden(Exception):
@@ -44,6 +45,17 @@ def get_schema():
     except Schema.DoesNotExist:
         return None
 
+def get_active_schemata():
+    """
+    Get a (cached) list of all currently active schemata.
+    """
+    schemata = cache.get('active-schemata')
+    if schemata is None:
+        schemata = Schema.objects.active()
+        cache.set('active-schemata', schemata)
+    return schemata
+
+    
 def activate_schema(schema):
     """
     Activate the schema provided, or with the name provided.

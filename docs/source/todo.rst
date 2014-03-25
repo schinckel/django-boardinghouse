@@ -9,9 +9,6 @@ TODO
 
 * Enable support for django-devserver: we currently get an infinite recursion when both of us are installed.
 
-* Cache schema queryset so we don't have to load it each request. We would need to invalidate this cache when a new schema is added.
-
-
 Tests to write
 --------------
 
@@ -24,6 +21,19 @@ Tests to write
 * :mod:`boardinghouse.ensure_installation` - this is pretty hard to test automatically without having multiple projects.
 
 * Test :meth:`boardinghouse.models.SchemaQuerySet.inactive`
+
+* Ensure get_admin_url (non-schema-aware model) still works.
+
+User.visible_schemata property testing:
+
+* Test adding schemata to a user clears the cache.
+* Test removing schemata from a user clears the cache.
+* Test adding users to schema clears the cache.
+* Test removing users from a schema clears the cache.
+* Test saving a schema clears the cache for all associated users.
+
+* Test saving a schema clears the global active schemata cache
+
 
 Example Project
 ---------------

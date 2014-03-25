@@ -287,7 +287,9 @@ def invalidate_cache(sender, **kwargs):
 # related to a schema if that schema is changed - specifically, if it's
 # active status is changed. However, we can't track this with
 # django-model-utils, due to a bug in django.
+# We will also clear out the global active schemata cache.
 @receiver(models.signals.post_save, sender=Schema)
 def invalidate_all_user_caches(sender, **kwargs):
+    cache.delete('active-schemata')
     for pk in kwargs['instance'].users.all():
         cache.delete('visible-schemata-%s' % pk)
