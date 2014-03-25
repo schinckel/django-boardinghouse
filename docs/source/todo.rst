@@ -3,8 +3,6 @@ TODO
 
 * Cache schema queryset so we don't have to load it each request. We would need to invalidate this cache when a new schema is added.
 
-* Cache request.user.schemata queryset (as above).
-
 * Add in views for allowing inviting of users (registered or not) into a schema.
 
 * Provide a better error when ``loaddata`` is run without ``--schema``, and an error occurred.

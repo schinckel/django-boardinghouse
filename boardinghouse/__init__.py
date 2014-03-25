@@ -36,3 +36,5 @@ def inject_app_defaults():
                     pass
 
 inject_app_defaults()
+
+default_app_config = 'boardinghouse.apps.BoardingHouseConfig'

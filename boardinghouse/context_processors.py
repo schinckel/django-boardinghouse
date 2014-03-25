@@ -12,7 +12,7 @@ def schemata(request):
     if request.user.is_staff or request.user.is_superuser:
         available_schemata = get_schema_model().objects.all()
     else:
-        available_schemata = request.user.schemata.all()
+        available_schemata = request.user.visible_schemata
     
     return {
         'schemata': available_schemata,

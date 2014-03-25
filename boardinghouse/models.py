@@ -5,6 +5,7 @@ import logging
 import django
 from django.conf import settings
 from django.contrib import auth
+from django.core.cache import cache
 from django.db import models, connection, transaction
 from django.utils.translation import ugettext_lazy as _
 from django.core.validators import RegexValidator
@@ -37,9 +38,6 @@ class SchemaQuerySet(models.query.QuerySet):
     def inactive(self):
         return self.filter(is_active=False)
     
-    def schemata(self):
-        return self.values_list('schema', flat=True)
-
 SCHEMA_NAME_VALIDATOR_MESSAGE = u'May only contain lowercase letters, digits and underscores. Must start with a letter.'
 
 schema_name_validator = RegexValidator(
@@ -257,3 +255,39 @@ if 'django.contrib.admin' in settings.INSTALLED_APPS:
 if 'django.contrib.auth' in settings.INSTALLED_APPS:
     from django.contrib.auth.models import AnonymousUser
     AnonymousUser.schemata = Schema.objects.none()
+    AnonymousUser.visible_schemata = Schema.objects.none()
+
+# Add a cached method that prevents user.schemata.all() queries from
+# being needlessly duplicated.
+def visible_schemata(user):
+    schemata = cache.get('visible-schemata-%s' % user.pk)
+    if schemata is None:
+        schemata = user.schemata.active()
+        cache.set('visible-schemata-%s' % user.pk, schemata)
+    
+    return schemata
+
+def add_visible_schemata_to_user():
+    models.get_model(*UserModel.split('.')).visible_schemata = property(visible_schemata)
+    
+if django.VERSION < (1, 7):
+    add_visible_schemata_to_user()
+
+# We also need to watch for changes to the user_schemata table, to invalidate
+# this cache.
+@receiver(models.signals.m2m_changed, sender=Schema.users.through)
+def invalidate_cache(sender, **kwargs):
+    if kwargs['reverse']:
+        cache.delete('visible-schemata-%s' % kwargs['instance'].pk)
+    else:
+        for pk in kwargs['pk_set']:
+            cache.delete('visible-schemata-%s' % pk)
+
+# In addition, we need to clear out the schemata cache for all users
+# related to a schema if that schema is changed - specifically, if it's
+# active status is changed. However, we can't track this with
+# django-model-utils, due to a bug in django.
+@receiver(models.signals.post_save, sender=Schema)
+def invalidate_all_user_caches(sender, **kwargs):
+    for pk in kwargs['instance'].users.all():
+        cache.delete('visible-schemata-%s' % pk)

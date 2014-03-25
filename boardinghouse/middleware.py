@@ -72,9 +72,9 @@ def change_schema(request, schema):
             if not schema.is_active:
                 raise Forbidden()
         # Ensure that this user has access to this schema,
-        # and that this schema is active. We can do this in
-        # one database hit.
-        if schema_name not in user.schemata.active().schemata():
+        # and that this schema is active. We can do this using the
+        # cache, which prevents hitting the database.
+        if schema_name not in [schema.name for schema in user.visible_schemata]:
             raise Forbidden()
     
     # Allow 3rd-party applications to listen for an attempt to change
@@ -187,9 +187,9 @@ class SchemaChangeMiddleware:
                 change_schema(request, schema)
             except Forbidden:
                 return FORBIDDEN
-        elif 'schema' not in request.session and request.user.schemata.count() == 1:
+        elif 'schema' not in request.session and len(request.user.visible_schemata) == 1:
             # Can we not require a db hit each request here?
-            change_schema(request, request.user.schemata.get())
+            change_schema(request, request.user.visible_schemata[0])
         
 
 
