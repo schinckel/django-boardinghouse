@@ -80,6 +80,11 @@ class TestLoadData(TestCase):
         with self.assertRaises(DatabaseError):
             with capture_err(call_command, 'loaddata', 'boardinghouse/tests/fixtures/aware.json', commit=False) as output:
                 self.assertIn('DatabaseError: Could not load boardinghouse.AwareModel(pk=None): relation "boardinghouse_awaremodel" does not exist\n', output)
+
+    def test_loading_aware_data_with_template_schema_fails(self):
+        with self.assertRaises(DatabaseError):
+            with capture_err(call_command, 'loaddata', 'boardinghouse/tests/fixtures/aware.json', schema="__template__", commit=False) as output:
+                self.assertIn('DatabaseError: Could not load boardinghouse.AwareModel(pk=None): relation "boardinghouse_awaremodel" does not exist\n', output)
     
     def test_loading_aware_data_works(self):
         Schema.objects.mass_create('a', 'b')
