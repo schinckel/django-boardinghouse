@@ -20,7 +20,7 @@ class TestPartitioning(TestCase):
         AwareModel.objects.create(name="Baz object")
         self.assertRaises(AwareModel.DoesNotExist, AwareModel.objects.get, name='Foo object')
         
-        # TODO: Make this work?
+        # TODO: Make this work? Or do we just let the error propagate?
         # second.deactivate()
         # self.assertEquals(0, AwareModel.objects.count())
         
