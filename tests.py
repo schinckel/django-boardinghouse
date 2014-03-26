@@ -58,7 +58,7 @@ def main():
     global_settings.COVERAGE_USE_STDOUT = True
     global_settings.COVERAGE_PATH_EXCLUDES = ['.hg', 'templates', 'tests', 'sql', '__pycache__']
     
-    global_settings.COVERAGE_MODULE_EXCLUDES = ['boardinghouse.settings']
+    global_settings.COVERAGE_MODULE_EXCLUDES = ['boardinghouse.__init__', 'boardinghouse.settings']
     
     if django.VERSION < (1,7):
         global_settings.COVERAGE_MODULE_EXCLUDES += ['boardinghouse.apps', 'boardinghouse.backends.postgres.schema']
