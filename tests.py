@@ -58,6 +58,14 @@ def main():
     global_settings.COVERAGE_USE_STDOUT = True
     global_settings.COVERAGE_PATH_EXCLUDES = ['.hg', 'templates', 'tests', 'sql', '__pycache__']
     
+    global_settings.COVERAGE_MODULE_EXCLUDES = ['boardinghouse.settings']
+    
+    if django.VERSION < (1,7):
+        global_settings.COVERAGE_MODULE_EXCLUDES += ['boardinghouse.apps', 'boardinghouse.backends.postgres.schema']
+    
+    if django.VERSION >= (1, 7):
+        global_settings.COVERAGE_MODULE_EXCLUDES += ['boardinghouse.backends.south_backend']
+    
     if os.environ.get('COVERAGE', None):
         from django_coverage import coverage_runner
         test_runner = coverage_runner.CoverageRunner
