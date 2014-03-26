@@ -56,6 +56,11 @@ class Invitation(SharedSchemaModel):
         ordering = ('created_at',)
         app_label = 'invite'
     
+    def __unicode__(self):
+        return 'Invitation to %s from %s to join %s' % (
+            self.email, self.sender, self.schema.name
+        )
+    
     @property
     def redeemed(self):
         return self.accepted_at or self.declined_at
