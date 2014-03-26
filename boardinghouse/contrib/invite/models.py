@@ -4,6 +4,7 @@ import django
 from django.conf import settings
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+from django.utils.timezone import now
 
 # Can't import into the class namespace: we need to do it at the module.
 if django.VERSION < (1,7):
@@ -22,12 +23,12 @@ class InvitationQuerySet(models.query.QuerySet):
     
     def pending(self):
         self.not_handled().filter(
-            created_at__gte=datetime.datetime.utcnow()-INVITATION_EXPIRY
+            created_at__gte=now()-INVITATION_EXPIRY
         )
     
     def expired(self):
         return self.not_handled().filter(
-            created_at__lt=datetime.datetime.utcnow()-INVITATION_EXPIRY
+            created_at__lt=now()-INVITATION_EXPIRY
         )
     
     def accepted(self):
@@ -67,7 +68,7 @@ class Invitation(SharedSchemaModel):
     
     @property
     def expired(self):
-        return self.created_at > datetime.datetime.utcnow() - INVITATION_EXPIRY
+        return self.created_at < now() - INVITATION_EXPIRY
     
     @property
     def redeemable(self):
