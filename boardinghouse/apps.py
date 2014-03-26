@@ -1,9 +1,12 @@
-from django.apps import AppConfig
+try:
+    from django.apps import AppConfig
+except ImportError:
+    pass
+else:
+    from .models import add_visible_schemata_to_user
 
-from .models import add_visible_schemata_to_user
-
-class BoardingHouseConfig(AppConfig):
-    name = 'boardinghouse'
+    class BoardingHouseConfig(AppConfig):
+        name = 'boardinghouse'
     
-    def ready(self):
-        add_visible_schemata_to_user()
+        def ready(self):
+            add_visible_schemata_to_user()

@@ -250,7 +250,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('index', 'django-boardinghouse', u'django-boardinghouse Documentation',
-   u'Matthew Schinckel', 'django-boardinghouse', 'One line description of project.',
+   u'Matthew Schinckel', 'django-boardinghouse', 'Django partitioning using postgres schemata',
    'Miscellaneous'),
 ]
 
