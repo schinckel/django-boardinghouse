@@ -22,6 +22,14 @@ boardinghouse.admin module
     :undoc-members:
     :show-inheritance:
 
+boardinghouse.apps module
+-------------------------
+
+.. automodule:: boardinghouse.apps
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 boardinghouse.base module
 -------------------------
 
