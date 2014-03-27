@@ -132,9 +132,14 @@ def is_shared_model(model):
     if app_model in settings.SHARED_MODELS:
         return True
     
+    # Sometimes, we want a join table to be private.
+    if app_model in settings.PRIVATE_MODELS:
+        return False
+    
     # if all fields are auto or fk, then we are a join model,
     # and if all related objects are shared, then we must
-    # also be shared.
+    # also be shared, unless we were explicitly marked as private
+    # above.
     if _is_join_model(model):
         return all([
             is_shared_model(field.rel.get_related_field().model)

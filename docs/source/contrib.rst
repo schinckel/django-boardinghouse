@@ -55,6 +55,9 @@ boardinghouse.contrib.shared_roles
 
 This app alters the `django.contrib.auth` application, so that, whilst the `Group` model remains a `SharedSchemaModel`, the relationships between `User` and `Group`, and the relationship between `User` and `Permission` are actually schema-aware.
 
+This basically requires us just to move the `auth_group_permissions` table into the various schemata.
+
+Can we just do this by having a 
 
 .. _demo:
 
