@@ -8,8 +8,7 @@ django-boardinghouse
 
 Multi-tenancy for Django applications, using Postgres Schemas.
 
-.. image:: https://drone.io/bitbucket.org/schinckel/django-boardinghouse/status.png
-.. image:: https://drone.io/bitbucket.org/schinckel/django-boardinghouse/files/.coverage/coverage_status.png
+|status| |coverage| |deps|
 
 Contents:
 
@@ -20,6 +19,7 @@ Contents:
    installation
    interactions
    example
+   contrib
    development
    todo
    code
@@ -31,3 +31,9 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
+
+.. |status| image:: https://drone.io/bitbucket.org/schinckel/django-boardinghouse/status.png
+.. |coverage| image:: https://drone.io/bitbucket.org/schinckel/django-boardinghouse/files/.coverage/coverage_status.png
+.. |deps| image:: https://requires.io/bitbucket/schinckel/django-boardinghouse/requirements.png?branch=default
+   :target: https://requires.io/bitbucket/schinckel/django-boardinghouse/requirements/?branch=default
+   :alt: Requirements Status
