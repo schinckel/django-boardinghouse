@@ -9,7 +9,9 @@ from boardinghouse.schema import get_schema
 from .models import Invitation
 
 ALREADY_REDEEMED = _('This invitation has already been redeemed.')
-
+EXPIRED = _('This invitation has expired.')
+ACCEPTED = _('This invitation has already been accepted.')
+DECLINED = _('This invitation has already been declined.')
 
 class InvitePersonForm(forms.ModelForm):
     """
@@ -43,19 +45,23 @@ class AcceptForm(forms.ModelForm):
     """
     A form that can be used to accept an invitation to a schema.
     """
-    this_account = forms.BooleanField(required=False, initial=True)
-    
+        
     class Meta:
         model = Invitation
-        fields = ('this_account',)
+        fields = ()
     
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')
         super(AcceptForm, self).__init__(*args, **kwargs)
     
     def clean(self):
-        if self.instance.accepted_at:
-            raise forms.ValidationError()
+        if self.instance.expired:
+            raise forms.ValidationError(EXPIRED)
+        if self.instance.redeemed:
+            raise forms.ValidationError(ACCEPTED)
+        if self.instance.declined:
+            raise forms.ValidationError(DECLINED)
+        return self.cleaned_data
     
     def save(self, *args, **kwargs):
         self.user.schemata.add(self.instance.schema)
@@ -67,6 +73,13 @@ class DeclineForm(forms.ModelForm):
     class Meta:
         model = Invitation
         fields = ()
+    
+    def clean(self):
+        # In this case, we just want to tell the user this object
+        # has been accepted, since they attempted to decline it.
+        if self.instance.accepted:
+            raise forms.ValidationError(ACCEPTED)
+        return {}
     
     def save(self, *args, **kwargs):
         self.instance.declined_at = datetime.datetime.utcnow()

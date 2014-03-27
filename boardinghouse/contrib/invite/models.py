@@ -19,10 +19,10 @@ INVITATION_EXPIRY = getattr(settings, 'INVITATION_EXPIRY', datetime.timedelta(7)
 
 class InvitationQuerySet(models.query.QuerySet):
     def not_handled(self):
-        return self.filter(declined_at=None, accepted_at=None)
+        return self.filter(declined_at=None).filter(accepted_at=None)
     
     def pending(self):
-        self.not_handled().filter(
+        return self.not_handled().filter(
             created_at__gte=now()-INVITATION_EXPIRY
         )
     
@@ -32,10 +32,10 @@ class InvitationQuerySet(models.query.QuerySet):
         )
     
     def accepted(self):
-        self.exclude(accepted_at=None)
+        return self.exclude(accepted_at=None)
     
     def declined(self):
-        self.exclude(declined_at=None)
+        return self.exclude(declined_at=None)
 
 class Invitation(SharedSchemaModel):
     email = models.EmailField(verbose_name=_('Email address'))
@@ -45,6 +45,7 @@ class Invitation(SharedSchemaModel):
     redemption_code = models.CharField(max_length=36, null=True, blank=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
+    # Can we ensure that at most one of these two is not null?
     accepted_at = models.DateTimeField(null=True, blank=True)
     declined_at = models.DateTimeField(null=True, blank=True)
     
@@ -58,13 +59,21 @@ class Invitation(SharedSchemaModel):
         app_label = 'invite'
     
     def __unicode__(self):
-        return 'Invitation to %s from %s to join %s' % (
-            self.email, self.sender, self.schema.name
+        return '[%s] Invitation to %s from %s to join %s' % (
+            unicode(self.status), self.email, self.sender, self.schema.name
         )
     
     @property
     def redeemed(self):
         return self.accepted_at or self.declined_at
+    
+    @property
+    def declined(self):
+        return self.declined_at is not None
+    
+    @property
+    def accepted(self):
+        return self.accepted_at is not None
     
     @property
     def expired(self):
@@ -73,4 +82,18 @@ class Invitation(SharedSchemaModel):
     @property
     def redeemable(self):
         return not (self.expired or self.redeemed)
+    
+    @property
+    def status(self):
+        if self.declined:
+            return _('DECLINED')
+        if self.accepted:
+            return _('ACCEPTED')
+        if self.expired:
+            return _('EXPIRED')
+        return _('PENDING')
+    
+    @property
+    def expiry_date(self):
+        return self.created_at + INVITATION_EXPIRY
     
