@@ -80,8 +80,8 @@ class TestAdminAdditions(TestCase):
         entry = LogEntry.objects.get()
         
         self.assertEquals('a', entry.object_schema.pk)
-        
-        self.assertEquals('?__schema=a', entry.get_admin_url()[-11:])
+        self.assertEquals(2, len(entry.get_admin_url().split('?')))
+        self.assertEquals('__schema=a', entry.get_admin_url().split('?')[1])
     
     def test_admin_log_naive_object_no_schema(self):
         from django.contrib.admin.models import LogEntry, ADDITION
@@ -106,3 +106,4 @@ class TestAdminAdditions(TestCase):
         entry = LogEntry.objects.get()
         
         self.assertEquals(None, entry.object_schema_id)
+        self.assertEquals(1, len(entry.get_admin_url().split('?')))
