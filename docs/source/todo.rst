@@ -7,8 +7,6 @@ TODO
 
 * Use the ``schema`` attribute on serialised objects to load them into the correct schema. I think this is possible.
 
-* Enable support for django-devserver: we currently get an infinite recursion when both of us are installed.
-
 Tests to write
 --------------
 

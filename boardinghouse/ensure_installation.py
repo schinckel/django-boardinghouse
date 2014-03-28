@@ -5,6 +5,7 @@ this in a rather hidden way: it injects the objects
 that it thinks should be installed into the settings.
 
 """
+import django
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
@@ -47,6 +48,11 @@ if 'django.contrib.admin' in settings.INSTALLED_APPS:
 # relationship to Schema. However, this is hard to test, as when we have
 # test data, we don't add that until after.
 
+# django-devserver causes infinite recursion on django < 1.7
+# when django-boardinghouse is installed.
+if django.VERSION < (1,7):
+    if 'devserver' in settings.INSTALLED_APPS:
+        raise ImproperlyConfigured('django-devserver is incompatible with django-boardinghouse when running under django < 1.7')
 
 # # Hacks to get dumpdata/loaddata to work a bit better...
 # from django.core.serializers.python import Serializer

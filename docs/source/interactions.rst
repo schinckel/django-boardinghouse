@@ -34,3 +34,8 @@ It makes sense to have django-reversion store ``Revisions`` and ``Versions`` in 
   This has not yet been implemented:
 
   However, you may want to have versioning for your shared models. Because of this, the relevant tables will also be created in the ``public`` schema. When creating a version of a model that is a `Shared Model`, you must remember to deactivate any active schema (and then possibly reactivate it).
+  
+django-devserver
+================
+
+If you use `django-devserver`_ with django-boardinghouse, you must be using Django 1.7 or later. There is a bug in all versions of Django prior to this that causes a stack overflow (infinite recursion) when both apps are installed.
