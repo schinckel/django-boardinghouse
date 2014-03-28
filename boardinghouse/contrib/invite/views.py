@@ -66,11 +66,40 @@ confirm_invitation = ConfirmInvitation.as_view()
 class LoginAndAcceptView(object):
     pass
 
+
 class RegisterAndAcceptView(object):
     pass
+
 
 class DeclineInvitation(InvitationMixin, generic.UpdateView):
     form_class = DeclineForm
     success_url = '/admin/invite/invitation/'
     
 decline_invitation = DeclineInvitation.as_view()
+
+
+class PendingReceivedInvitations(generic.ListView):
+    template_name = 'invite/list.html'
+    
+    def get_queryset(self):
+        return Invitation.objects.for_email(self.request.user.email).pending()
+
+pending_received_invitations = PendingReceivedInvitations.as_view()
+
+
+class PendingSentInvitations(generic.ListView):
+    template_name = 'invite/list.html'
+    
+    def get_queryset(self):
+        return self.request.user.sent_invitations.pending()
+
+pending_sent_invitations = PendingSentInvitations.as_view()
+
+
+class RedeemedOrExpiredInvitations(generic.ListView):
+    template_name = 'invite/list.html'
+    
+    def get_queryset(self):
+        return self.request.user.sent_invitations.not_pending()
+
+redeemed_or_expired_invitations = RedeemedOrExpiredInvitations.as_view()

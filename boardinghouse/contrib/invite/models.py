@@ -26,6 +26,10 @@ class InvitationQuerySet(models.query.QuerySet):
             created_at__gte=now()-INVITATION_EXPIRY
         )
     
+    def not_pending(self):
+        # Any invitations that have expired, have been accepted or declined.
+        return self.exclude(pk__in=self.pending())
+    
     def expired(self):
         return self.not_handled().filter(
             created_at__lt=now()-INVITATION_EXPIRY
@@ -36,6 +40,9 @@ class InvitationQuerySet(models.query.QuerySet):
     
     def declined(self):
         return self.exclude(declined_at=None)
+    
+    def for_email(self, email):
+        return self.filter(email=email)
 
 class Invitation(SharedSchemaModel):
     email = models.EmailField(verbose_name=_('Email address'))

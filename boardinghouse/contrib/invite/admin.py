@@ -36,6 +36,7 @@ class StatusFilter(admin.SimpleListFilter):
             ('expired', _('Expired')),
             ('accepted', _('Accepted')),
             ('declined', _('Declined')),
+            ('not_pending', _('Redeemed or Expired')),
         )
     
     def queryset(self, request, queryset):
