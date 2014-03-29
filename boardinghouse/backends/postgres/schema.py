@@ -7,7 +7,9 @@ except ImportError:
     pass
 else:
     from ...schema import is_shared_model, is_shared_table
-    from ...schema import get_schema_model, get_template_schema
+    from ...schema import get_active_schemata
+    from ...schema import activate_schema, deactivate_schema
+    from ...schema import activate_template_schema
 
     def wrap(name):
         method = getattr(schema.DatabaseSchemaEditor, name)
@@ -20,13 +22,13 @@ else:
             if '_apply_to_all' in [x[3] for x in inspect.stack()[1:]]:
                 return method(self, model, *args, **kwargs)
             
-            for schema in get_schema_model().objects.all():
+            for schema in get_active_schemata():
                 schema.activate()
                 method(self, model, *args, **kwargs)
             
-            get_template_schema().activate()
+            activate_template_schema()
             result = method(self, model, *args, **kwargs)
-            get_template_schema().deactivate()
+            deactivate_schema()
             return result
     
         return _apply_to_all
@@ -54,13 +56,13 @@ else:
             
             execute = super(DatabaseSchemaEditor, self).execute
             if match and not is_shared_table(match['table_name']):
-                for schema in get_schema_model().objects.all():
+                for schema in get_active_schemata():
                     schema.activate()
                     execute(sql, params)
                 
-                get_template_schema().activate()
+                activate_template_schema()
                 execute(sql, params)
-                get_template_schema().deactivate()
+                deactivate_schema()
             else:
                 execute(sql, params)
                     

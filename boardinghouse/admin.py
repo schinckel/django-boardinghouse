@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.conf import settings
 
-from .schema import get_schema, is_shared_model, get_schema_model
+from .schema import get_active_schema, is_shared_model, get_schema_model
 
 # We only want to install our SchemaAdmin if our schema model is the
 # one that is used: otherwise it's up to the project developer to 
@@ -37,7 +37,7 @@ def get_inline_instances(self, request, obj=None):
     If we don't patch this, then a ``DatabaseError`` will occur because
     the tables could not be found.
     """
-    schema = get_schema()
+    schema = get_active_schema()
     return [
         inline(self.model, self.admin_site) for inline in self.inlines
         if schema or is_shared_model(inline.model)

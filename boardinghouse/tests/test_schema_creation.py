@@ -3,15 +3,16 @@ from django.db import connection
 from django import forms
 
 from ..schema import (
-    get_schema, _get_schema_or_template, 
     activate_schema, deactivate_schema,
     TemplateSchemaActivation,
     is_shared_model,
-    get_schema_model, get_template_schema,
+    get_active_schema_name, get_active_schema,
+    get_schema_model,
+    activate_template_schema,
+    _get_search_path,
 )
 
 Schema = get_schema_model()
-template_schema = get_template_schema()
 
 SCHEMA_QUERY = "SELECT schema_name FROM information_schema.schemata WHERE schema_name = %s"
 TABLE_QUERY = "SELECT table_name FROM information_schema.tables WHERE table_schema = %s AND table_name = %s"
@@ -49,7 +50,7 @@ class TestPostgresSchemaCreation(TestCase):
         cursor.close()
     
     def test_schema_creation_clones_template(self):
-        template_schema.activate()
+        activate_template_schema()
         cursor = connection.cursor()
         cursor.execute("CREATE TABLE foo (id SERIAL NOT NULL PRIMARY KEY)")
         dup = Schema.objects.create(name="Duplicate", schema='duplicate')
@@ -110,46 +111,42 @@ class TestSchemaClassValidationLogic(TestCase):
 
 class TestGetSetSearchPath(TestCase):
     def test_default_search_path(self):
-        self.assertEquals(None, get_schema())
+        self.assertEquals(None, get_active_schema_name())
 
     def test_activate_schema_sets_search_path(self):
         schema = Schema.objects.create(name='a', schema='a')
         schema.activate()
-        self.assertEquals(schema, get_schema())
+        self.assertEquals(schema.schema, get_active_schema_name())
         
-        template_schema.activate()
-        self.assertEquals(template_schema, get_schema())
+        activate_template_schema()
+        self.assertEquals('__template__', _get_search_path()[0])
     
     def test_deactivate_schema_resets_search_path(self):
         schema = Schema.objects.create(name='a', schema='a')
         schema.activate()
         schema.deactivate()
-        self.assertEquals(None, get_schema())
+        self.assertEquals(None, get_active_schema_name())
     
     def test_get_schema_or_template_helper(self):
         schema = Schema.objects.create(name='a', schema='a')
-        self.assertEquals('__template__', _get_schema_or_template())
+        self.assertEquals(None, get_active_schema_name())
         
         schema.activate()
-        self.assertEquals('a', _get_schema_or_template())
+        self.assertEquals('a', get_active_schema_name())
         
         schema.deactivate()
-        self.assertEquals('__template__', _get_schema_or_template())
+        self.assertEquals(None, get_active_schema_name())
     
     def test_activate_schema_function(self):
         self.assertRaises(TemplateSchemaActivation, activate_schema, '__template__')
-        self.assertRaises(TemplateSchemaActivation, activate_schema, template_schema)
     
         Schema.objects.mass_create('a', 'b')
         
         activate_schema('a')
-        self.assertEquals('a', get_schema().schema)
+        self.assertEquals('a', get_active_schema_name())
         
         activate_schema('b')
-        self.assertEquals('b', get_schema().schema)
+        self.assertEquals('b', get_active_schema_name())
         
         deactivate_schema()
-        self.assertEquals(None, get_schema())
-        
-        activate_schema(Schema.objects.get(schema='a'))
-        self.assertEquals('a', get_schema().schema)
+        self.assertEquals(None, get_active_schema_name())

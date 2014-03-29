@@ -6,10 +6,10 @@ import django
 from django.conf import settings
 from django.contrib import auth
 from django.core.cache import cache
-from django.db import models, connection, transaction
-from django.utils.translation import ugettext_lazy as _
 from django.core.validators import RegexValidator
+from django.db import models, connection, transaction
 from django.forms import ValidationError
+from django.utils.translation import ugettext_lazy as _
 
 if django.VERSION < (1,7):
     from model_utils.managers import PassThroughManager
@@ -19,31 +19,38 @@ else:
 import ensure_installation
 import signals
 
+from .schema import (
+    activate_schema, deactivate_schema, get_active_schema_name,
+)
+
 LOGGER = logging.getLogger(__name__)
 UserModel = getattr(settings, 'AUTH_USER_MODEL', 'auth.user')
 
-class SchemaQuerySet(models.query.QuerySet):
-    def bulk_create(self, *args, **kwargs):
-        created = super(SchemaQuerySet, self).bulk_create(*args, **kwargs)
-        for schema in created:
-            schema.create_schema()
-        return created
-    
-    def mass_create(self, *args):
-        self.bulk_create([Schema(name=x, schema=x) for x in args])
-    
-    def active(self):
-        return self.filter(is_active=True)
-    
-    def inactive(self):
-        return self.filter(is_active=False)
-    
 SCHEMA_NAME_VALIDATOR_MESSAGE = u'May only contain lowercase letters, digits and underscores. Must start with a letter.'
 
 schema_name_validator = RegexValidator(
     regex='^[a-z][a-z0-9_]*$',
     message=_(SCHEMA_NAME_VALIDATOR_MESSAGE)
 )
+
+class SchemaQuerySet(models.query.QuerySet):
+    def bulk_create(self, *args, **kwargs):
+        created = super(SchemaQuerySet, self).bulk_create(*args, **kwargs)
+        for schema in created:
+            schema.create_schema()
+        cache.delete('active-schemata')
+        return created
+    
+    def mass_create(self, *args):
+        self.bulk_create([Schema(name=x, schema=x) for x in args])
+        cache.delete('active-schemata')
+    
+    def active(self):
+        return self.filter(is_active=True)
+    
+    def inactive(self):
+        return self.filter(is_active=False)
+
 
 
 class Schema(models.Model):
@@ -142,35 +149,11 @@ class Schema(models.Model):
         LOGGER.info('New schema created: %s' % self.schema)
     
     def activate(self, cursor=None):
-        """
-        Activate the current schema: this will execute, in the database
-        connection, something like:
-        
-            SET search_path TO "foo",public;
-            
-        It sends signals before and after that the schema will be, and was
-        activated.
-        """
-        if not cursor:
-            cursor = connection.cursor()
-            self.activate(cursor)
-            return cursor.close()
-        signals.schema_pre_activate.send(sender=self, schema=self.schema)
-        cursor.execute('SET search_path TO "%s",public' % self.schema)
-        signals.schema_post_activate.send(sender=self, schema=self.schema)
+        activate_schema(self.schema)
     
     @classmethod
     def deactivate(cls, cursor=None):
-        """
-        Deactivate the current (or any) schema.
-        """
-        if not cursor:
-            cursor = connection.cursor()
-            cls.deactivate(cursor)
-            return cursor.close()
-        signals.schema_pre_activate.send(sender=cls, schema=None)
-        cursor.execute('SET search_path TO "$user",public')
-        signals.schema_post_activate.send(sender=cls, schema=None)
+        deactivate_schema()
     
 
 # This is a bit of fancy trickery to stick the property _is_shared_model
@@ -205,11 +188,11 @@ def inject_schema_attribute(sender, instance, **kwargs):
     You may use this in conjunction with :class:`MultiSchemaMixin`, it will
     respect any value that has already been set on the instance.
     """
-    from .schema import is_shared_model, get_schema
+    from .schema import is_shared_model, get_active_schema_name
     if is_shared_model(sender):
         return
     if not getattr(instance, '_schema', None):
-        instance._schema = get_schema()
+        instance._schema = get_active_schema_name()
 
 models.signals.post_init.connect(inject_schema_attribute)
 
@@ -237,7 +220,7 @@ if 'django.contrib.admin' in settings.INSTALLED_APPS:
 
         if not is_shared_model(obj):
             # I think we may have an attribute schema on the object?
-            instance.object_schema_id = obj._schema.schema
+            instance.object_schema_id = obj._schema
             
     
     # ...so we can add that bit to the url, and have links in the admin
@@ -245,7 +228,7 @@ if 'django.contrib.admin' in settings.INSTALLED_APPS:
     get_admin_url = LogEntry.get_admin_url
     
     def new_get_admin_url(self):
-        if self.object_schema:
+        if self.object_schema_id:
             return get_admin_url(self) + '?__schema=%s' % self.object_schema_id
         
         return get_admin_url(self)
@@ -289,6 +272,7 @@ def invalidate_cache(sender, **kwargs):
 # django-model-utils, due to a bug in django.
 # We will also clear out the global active schemata cache.
 @receiver(models.signals.post_save, sender=Schema)
+@receiver(signals.schema_created, sender=Schema)
 def invalidate_all_user_caches(sender, **kwargs):
     cache.delete('active-schemata')
     for pk in kwargs['instance'].users.all():

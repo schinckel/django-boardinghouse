@@ -19,6 +19,6 @@ clean:
 	rm -rf .boarding-school
 
 runserver:
-	./manage.py runserver
+	./manage.py runserver ${PORT}
 
 all: database virtualenv install-packages load-data
