@@ -20,7 +20,7 @@ import ensure_installation
 import signals
 
 from .schema import (
-    activate_schema, deactivate_schema, get_active_schema_name,
+    create_schema, activate_schema, deactivate_schema, get_active_schema_name,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -128,25 +128,7 @@ class Schema(models.Model):
         At this stage, we just exit without failure (although log a warning)
         if the schema was already found in the database.
         """
-        # If we weren't passed in a cursor, get one and call ourselves.
-        if not cursor:
-            cursor = connection.cursor()
-            self.create_schema(cursor)
-            return cursor.close()
-        
-        # Look and see if this schema already exists. 
-        cursor.execute("SELECT schema_name FROM information_schema.schemata WHERE schema_name = %s", [self.schema])
-        # If it doesn't create it. This still actually works even if we
-        # are creating the template schema, even though I thought it might
-        # fail.
-        if cursor.fetchone():
-            LOGGER.warn('Attempt to create an existing schema: %s' % self.schema)
-            return
-        
-        cursor.execute("SELECT clone_schema('__template__', %s);", [self.schema])
-        # transaction.commit_unless_managed()
-        signals.schema_created.send(sender=self, schema=self.schema)
-        LOGGER.info('New schema created: %s' % self.schema)
+        create_schema(self.schema)
     
     def activate(self, cursor=None):
         activate_schema(self.schema)
@@ -275,5 +257,6 @@ def invalidate_cache(sender, **kwargs):
 @receiver(signals.schema_created, sender=Schema)
 def invalidate_all_user_caches(sender, **kwargs):
     cache.delete('active-schemata')
+    cache.delete('all-schemata')
     for pk in kwargs['instance'].users.all():
         cache.delete('visible-schemata-%s' % pk)

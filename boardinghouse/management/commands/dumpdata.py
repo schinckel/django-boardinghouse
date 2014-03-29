@@ -18,8 +18,8 @@ from optparse import make_option
 
 from ...schema import (
     is_shared_model, get_active_schemata, 
-    activate_schema, activate_template_schema, deactivate_schema,
-    Forbidden,
+    activate_template_schema, deactivate_schema,
+    get_schema_model,
 )
 
 class Command(dumpdata.Command):
@@ -32,7 +32,8 @@ class Command(dumpdata.Command):
     
     def handle(self, *app_labels, **options):
         schema_name = options.get('schema')
-
+        Schema = get_schema_model()
+        
         # If we have have any explicit models that are aware, then we should
         # raise an exception if we weren't handed a schema.
         get_model = models.get_model
@@ -48,10 +49,12 @@ class Command(dumpdata.Command):
             activate_template_schema()
         else:
             try:
-                activate_schema(schema_name)
-            except Forbidden:
+                schema = Schema.objects.get(schema=options.get('schema'))
+            except Schema.DoesNotExist:
                 raise CommandError('No Schema found named "%s"' % schema_name)
-        
+            
+            schema.activate()
+
         data = super(Command, self).handle(*app_labels, **options)
         
         deactivate_schema()

@@ -1,3 +1,4 @@
+import logging
 import os
 
 import django
@@ -8,6 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 
 import signals
 
+LOGGER = logging.getLogger(__name__)
 global _active_schema
 
 class Forbidden(Exception):
@@ -38,7 +40,22 @@ def _get_search_path():
     search_path = cursor.fetchone()[0]
     cursor.close()
     return search_path.split(',')
+
+def _set_search_path(search_path):
+    cursor = connection.cursor()
+    cursor.execute('SET search_path TO %s,public;', [search_path])
+    cursor.close()
+
+def _schema_exists(schema_name, cursor=None):
+    if cursor:
+        cursor.execute("SELECT schema_name FROM information_schema.schemata WHERE schema_name = %s", [schema_name])
+        return bool(cursor.fetchone())
     
+    cursor = connection.cursor()
+    try:
+        return _schema_exists(schema_name, cursor)
+    finally:
+        cursor.close()
     
 def get_active_schema_name():
     """
@@ -76,6 +93,16 @@ def get_active_schemata():
         cache.set('active-schemata', schemata)
     return schemata
 
+def get_all_schemata():
+    """
+    Get a (cached) list of all schemata.
+    """
+    schemata = cache.get('all-schemata')
+    if schemata is None:
+        schemata = get_schema_model().objects.all()
+        cache.set('all-schemata', schemata)
+    return schemata
+
 def _get_schema(schema_name):
     """
     Get the matching active schema object for the given name,
@@ -105,12 +132,10 @@ def activate_schema(schema_name):
         raise TemplateSchemaActivation()
     
     global _active_schema
-    cursor = connection.cursor()
     signals.schema_pre_activate.send(sender=None, schema_name=schema_name)
-    cursor.execute('SET search_path TO %s,public;' % schema_name)
+    _set_search_path(schema_name)
     signals.schema_post_activate.send(sender=None, schema_name=schema_name)
     _active_schema = schema_name
-    cursor.close()
 
 def activate_template_schema():
     """
@@ -121,7 +146,7 @@ def activate_template_schema():
     schema_name = '__template__'
     cursor = connection.cursor()
     signals.schema_pre_activate.send(sender=None, schema_name=schema_name)
-    cursor.execute('SET search_path TO %s,public;' % schema_name)
+    _set_search_path(schema_name)
     signals.schema_post_activate.send(sender=None, schema_name=schema_name)
 
 def get_template_schema():
@@ -139,6 +164,21 @@ def deactivate_schema(schema=None):
     _active_schema = None
     cursor.close()
 
+
+def create_schema(schema_name):
+    cursor = connection.cursor()
+    
+    if _schema_exists(schema_name):
+        LOGGER.warn('Attempt to create an existing schema: %s' % schema_name)
+        return
+    
+    cursor.execute("SELECT clone_schema('__template__', %s);", [schema_name])
+    cursor.close()
+
+    signals.schema_created.send(sender=None, schema=schema_name)
+
+    LOGGER.info('New schema created: %s' % schema_name)
+    
 #: These models are required to be shared by the system.
 REQUIRED_SHARED_MODELS = [
     'auth.user',
