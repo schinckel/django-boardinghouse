@@ -63,8 +63,8 @@ if django.VERSION < (1,7):
 #     def get_dump_object(self, obj):
 #         dump_object = _get_dump_object(self, obj)
 #         if obj._is_schema_aware:
-#             from schema import get_schema
-#             dump_object['schema'] = get_schema().schema
+#             from schema import get_active_schema
+#             dump_object['schema'] = get_active_schema().schema
 #         return obj
 #     
 #     Serializer.get_dump_object = get_dump_object
@@ -73,6 +73,6 @@ if django.VERSION < (1,7):
 #     def end_object(self, obj):
 #         _end_object(self, obj)
 #         if obj._is_schema_aware:
-#             from schema import get_schema
-#             self.objects[-1]['schema'] = get_schema().schema
+#             from schema import get_active_schema
+#             self.objects[-1]['schema'] = get_active_schema().schema
 #     Serializer.end_object = end_object

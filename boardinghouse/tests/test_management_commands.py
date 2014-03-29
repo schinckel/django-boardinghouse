@@ -12,7 +12,7 @@ from django.db import connection, DatabaseError
 from django.db import transaction
 from django.test import TestCase
 
-from ..schema import get_schema, get_schema_model
+from ..schema import get_active_schema, get_schema_model
 
 from .models import AwareModel, NaiveModel
 
@@ -55,7 +55,7 @@ class TestLoadData(TestCase):
             self.assertEquals('Installed 2 object(s) from 1 fixture(s)\n', output)
         self.assertEquals(2, Schema.objects.count())
         Schema.objects.all()[0].activate()
-        self.assertTrue(get_schema())
+        self.assertTrue(get_active_schema())
         cursor = connection.cursor()
         for schema in Schema.objects.all():
             cursor.execute(SCHEMA_QUERY, [schema.schema])

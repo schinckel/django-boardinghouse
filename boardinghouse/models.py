@@ -20,31 +20,38 @@ else:
 import ensure_installation
 import signals
 
+from .schema import (
+    create_schema, activate_schema, deactivate_schema, get_active_schema_name,
+)
+
 LOGGER = logging.getLogger(__name__)
 USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.user')
 
-class SchemaQuerySet(models.query.QuerySet):
-    def bulk_create(self, *args, **kwargs):
-        created = super(SchemaQuerySet, self).bulk_create(*args, **kwargs)
-        for schema in created:
-            schema.create_schema()
-        return created
-    
-    def mass_create(self, *args):
-        self.bulk_create([Schema(name=x, schema=x) for x in args])
-    
-    def active(self):
-        return self.filter(is_active=True)
-    
-    def inactive(self):
-        return self.filter(is_active=False)
-    
 SCHEMA_NAME_VALIDATOR_MESSAGE = u'May only contain lowercase letters, digits and underscores. Must start with a letter.'
 
 schema_name_validator = RegexValidator(
     regex='^[a-z][a-z0-9_]*$',
     message=_(SCHEMA_NAME_VALIDATOR_MESSAGE)
 )
+
+class SchemaQuerySet(models.query.QuerySet):
+    def bulk_create(self, *args, **kwargs):
+        created = super(SchemaQuerySet, self).bulk_create(*args, **kwargs)
+        for schema in created:
+            schema.create_schema()
+        cache.delete('active-schemata')
+        return created
+    
+    def mass_create(self, *args):
+        self.bulk_create([Schema(name=x, schema=x) for x in args])
+        cache.delete('active-schemata')
+    
+    def active(self):
+        return self.filter(is_active=True)
+    
+    def inactive(self):
+        return self.filter(is_active=False)
+
 
 
 class Schema(models.Model):
@@ -122,56 +129,14 @@ class Schema(models.Model):
         At this stage, we just exit without failure (although log a warning)
         if the schema was already found in the database.
         """
-        # If we weren't passed in a cursor, get one and call ourselves.
-        if not cursor:
-            cursor = connection.cursor()
-            self.create_schema(cursor)
-            return cursor.close()
-        
-        # Look and see if this schema already exists. 
-        cursor.execute("SELECT schema_name FROM information_schema.schemata WHERE schema_name = %s", [self.schema])
-        # If it doesn't create it. This still actually works even if we
-        # are creating the template schema, even though I thought it might
-        # fail.
-        if cursor.fetchone():
-            LOGGER.warn('Attempt to create an existing schema: %s' % self.schema)
-            return
-        
-        cursor.execute("SELECT clone_schema('__template__', %s);", [self.schema])
-        # transaction.commit_unless_managed()
-        signals.schema_created.send(sender=self, schema=self.schema)
-        LOGGER.info('New schema created: %s' % self.schema)
+        create_schema(self.schema)
     
     def activate(self, cursor=None):
-        """
-        Activate the current schema: this will execute, in the database
-        connection, something like:
-        
-            SET search_path TO "foo",public;
-            
-        It sends signals before and after that the schema will be, and was
-        activated.
-        """
-        if not cursor:
-            cursor = connection.cursor()
-            self.activate(cursor)
-            return cursor.close()
-        signals.schema_pre_activate.send(sender=self, schema=self.schema)
-        cursor.execute('SET search_path TO "%s",public' % self.schema)
-        signals.schema_post_activate.send(sender=self, schema=self.schema)
+        activate_schema(self.schema)
     
     @classmethod
     def deactivate(cls, cursor=None):
-        """
-        Deactivate the current (or any) schema.
-        """
-        if not cursor:
-            cursor = connection.cursor()
-            cls.deactivate(cursor)
-            return cursor.close()
-        signals.schema_pre_activate.send(sender=cls, schema=None)
-        cursor.execute('SET search_path TO "$user",public')
-        signals.schema_post_activate.send(sender=cls, schema=None)
+        deactivate_schema()
     
 
 # This is a bit of fancy trickery to stick the property _is_shared_model
@@ -206,11 +171,11 @@ def inject_schema_attribute(sender, instance, **kwargs):
     You may use this in conjunction with :class:`MultiSchemaMixin`, it will
     respect any value that has already been set on the instance.
     """
-    from .schema import is_shared_model, get_schema
+    from .schema import is_shared_model, get_active_schema_name
     if is_shared_model(sender):
         return
     if not getattr(instance, '_schema', None):
-        instance._schema = get_schema()
+        instance._schema = get_active_schema_name()
 
 models.signals.post_init.connect(inject_schema_attribute)
 
@@ -223,12 +188,9 @@ if 'django.contrib.admin' in settings.INSTALLED_APPS:
     if not getattr(LogEntry, 'object_schema', None):
         LogEntry.add_to_class(
             'object_schema',
-            # Can't use an FK, as we may get a not installed error at this
-            # point in time.
-            # models.CharField(max_length=36, blank=True, null=True)
             models.ForeignKey('boardinghouse.schema', blank=True, null=True)
         )
-    
+        
         # Now, when we have an object that gets saved in the admin, we
         # want to store the schema in the log, ...
         @receiver(models.signals.pre_save, sender=LogEntry)
@@ -237,15 +199,14 @@ if 'django.contrib.admin' in settings.INSTALLED_APPS:
 
             if not is_shared_model(obj):
                 # I think we may have an attribute schema on the object?
-                instance.object_schema_id = obj._schema.schema
+                instance.object_schema_id = obj._schema
         
-
         # ...so we can add that bit to the url, and have links in the admin
         # that will automatically change the schema for us.
         get_admin_url = LogEntry.get_admin_url
 
         def new_get_admin_url(self):
-            if self.object_schema:
+            if self.object_schema_id:
                 return get_admin_url(self) + '?__schema=%s' % self.object_schema_id
     
             return get_admin_url(self)
@@ -291,7 +252,9 @@ def invalidate_cache(sender, **kwargs):
 # django-model-utils, due to a bug in django.
 # We will also clear out the global active schemata cache.
 @receiver(models.signals.post_save, sender=Schema)
+@receiver(signals.schema_created, sender=Schema)
 def invalidate_all_user_caches(sender, **kwargs):
     cache.delete('active-schemata')
+    cache.delete('all-schemata')
     for pk in kwargs['instance'].users.all():
         cache.delete('visible-schemata-%s' % pk)

@@ -32,7 +32,12 @@
 {% endblock %}
 
 {% block branding %}
-<h1 id="site-name">{% trans 'Django administration' %}<div>{% include 'admin/change_schema.html' %}</div></h1>
+<h1 id="site-name">
+  {% trans 'Django administration' %}
+  {% if schemata %}
+    <div>{% include 'admin/change_schema.html' %}</div>
+  {% endif %}
+</h1>
 {% endblock %}
 
 {% block nav-global %}

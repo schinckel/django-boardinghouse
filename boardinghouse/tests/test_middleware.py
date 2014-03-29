@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from ..schema import get_schema, TemplateSchemaActivation, get_schema_model
+from ..schema import TemplateSchemaActivation, get_schema_model
 from .models import AwareModel, User
 
 Schema = get_schema_model()

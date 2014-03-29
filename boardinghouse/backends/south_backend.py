@@ -4,8 +4,10 @@ import sys
 from django.db import models
 
 from ..schema import (
-    is_shared_table, _get_schema_or_template,
-    get_schema_model, get_template_schema
+    is_shared_table, get_active_schema_name,
+    activate_template_schema,
+    activate_schema, deactivate_schema,
+    get_active_schemata,
 )
 
 try:
@@ -24,9 +26,6 @@ else:
         function = getattr(postgresql_psycopg2.DatabaseOperations, name)
     
         def apply_to_all(self, table, *args, **kwargs):
-            template_schema = get_template_schema()
-            Schema = get_schema_model()
-            
             # If this model is naive, then we only want to run the wrapped
             # function normally.
             if is_shared_table(table):
@@ -43,14 +42,14 @@ else:
                 if frame[3] == 'apply_to_all':
                     return function(self, table, *args, **kwargs)
         
-            for schema in Schema.objects.all():
+            for schema in get_active_schemata():
                 schema.activate()
                 function(self, table, *args, **kwargs)
-                schema.deactivate()
+                deactivate_schema()
         
-            template_schema.activate()
+            activate_template_schema()
             function(self, table, *args, **kwargs)
-            template_schema.deactivate()
+            deactivate_schema()
         
         return apply_to_all
 
@@ -93,7 +92,7 @@ else:
         # each command. This may potentially slow things down, but it's also
         # the only way to ensure it is correct.
         def add_deferred_sql(self, sql):
-            schema = _get_schema_or_template()
+            schema = get_active_schema_name() or '__template__'
             sql = "SET search_path TO %s,public; %s; SET search_path TO public;" % (schema, sql)
             self.deferred_sql.append(sql)
     
@@ -105,7 +104,7 @@ else:
             if is_shared_table(table_name):
                 schema = self._get_schema_name()
             else:
-                schema = _get_schema_or_template()
+                schema = get_active_schema_name() or '__template__'
         
             constraints = {}
             ifsc_tables = ["constraint_column_usage", "key_column_usage"]

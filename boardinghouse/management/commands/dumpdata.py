@@ -16,7 +16,11 @@ from django.db import models
 
 from optparse import make_option
 
-from ...schema import is_shared_model, get_schema_model, get_template_schema
+from ...schema import (
+    is_shared_model, get_active_schemata, 
+    activate_template_schema, deactivate_schema,
+    get_schema_model,
+)
 
 class Command(dumpdata.Command):
     option_list = dumpdata.Command.option_list + (
@@ -27,18 +31,9 @@ class Command(dumpdata.Command):
     )
     
     def handle(self, *app_labels, **options):
-        Schema = get_schema_model()
-        template_schema = get_template_schema()
-        
         schema_name = options.get('schema')
-        if schema_name == '__template__':
-            schema = template_schema
-        else:
-            try:
-                schema = Schema.objects.get(schema=options.get('schema'))
-            except Schema.DoesNotExist:
-                raise CommandError('No Schema found named "%s"' % schema_name)
-
+        Schema = get_schema_model()
+        
         # If we have have any explicit models that are aware, then we should
         # raise an exception if we weren't handed a schema.
         get_model = models.get_model
@@ -47,12 +42,21 @@ class Command(dumpdata.Command):
             for label in app_labels if '.' in label
             and get_model(*label.split('.'))
         ])
-        
-        if aware_required and schema == template_schema:
-            raise CommandError('You must pass a schema when an explicit model is aware.')
-        
-        schema.activate()
+
+        if schema_name == '__template__':
+            if aware_required:
+                raise CommandError('You must pass a schema when an explicit model is aware.')
+            activate_template_schema()
+        else:
+            try:
+                schema = Schema.objects.get(schema=options.get('schema'))
+            except Schema.DoesNotExist:
+                raise CommandError('No Schema found named "%s"' % schema_name)
+            
+            schema.activate()
+
         data = super(Command, self).handle(*app_labels, **options)
-        schema.deactivate()
+        
+        deactivate_schema()
 
         return data

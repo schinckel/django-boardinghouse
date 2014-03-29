@@ -1,12 +1,22 @@
+import logging
 import os
 
 import django
 from django.conf import settings
 from django.core.cache import cache
 from django.db import models, connection
+from django.utils.translation import ugettext_lazy as _
+
+import signals
+
+LOGGER = logging.getLogger(__name__)
+global _active_schema
 
 class Forbidden(Exception):
-    pass
+    """
+    An exception that will be raised when an attempt to activate a non-valid
+    schema is made.
+    """
 
 class TemplateSchemaActivation(Forbidden):
     """
@@ -18,32 +28,60 @@ class TemplateSchemaActivation(Forbidden):
             'Activating template schema forbidden.', *args, **kwargs
         )
 
+
 def get_schema_model():
     return models.get_model('boardinghouse','schema')
 
-def get_template_schema():
-    return get_schema_model()(schema="__template__")
+_active_schema = None
 
-def get_schema():
+def _get_search_path():
+    cursor = connection.cursor()
+    cursor.execute('SHOW search_path')
+    search_path = cursor.fetchone()[0]
+    cursor.close()
+    return search_path.split(',')
+
+def _set_search_path(search_path):
+    cursor = connection.cursor()
+    cursor.execute('SET search_path TO %s,public;', [search_path])
+    cursor.close()
+
+def _schema_exists(schema_name, cursor=None):
+    if cursor:
+        cursor.execute("SELECT schema_name FROM information_schema.schemata WHERE schema_name = %s", [schema_name])
+        return bool(cursor.fetchone())
+    
+    cursor = connection.cursor()
+    try:
+        return _schema_exists(schema_name, cursor)
+    finally:
+        cursor.close()
+    
+def get_active_schema_name():
     """
     Get the currently active schema.
     
     This requires a database query to ask it what the current `search_path` is.
     """
-    cursor = connection.cursor()
-    cursor.execute('SHOW search_path')
-    search_path = cursor.fetchone()[0]
-    cursor.close()
-    schema_name = search_path.split(',')[0]
-    if schema_name == '__template__':
-        return get_template_schema()
+    global _active_schema
     
-    Schema = get_schema_model()
+    if _active_schema:
+        return _active_schema
     
-    try:
-        return Schema.objects.get(schema=schema_name)
-    except Schema.DoesNotExist:
-        return None
+    reported_schema = _get_search_path()[0]
+    
+    if _get_schema(reported_schema):
+        _active_schema = reported_schema
+    else:
+        _active_schema = None
+    
+    return _active_schema
+
+def get_active_schema():
+    """
+    Get the (internal) name of the currently active schema.
+    """
+    return _get_schema(get_active_schema_name())
 
 def get_active_schemata():
     """
@@ -51,43 +89,96 @@ def get_active_schemata():
     """
     schemata = cache.get('active-schemata')
     if schemata is None:
-        schemata = Schema.objects.active()
+        schemata = get_schema_model().objects.active()
         cache.set('active-schemata', schemata)
     return schemata
 
-    
-def activate_schema(schema):
+def get_all_schemata():
     """
-    Activate the schema provided, or with the name provided.
-    
-    This will raise a :class:`TemplateSchemaActivation` exception if
-    the __template__ schema is attempted to be activated.
+    Get a (cached) list of all schemata.
     """
-    Schema = get_schema_model()
+    schemata = cache.get('all-schemata')
+    if schemata is None:
+        schemata = get_schema_model().objects.all()
+        cache.set('all-schemata', schemata)
+    return schemata
+
+def _get_schema(schema_name):
+    """
+    Get the matching active schema object for the given name,
+    if it exists.
+    """
+    if not schema_name:
+        return
+    for schema in get_active_schemata():
+        if schema_name == schema.schema:
+            return schema
+        if schema_name == schema:
+            return schema
+
+def activate_schema(schema_name):
+    """
+    Activate the current schema: this will execute, in the database
+    connection, something like:
     
-    if isinstance(schema, Schema):
-        if schema.schema == '__template__':
-            raise TemplateSchemaActivation()
-        schema.activate()
-    else:
-        if schema == '__template__':
-            raise TemplateSchemaActivation()
-        # This is a sanity check that the schema actually
-        # exists, but does mean there is a database hit to
-        # get the schema object, then another to set the
-        # schema. Could we just use:
-        #   Schema(schema=schema).activate()
-        # instead? That would save a db hit, but would allow
-        # for setting a search_path without a schema (which could
-        # give bad results).
-        Schema.objects.get(schema=schema).activate()
+        SET search_path TO "foo",public;
+        
+    It sends signals before and after that the schema will be, and was
+    activated.
+    
+    Must be passed a string: the internal name of the schema to activate.
+    """
+    if schema_name == '__template__':
+        raise TemplateSchemaActivation()
+    
+    global _active_schema
+    signals.schema_pre_activate.send(sender=None, schema_name=schema_name)
+    _set_search_path(schema_name)
+    signals.schema_post_activate.send(sender=None, schema_name=schema_name)
+    _active_schema = schema_name
+
+def activate_template_schema():
+    """
+    Activate the template schema. You probably don't want to do this.
+    """
+    global _active_schema
+    _active_schema = None
+    schema_name = '__template__'
+    cursor = connection.cursor()
+    signals.schema_pre_activate.send(sender=None, schema_name=schema_name)
+    _set_search_path(schema_name)
+    signals.schema_post_activate.send(sender=None, schema_name=schema_name)
+
+def get_template_schema():
+    return get_schema_model()('__template__')
 
 def deactivate_schema(schema=None):
     """
     Deactivate the provided (or current) schema.
     """
-    get_template_schema().deactivate()
+    global _active_schema
+    cursor = connection.cursor()
+    signals.schema_pre_activate.send(sender=None, schema_name=None)
+    cursor.execute('SET search_path TO "$user",public;')
+    signals.schema_post_activate.send(sender=None, schema_name=None)
+    _active_schema = None
+    cursor.close()
 
+
+def create_schema(schema_name):
+    cursor = connection.cursor()
+    
+    if _schema_exists(schema_name):
+        LOGGER.warn('Attempt to create an existing schema: %s' % schema_name)
+        return
+    
+    cursor.execute("SELECT clone_schema('__template__', %s);", [schema_name])
+    cursor.close()
+
+    signals.schema_created.send(sender=None, schema=schema_name)
+
+    LOGGER.info('New schema created: %s' % schema_name)
+    
 #: These models are required to be shared by the system.
 REQUIRED_SHARED_MODELS = [
     'auth.user',
@@ -180,18 +271,6 @@ def is_shared_table(table):
     return is_shared_model(model) and is_shared_model(rel_model)
     
 ## Internal helper functions.
-def _get_schema_or_template():
-    """
-    Get the name of the current schema, or __template__ if none is selected.
-    
-    This is really only intended to be used within code that deals with
-    table creation or migration, as the __template__ schema should not be
-    used at other times.
-    """
-    schema = get_schema()
-    if not schema:
-        return '__template__'
-    return schema.schema
 
 def _install_clone_schema_function():
     """
@@ -220,6 +299,7 @@ def _wrap_command(command):
         
         deactivate_schema()
         
+        # We don't want just active schemata...
         for schema in get_schema_model().objects.all():
             schema.create_schema()
     

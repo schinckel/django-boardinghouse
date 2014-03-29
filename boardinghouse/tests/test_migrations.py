@@ -14,7 +14,7 @@ else:
     from django.db import migrations
     db = None
 
-from ..schema import get_schema_model, get_template_schema
+from ..schema import get_schema_model, get_template_schema, activate_template_schema
 from .models import AwareModel
 
 Schema = get_schema_model()
@@ -87,7 +87,7 @@ class SouthMigrate(TestCase):
         # Create a new column on awaremodel
         db.add_column('boardinghouse_awaremodel', 'test_column', models.IntegerField(null=True))
         # Check that the column exists on all of the schemata.
-        template_schema.activate()
+        activate_template_schema()
         columns = db.execute(build_column_query(template_schema))
         self.assertEquals([('test_column', 'integer')], columns)
         for schema in Schema.objects.all():
@@ -98,7 +98,7 @@ class SouthMigrate(TestCase):
         # add a unique
         db.create_unique('boardinghouse_awaremodel', ['test_column'])
         unique_constraint = 'boardinghouse_awaremodel_test_column_uniq'
-        template_schema.activate()
+        activate_template_schema()
         constraints = list(db._constraints_affecting_columns('boardinghouse_awaremodel', ['test_column']))
         self.assertIn(unique_constraint, constraints)
         for schema in Schema.objects.all():
@@ -108,7 +108,7 @@ class SouthMigrate(TestCase):
         
         # remove the unique
         db.delete_unique('boardinghouse_awaremodel', ['test_column'])
-        template_schema.activate()
+        activate_template_schema()
         constraints = list(db._constraints_affecting_columns('boardinghouse_awaremodel', ['test_column']))
         self.assertNotIn(unique_constraint, constraints)
         for schema in Schema.objects.all():
@@ -118,7 +118,7 @@ class SouthMigrate(TestCase):
         
         # alter the column type
         db.alter_column('boardinghouse_awaremodel', 'test_column', models.TextField(null=True))
-        template_schema.activate()
+        activate_template_schema()
         columns = db.execute(build_column_query(template_schema))
         self.assertEquals([('test_column', 'text')], columns)
         for schema in Schema.objects.all():
@@ -129,7 +129,7 @@ class SouthMigrate(TestCase):
         # Remove that column
         db.drop_column('boardinghouse_awaremodel', 'test_column')
         # Check that the column no longer exists on all of the schemata.        
-        template_schema.activate()
+        activate_template_schema()
         columns = db.execute(build_column_query(template_schema))
         self.assertEquals([], columns)
         for schema in Schema.objects.all():
