@@ -34,7 +34,7 @@ else:
         return _apply_to_all
     
     CREATE_INDEX = re.compile(r'^CREATE INDEX (?P<index_name>.+?) ON "(?P<table_name>.+?)" \("(?P<column_name>.+?)"\)$')
-    ADD_CONSTRAINT = re.compile(r'^ALTER TABLE "(?P<table_name>.+?)" ADD CONSTRAINT')
+    ALTER_TABLE = re.compile(r'^ALTER TABLE "?(?P<table_name>.+?)"? ADD (?P<type>(CONSTRAINT)|(CHECK)|(EXCLUDE))')
     
     class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         column_sql = wrap('column_sql')
@@ -51,8 +51,8 @@ else:
             match = None
             if CREATE_INDEX.match(sql):
                 match = CREATE_INDEX.match(sql).groupdict()
-            elif ADD_CONSTRAINT.match(sql):
-                match = ADD_CONSTRAINT.match(sql).groupdict()
+            elif ALTER_TABLE.match(sql):
+                match = ALTER_TABLE.match(sql).groupdict()
             
             execute = super(DatabaseSchemaEditor, self).execute
             if match and not is_shared_table(match['table_name']):
