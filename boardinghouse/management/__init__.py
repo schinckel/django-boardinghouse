@@ -2,9 +2,12 @@ from django.db import models, connection
 from django.conf import settings
 from django.core.management.color import no_style
 
-from boardinghouse.schema import is_shared_model, get_schema_model
+from boardinghouse.schema import is_shared_model, get_schema_model, _sql_from_file
 
 def post_syncdb_duplicator(sender, **kwargs):
+    _sql_from_file('clone_schema')
+    _sql_from_file('protect_schema_column')
+    
     cursor = connection.cursor()
     
     # See if any of the newly created models are schema-aware

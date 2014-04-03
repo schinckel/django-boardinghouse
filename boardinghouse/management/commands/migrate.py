@@ -34,7 +34,7 @@ command to ensure:
 """
 from django.db import connection
 
-from ...schema import _wrap_command, get_schema_model, get_template_schema
+from ...schema import _wrap_command, _sql_from_file, get_schema_model, get_template_schema
 
 Command = None
 
@@ -68,6 +68,7 @@ except ImportError:
                     function(self, migration, database)
                 else:
                     function(self, migration, database)
+                _sql_from_file('protect_schema_column')
             return inner
         
         Migrator.run = wrap(Migrator.run)
