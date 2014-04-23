@@ -4,7 +4,7 @@
 
 CREATE OR REPLACE FUNCTION reject_schema_column_change() RETURNS TRIGGER AS $$
   BEGIN
-    RAISE EXCEPTION 'Schema % cannot be renamed', OLD.schema;
+    RAISE EXCEPTION 'Schema cannot be renamed' USING HINT = OLD.schema;
   END;
 $$ LANGUAGE plpgsql;
 
