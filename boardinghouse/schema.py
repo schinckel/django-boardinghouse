@@ -223,9 +223,14 @@ def is_shared_model(model):
     if app_model in settings.SHARED_MODELS:
         return True
     
+    # Sometimes, we want a join table to be private.
+    if app_model in settings.PRIVATE_MODELS:
+        return False
+    
     # if all fields are auto or fk, then we are a join model,
     # and if all related objects are shared, then we must
-    # also be shared.
+    # also be shared, unless we were explicitly marked as private
+    # above.
     if _is_join_model(model):
         return all([
             is_shared_model(field.rel.get_related_field().model)
@@ -267,23 +272,23 @@ def is_shared_table(table):
     
 ## Internal helper functions.
 
-def _install_clone_schema_function():
+def _sql_from_file(filename):
     """
     A large part of this project is based around how simple it is to
     clone a schema's structure into a new schema. This is encapsulated in
     an SQL script: this function will install that function into the current
     database.
     """
-    clone_schema_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'sql', 'clone_schema.sql')
-    clone_schema_function = " ".join([x.strip() for x in open(clone_schema_file).readlines() if not x.strip().startswith('--')])
-    clone_schema_function = clone_schema_function.replace("%", "%%")
     cursor = connection.cursor()
-    cursor.execute(clone_schema_function)
+    sql_file= os.path.join(os.path.abspath(os.path.dirname(__file__)), 'sql', '%s.sql' % filename)
+    function = " ".join([x.strip() for x in open(sql_file).readlines() if not x.strip().startswith('--')])
+    function = function.replace("%", "%%")
+    cursor.execute(function)
     cursor.close()
 
 def _wrap_command(command):
     def inner(self, *args, **kwargs):
-        _install_clone_schema_function()
+        _sql_from_file('clone_schema')
         get_template_schema().create_schema()
         
         cursor = connection.cursor()

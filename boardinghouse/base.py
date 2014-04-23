@@ -2,9 +2,6 @@
 """
 from django.db import models
 
-# Why do we get a weird error if we don't import this?
-import boardinghouse.models
-
 class MultiSchemaMixin(object):
     """
     A mixin that allows for fetching objects from multiple

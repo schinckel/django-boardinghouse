@@ -128,18 +128,23 @@ class TestDumpData(TestCase):
         Schema.objects.get(schema='a').activate()
         AwareModel.objects.create(name='foo')
         
+        def by_model(x):
+            return x['model']
+        
         with capture(call_command, 'dumpdata', 'boardinghouse', schema='a') as output:
-            data = json.loads(output)
-            self.assertEquals(3, len(data))
-            self.assertEquals('boardinghouse.schema', data[0]['model'])
-            self.assertEquals('boardinghouse.schema', data[1]['model'])
-            self.assertEquals({"status": False, "name": "foo"}, data[2]['fields'])
+            data = sorted(json.loads(output), key=by_model)
+
+        self.assertEquals(3, len(data))
+        self.assertEquals({"status": False, "name": "foo"}, data[0]['fields'])
+        self.assertEquals('boardinghouse.schema', data[1]['model'])
+        self.assertEquals('boardinghouse.schema', data[2]['model'])
             
         with capture(call_command, 'dumpdata', 'boardinghouse', schema='b') as output:
-            data = json.loads(output)
-            self.assertEquals(2, len(data))
-            self.assertEquals('boardinghouse.schema', data[0]['model'])
-            self.assertEquals('boardinghouse.schema', data[1]['model'])
+            data = sorted(json.loads(output), key=by_model)
+        
+        self.assertEquals(2, len(data))
+        self.assertEquals('boardinghouse.schema', data[0]['model'])
+        self.assertEquals('boardinghouse.schema', data[1]['model'])
     
     @unittest.skipIf(django.VERSION < (1,5), "CommandError used here")
     def test_dumpdata_on_aware_model_requires_schema(self):

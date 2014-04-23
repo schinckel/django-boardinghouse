@@ -30,6 +30,7 @@ def main():
     ) + south + (
         'boardinghouse',
         'django.contrib.admin',
+        'boardinghouse.contrib.invite',
     )
     global_settings.DATABASES = {
         'default': {

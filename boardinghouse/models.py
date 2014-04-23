@@ -8,6 +8,7 @@ from django.contrib import auth
 from django.core.cache import cache
 from django.core.validators import RegexValidator
 from django.db import models, connection, transaction
+from django.dispatch import receiver
 from django.forms import ValidationError
 from django.utils.translation import ugettext_lazy as _
 
@@ -24,7 +25,7 @@ from .schema import (
 )
 
 LOGGER = logging.getLogger(__name__)
-UserModel = getattr(settings, 'AUTH_USER_MODEL', 'auth.user')
+USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.user')
 
 SCHEMA_NAME_VALIDATOR_MESSAGE = u'May only contain lowercase letters, digits and underscores. Must start with a letter.'
 
@@ -77,7 +78,7 @@ class Schema(models.Model):
     is_active = models.BooleanField(default=True,
         help_text=_(u'Use this instead of deleting schemata.')
     )
-    users = models.ManyToManyField(UserModel,
+    users = models.ManyToManyField(USER_MODEL,
         null=True, blank=True, related_name='schemata',
         help_text=_(u'Which users may access data from this schema.')
     )
@@ -181,41 +182,36 @@ models.signals.post_init.connect(inject_schema_attribute)
 if 'django.contrib.admin' in settings.INSTALLED_APPS:
     # Patch LogEntry to store reference to Schema if applicable.
     from django.contrib.admin.models import LogEntry
-    from django.db import models
-    from django.dispatch import receiver
     
     from .schema import is_shared_model
     
-    LogEntry.add_to_class(
-        'object_schema',
-        # Can't use an FK, as we may get a not installed error at this
-        # point in time.
-        # models.CharField(max_length=36, blank=True, null=True)
-        models.ForeignKey('boardinghouse.schema', blank=True, null=True)
-    )
+    if not getattr(LogEntry, 'object_schema', None):
+        LogEntry.add_to_class(
+            'object_schema',
+            models.ForeignKey('boardinghouse.schema', blank=True, null=True)
+        )
         
-    # Now, when we have an object that gets saved in the admin, we
-    # want to store the schema in the log, ...
-    @receiver(models.signals.pre_save, sender=LogEntry)
-    def update_object_schema(sender, instance, **kwargs):
-        obj = instance.get_edited_object()
+        # Now, when we have an object that gets saved in the admin, we
+        # want to store the schema in the log, ...
+        @receiver(models.signals.pre_save, sender=LogEntry)
+        def update_object_schema(sender, instance, **kwargs):
+            obj = instance.get_edited_object()
 
-        if not is_shared_model(obj):
-            # I think we may have an attribute schema on the object?
-            instance.object_schema_id = obj._schema
-            
-    
-    # ...so we can add that bit to the url, and have links in the admin
-    # that will automatically change the schema for us.
-    get_admin_url = LogEntry.get_admin_url
-    
-    def new_get_admin_url(self):
-        if self.object_schema_id:
-            return get_admin_url(self) + '?__schema=%s' % self.object_schema_id
+            if not is_shared_model(obj):
+                # I think we may have an attribute schema on the object?
+                instance.object_schema_id = obj._schema
         
-        return get_admin_url(self)
+        # ...so we can add that bit to the url, and have links in the admin
+        # that will automatically change the schema for us.
+        get_admin_url = LogEntry.get_admin_url
+
+        def new_get_admin_url(self):
+            if self.object_schema_id:
+                return get_admin_url(self) + '?__schema=%s' % self.object_schema_id
     
-    LogEntry.get_admin_url = new_get_admin_url
+            return get_admin_url(self)
+
+        LogEntry.get_admin_url = new_get_admin_url
 
 if 'django.contrib.auth' in settings.INSTALLED_APPS:
     from django.contrib.auth.models import AnonymousUser
@@ -233,8 +229,10 @@ def visible_schemata(user):
     return schemata
 
 def add_visible_schemata_to_user():
-    models.get_model(*UserModel.split('.')).visible_schemata = property(visible_schemata)
-    
+    UserModel = models.get_model(*USER_MODEL.split('.'))
+    if not getattr(UserModel, 'visible_schemata', None):
+        UserModel.visible_schemata = property(visible_schemata)
+
 if django.VERSION < (1, 7):
     add_visible_schemata_to_user()
 

@@ -106,6 +106,8 @@ settings for a project using django-boardinghouse.
 .. autofunction:: boardinghouse.context_processors.schemata
   :noindex:
 
+.. _changing_schema:
+
 Changing Schema
 ---------------
 
