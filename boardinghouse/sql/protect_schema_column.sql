@@ -18,7 +18,7 @@ BEGIN
     SELECT * FROM information_schema.tables
     WHERE table_name = 'boardinghouse_schema'
     AND table_schema = 'public'
-  )THEN
+  ) THEN
     CREATE TRIGGER protect_boardinghouse_schema_column
       BEFORE UPDATE OF schema ON public.boardinghouse_schema
       FOR EACH ROW
