@@ -256,5 +256,5 @@ def invalidate_cache(sender, **kwargs):
 def invalidate_all_user_caches(sender, **kwargs):
     cache.delete('active-schemata')
     cache.delete('all-schemata')
-    for pk in kwargs['instance'].users.all():
-        cache.delete('visible-schemata-%s' % pk)
+    for user in kwargs['instance'].users.values('pk'):
+        cache.delete('visible-schemata-%s' % user['pk'])

@@ -48,7 +48,7 @@ class Invitation(SharedSchemaModel):
     email = models.EmailField(verbose_name=_('Email address'))
     sender = models.ForeignKey(UserModel, related_name='sent_invitations')
     message = models.TextField()
-    schema = models.ForeignKey('boardinghouse.schema')
+    schema = models.ForeignKey('boardinghouse.schema', related_name='invitations')
     redemption_code = models.CharField(max_length=36, null=True, blank=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
