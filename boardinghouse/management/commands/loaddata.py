@@ -41,6 +41,9 @@ class Command(loaddata.Command):
         
             schema.activate()
         
+        # We should wrap this in a try/except, and present a reasonable
+        # error message if we think we tried to load data without a schema
+        # that required one.
         super(Command, self).handle(*app_labels, **options)
 
         Schema().deactivate()
