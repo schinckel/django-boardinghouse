@@ -192,7 +192,6 @@ class SchemaChangeMiddleware:
             change_schema(request, request.user.visible_schemata[0])
         
 
-
 class SchemaActivationMiddleware:
     """
     Middleware that actually activates the schema from the session.
