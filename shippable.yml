@@ -1,9 +1,8 @@
+build_environment: ubuntu1204
 language: python
-
 python:
   - "2.7"
-
 install:
-  - pip install coverage hg+https://bitbucket.org/schinckel/django-coverage psycopg2 django-model-utils https://www.djangoproject.com/download/1.7b2/tarball/
+  - pip install coverage psycopg2 django-model-utils https://www.djangoproject.com/download/1.7b2/tarball/
 
-script: python setup.py test
+script: coverage run setup.py test
