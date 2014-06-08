@@ -21,4 +21,8 @@ clean:
 runserver:
 	./manage.py runserver ${PORT}
 
+sync-unattended:
+	./manage.py syncdb --noinput
+
 all: database virtualenv install-packages load-data
+unattended: database virtualenv install-packages sync-unattended load-data
