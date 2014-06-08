@@ -33,8 +33,9 @@ else:
     
         return _apply_to_all
     
-    CREATE_INDEX = re.compile(r'^CREATE INDEX (?P<index_name>.+?) ON "(?P<table_name>.+?)" \("(?P<column_name>.+?)"\)$')
-    ALTER_TABLE = re.compile(r'^ALTER TABLE "?(?P<table_name>.+?)"? ADD (?P<type>(CONSTRAINT)|(CHECK)|(EXCLUDE))')
+    CREATE_INDEX = re.compile(r'^CREATE INDEX\W+(?P<index_name>.+?) ON "(?P<table_name>.+?)" \("(?P<column_name>.+?)"\)$')
+    ALTER_TABLE = re.compile(r'^ALTER TABLE\W+"?(?P<table_name>.+?)"? ADD (?P<type>(CONSTRAINT)|(CHECK)|(EXCLUDE))')
+    CREATE_TRIGGER = re.compile(r'^\W*CREATE\W+TRIGGER\W+(?P<trigger_name>.+?)\W+.*?\W+ON\W+"?(?P<table_name>.+?)"?\W')
     
     class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         column_sql = wrap('column_sql')
@@ -53,6 +54,8 @@ else:
                 match = CREATE_INDEX.match(sql).groupdict()
             elif ALTER_TABLE.match(sql):
                 match = ALTER_TABLE.match(sql).groupdict()
+            elif CREATE_TRIGGER.match(sql):
+                match = CREATE_TRIGGER.match(sql).groupdict()
             
             execute = super(DatabaseSchemaEditor, self).execute
             if match and not is_shared_table(match['table_name']):
