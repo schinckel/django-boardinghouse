@@ -19,5 +19,5 @@ try:
 except ImportError:
     pass
 
-from ...schema import get_schema_model, _wrap_command
+from ...schema import _wrap_command
 Command.handle_noargs = _wrap_command(Command.handle_noargs)
