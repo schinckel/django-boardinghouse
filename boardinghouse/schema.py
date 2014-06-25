@@ -302,10 +302,8 @@ def _wrap_command(command):
         cursor = connection.cursor()
         # In the case of create table statements, we want to make sure
         # they go to the public schema, but want reads to come from
-        # __template__. Actually, maybe we should just have public,
-        # so we actually get failures when stuff is incorrect.
-        # cursor.execute('SET search_path TO public,__template__;')
-        cursor.execute('SET search_path TO public;')
+        # __template__.
+        cursor.execute('SET search_path TO public,__template__;')
         cursor.close()
 
         command(self, *args, **kwargs)
