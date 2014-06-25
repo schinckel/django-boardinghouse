@@ -14,7 +14,7 @@ setup(
     include_package_data=True,
     install_requires = [
         'django',
-        'psycopg2',
+        #'psycopg2', # or psycopg2cffi
         'django-model-utils', # Only if django<1.7. Is there any way to do that?
     ],
     classifiers = [

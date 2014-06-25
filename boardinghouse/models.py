@@ -43,14 +43,14 @@ class SchemaQuerySet(models.query.QuerySet):
             schema.create_schema()
         cache.delete('active-schemata')
         return created
-    
+
     def mass_create(self, *args):
         self.bulk_create([Schema(name=x, schema=x) for x in args])
         cache.delete('active-schemata')
-    
+
     def active(self):
         return self.filter(is_active=True)
-    
+
     def inactive(self):
         return self.filter(is_active=False)
 
@@ -59,13 +59,13 @@ class SchemaQuerySet(models.query.QuerySet):
 class Schema(models.Model):
     """
     The Schema model provides an abstraction for a Postgres schema.
-    
+
     It will take care of creating a cloned copy of the template_schema
     when it is created, and also has the ability to activate and deactivate
     itself (at the start and end of the request cycle would be a good plan).
     """
     _is_shared_model = True
-    
+
     schema = models.CharField(max_length=36, primary_key=True, unique=True,
         validators=[schema_name_validator],
         help_text='<br>'.join([
@@ -74,7 +74,7 @@ class Schema(models.Model):
             u'May not be changed after creation.',
         ]),
     )
-    name = models.CharField(max_length=128, unique=True, 
+    name = models.CharField(max_length=128, unique=True,
         help_text=_(u'The display name of the schema.')
     )
     is_active = models.BooleanField(default=True,
@@ -84,26 +84,26 @@ class Schema(models.Model):
         null=True, blank=True, related_name='schemata',
         help_text=_(u'Which users may access data from this schema.')
     )
-    
+
     if django.VERSION < (1,7):
         objects = PassThroughManager.for_queryset_class(SchemaQuerySet)()
     else:
         objects = SchemaQuerySet.as_manager()
-    
+
     class Meta:
         app_label = 'boardinghouse'
         verbose_name_plural = 'schemata'
-    
+
     def __init__(self, *args, **kwargs):
         super(Schema, self).__init__(*args, **kwargs)
         self._initial_schema = self.schema
 
     def __unicode__(self):
         return u'%s (%s)' % (self.name, self.schema)
-    
+
     def save(self, *args, **kwargs):
         self._meta.get_field_by_name('schema')[0].run_validators(self.schema)
-        
+
         # We want to prevent someone creating a new schema with
         # the same internal name as an existing one. We assume if we
         # were 'initialised' then we were loaded from the database
@@ -119,27 +119,27 @@ class Schema(models.Model):
             raise ValidationError(_('may not change schema after creation.'))
 
         self.create_schema()
-        
+
         return super(Schema, self).save(*args, **kwargs)
-    
+
     def create_schema(self, cursor=None):
         """
         This method will create a new postgres schema with the name
         stored in 'self.schema', if it doesn't already exist in the
         database.
-        
+
         At this stage, we just exit without failure (although log a warning)
         if the schema was already found in the database.
         """
         create_schema(self.schema)
-    
+
     def activate(self, cursor=None):
         activate_schema(self.schema)
-    
+
     @classmethod
     def deactivate(cls, cursor=None):
         deactivate_schema()
-    
+
 
 # This is a bit of fancy trickery to stick the property _is_shared_model
 # on every model class, returning False, unless it has been explicitly
@@ -156,7 +156,7 @@ models.Model._is_shared_model = ClassProperty(classmethod(_is_shared_model))
 
 # We need to monkey-patch __eq__ on models.Model
 __old_eq__ = models.Model.__eq__
-    
+
 def __eq__(self, other):
     from .schema import is_shared_model
     if is_shared_model(self):
@@ -169,7 +169,7 @@ def inject_schema_attribute(sender, instance, **kwargs):
     """
     A signal listener that injects the current schema on the object
     just after it is instantiated.
-    
+
     You may use this in conjunction with :class:`MultiSchemaMixin`, it will
     respect any value that has already been set on the instance.
     """
@@ -184,15 +184,15 @@ models.signals.post_init.connect(inject_schema_attribute)
 if 'django.contrib.admin' in settings.INSTALLED_APPS:
     # Patch LogEntry to store reference to Schema if applicable.
     from django.contrib.admin.models import LogEntry
-    
+
     from .schema import is_shared_model
-    
+
     if not getattr(LogEntry, 'object_schema', None):
         LogEntry.add_to_class(
             'object_schema',
             models.ForeignKey('boardinghouse.schema', blank=True, null=True)
         )
-        
+
         # Now, when we have an object that gets saved in the admin, we
         # want to store the schema in the log, ...
         @receiver(models.signals.pre_save, sender=LogEntry)
@@ -202,7 +202,7 @@ if 'django.contrib.admin' in settings.INSTALLED_APPS:
             if not is_shared_model(obj):
                 # I think we may have an attribute schema on the object?
                 instance.object_schema_id = obj._schema
-        
+
         # ...so we can add that bit to the url, and have links in the admin
         # that will automatically change the schema for us.
         get_admin_url = LogEntry.get_admin_url
@@ -210,7 +210,7 @@ if 'django.contrib.admin' in settings.INSTALLED_APPS:
         def new_get_admin_url(self):
             if self.object_schema_id:
                 return get_admin_url(self) + '?__schema=%s' % self.object_schema_id
-    
+
             return get_admin_url(self)
 
         LogEntry.get_admin_url = new_get_admin_url
@@ -227,7 +227,7 @@ def visible_schemata(user):
     if schemata is None:
         schemata = user.schemata.active()
         cache.set('visible-schemata-%s' % user.pk, schemata)
-    
+
     return schemata
 
 def add_visible_schemata_to_user():
@@ -266,15 +266,17 @@ def invalidate_all_user_caches(sender, **kwargs):
 # signal on our own app.
 # How can we clear out all user caches? It depends upon
 # the cache backend, right?
-if django.VERSION < (1, 7):
+if hasattr(models.signals, 'pre_migrate'):
+    @receiver(models.signals.pre_migrate)
+    def invalidate_all_caches(sender, **kwargs):
+        if sender.name == 'boardinghouse':
+            cache.delete('active-schemata')
+            cache.delete('all-schemata')
+elif hasattr(models.signals, 'pre_syncdb'):
     @receiver(models.signals.pre_syncdb)
     def invalidate_all_caches(sender, **kwargs):
         if __name__ == sender.__name__:
             cache.delete('active-schemata')
             cache.delete('all-schemata')
 else:
-    @receiver(models.signals.pre_migrate)
-    def invalidate_all_caches(sender, **kwargs):
-        if sender.name == 'boardinghouse':
-            cache.delete('active-schemata')
-            cache.delete('all-schemata')
+    print "What do here?"
