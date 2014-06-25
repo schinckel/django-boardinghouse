@@ -25,6 +25,8 @@ from .schema import (
 )
 
 LOGGER = logging.getLogger(__name__)
+LOGGER.addHandler(logging.NullHandler())
+
 USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.user')
 
 SCHEMA_NAME_VALIDATOR_MESSAGE = u'May only contain lowercase letters, digits and underscores. Must start with a letter.'
@@ -243,8 +245,9 @@ def invalidate_cache(sender, **kwargs):
     if kwargs['reverse']:
         cache.delete('visible-schemata-%s' % kwargs['instance'].pk)
     else:
-        for pk in kwargs['pk_set']:
-            cache.delete('visible-schemata-%s' % pk)
+        if kwargs['pk_set']:
+            for pk in kwargs['pk_set']:
+                cache.delete('visible-schemata-%s' % pk)
 
 # In addition, we need to clear out the schemata cache for all users
 # related to a schema if that schema is changed - specifically, if it's
@@ -258,3 +261,20 @@ def invalidate_all_user_caches(sender, **kwargs):
     cache.delete('all-schemata')
     for user in kwargs['instance'].users.values('pk'):
         cache.delete('visible-schemata-%s' % user['pk'])
+
+# We also want to clear out all caches when we get a syncdb or migrate
+# signal on our own app.
+# How can we clear out all user caches? It depends upon
+# the cache backend, right?
+if django.VERSION < (1, 7):
+    @receiver(models.signals.pre_syncdb)
+    def invalidate_all_caches(sender, **kwargs):
+        if __name__ == sender.__name__:
+            cache.delete('active-schemata')
+            cache.delete('all-schemata')
+else:
+    @receiver(models.signals.pre_migrate)
+    def invalidate_all_caches(sender, **kwargs):
+        if sender.name == 'boardinghouse':
+            cache.delete('active-schemata')
+            cache.delete('all-schemata')
