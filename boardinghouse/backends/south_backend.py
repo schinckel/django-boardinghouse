@@ -24,13 +24,13 @@ else:
         # If so, it activates each schema in turn, and performs
         # it's task.
         function = getattr(postgresql_psycopg2.DatabaseOperations, name)
-    
+
         def apply_to_all(self, table, *args, **kwargs):
             # If this model is naive, then we only want to run the wrapped
             # function normally.
             if is_shared_table(table):
                 return function(self, table, *args, **kwargs)
-            
+
             # If we are already in a schema loop, like when one wrapped method
             # calls another one, we don't want to loop again in the inside
             # method (that's the one we are in now).
@@ -41,16 +41,16 @@ else:
             for frame in inspect.stack()[1:]:
                 if frame[3] == 'apply_to_all':
                     return function(self, table, *args, **kwargs)
-        
+
             for schema in get_active_schemata():
                 schema.activate()
                 function(self, table, *args, **kwargs)
                 deactivate_schema()
-        
+
             activate_template_schema()
             function(self, table, *args, **kwargs)
             deactivate_schema()
-        
+
         return apply_to_all
 
 
@@ -59,10 +59,10 @@ else:
         We need to wrap all of the calls to our methods in a wrapper that
         will call the method [NUM_SCHEMAS+1] times (including the special
         __template__ schema).
-        
+
         However, if the method is being called by another sibling method,
         then we don't want to have the duplicate calls.
-        
+
         """
         add_column = wrap('add_column')
         alter_column = wrap('alter_column')
@@ -86,7 +86,7 @@ else:
         # execute_many = wrap('execute_many')
         rename_column = wrap('rename_column')
         rename_table = wrap('rename_table')
-            
+
         # This gets called within an existing command, so we just want to make
         # it so it sets the search path correctly before and after running
         # each command. This may potentially slow things down, but it's also
@@ -95,7 +95,7 @@ else:
             schema = get_active_schema_name() or '__template__'
             sql = "SET search_path TO %s,public; %s; SET search_path TO public;" % (schema, sql)
             self.deferred_sql.append(sql)
-    
+
         # South uses some caching of constraints per table, we just override
         # this method to turn off that caching. That makes checks hit the
         # database each time, but that is better than trying to invalidate the
@@ -105,7 +105,7 @@ else:
                 schema = self._get_schema_name()
             else:
                 schema = get_active_schema_name() or '__template__'
-        
+
             constraints = {}
             ifsc_tables = ["constraint_column_usage", "key_column_usage"]
 
@@ -121,13 +121,12 @@ else:
                         kc.table_schema = %%s AND
                         kc.table_name = %%s
                 """ % ifsc_table, [schema, table_name])
-            
+
                 for constraint, column, kind in rows:
                     constraints.setdefault(column, set())
                     constraints[column].add((kind, constraint))
-        
+
             if column_name:
                 return constraints.get(column_name, set())
-        
+
             return constraints.items()
-    
