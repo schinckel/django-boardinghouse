@@ -74,12 +74,10 @@ BEGIN
 
   -- Finally, repeat for any views.
   -- Set the schema to the source, so we don't get schema-qualified names in the view definition.
-  EXECUTE 'SET search_path TO ' || source_schema;
   FOR view_ IN
     SELECT viewname, definition FROM pg_views WHERE schemaname = source_schema
   LOOP
-    EXECUTE 'SET search_path TO ' || dest_schema;
-    EXECUTE 'CREATE VIEW ' || quote_ident(view_.viewname) || ' AS ' || view_.definition;
+    EXECUTE 'CREATE VIEW ' || dest_schema || '.' || quote_ident(view_.viewname) || ' AS ' || view_.definition;
   END LOOP;
 
 END;
