@@ -7,6 +7,12 @@ from django.core.cache import cache
 from django.db import models, connection
 from django.utils.translation import ugettext_lazy as _
 
+try:
+    from django.apps import apps
+    get_model = apps.get_model
+except ImportError:
+    from django.db.models import get_model
+
 import signals
 
 LOGGER = logging.getLogger(__name__)
@@ -31,7 +37,7 @@ class TemplateSchemaActivation(Forbidden):
 
 
 def get_schema_model():
-    return models.get_model('boardinghouse','schema')
+    return get_model('boardinghouse','schema')
 
 _active_schema = None
 
@@ -315,3 +321,13 @@ def _wrap_command(command):
             schema.create_schema()
 
     return inner
+
+def _create_all_schemata():
+    """
+    Create all of the schemata, just in case they haven't yet been created.
+    """
+    cursor = connection.cursor()
+    cursor.execute("SELECT count(*)>0 FROM information_schema.tables WHERE table_name = 'boardinghouse_schema';")
+    if cursor.fetchone() == (True,):
+        for schema in get_schema_model().objects.all():
+            schema.create_schema()

@@ -14,8 +14,10 @@ from django.utils.translation import ugettext_lazy as _
 
 if django.VERSION < (1,7):
     from model_utils.managers import PassThroughManager
+    from django.db.models import get_model
 else:
-    pass
+    from django.apps import apps
+    get_model = apps.get_model
 
 import ensure_installation
 import signals
@@ -231,12 +233,13 @@ def visible_schemata(user):
     return schemata
 
 def add_visible_schemata_to_user():
-    UserModel = models.get_model(*USER_MODEL.split('.'))
+    UserModel = get_model(*USER_MODEL.split('.'))
     if not getattr(UserModel, 'visible_schemata', None):
         UserModel.visible_schemata = property(visible_schemata)
 
 if django.VERSION < (1, 7):
     add_visible_schemata_to_user()
+
 
 # We also need to watch for changes to the user_schemata table, to invalidate
 # this cache.
