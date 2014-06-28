@@ -73,11 +73,11 @@ BEGIN
   END LOOP;
 
   -- Finally, repeat for any views.
-  -- Set the schema to the source, so we don't get schema-qualified names in the view definition.
   FOR view_ IN
     SELECT viewname, definition FROM pg_views WHERE schemaname = source_schema
   LOOP
-    EXECUTE 'CREATE VIEW ' || dest_schema || '.' || quote_ident(view_.viewname) || ' AS ' || view_.definition;
+    EXECUTE 'CREATE VIEW ' || dest_schema || '.' || quote_ident(view_.viewname) || ' AS ' ||
+      replace(view_.definition, source_schema || '.', dest_schema || '.');
   END LOOP;
 
 END;
