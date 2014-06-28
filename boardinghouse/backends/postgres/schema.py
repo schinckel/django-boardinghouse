@@ -67,6 +67,7 @@ else:
                 match = DROP_VIEW.match(sql).groupdict()
 
             execute = super(DatabaseSchemaEditor, self).execute
+
             if match and not is_shared_table(match['table_name']):
                 for schema in get_schema_model().objects.all():
                     schema.activate()
@@ -76,6 +77,7 @@ else:
                 execute(sql, params)
                 deactivate_schema()
             else:
+                execute('SET search_path TO public,__template__')
                 execute(sql, params)
 
 
