@@ -7,14 +7,14 @@ Requirements
 
 * Django_
 * Postgres_
-* psycopg2_
+* psycopg2_ or psycopg2cffi_ if using PyPy
 * django-model-utils_
 
 This application requires, and depends upon Django_ being installed. Currently, versions from 1.4 to 1.6 are supported, along with South_ for migrations. 
 
 Support for 1.7 is partial, and not completely tested. Testing of the new django migrations API is not quite as straightforward as South_.
 
-Postgres is required to allow schema to be used. psycopg2_ is required as per normal Django/Postgres integration.
+Postgres is required to allow schema to be used. psycopg2_ or psycopg2cffi_ is required as per normal Django/Postgres integration.
 
 django-model-utils_ is used for ``PassThroughManager``, which, under Django 1.7 as be replaced by `QuerySet.as_manager() <https://docs.djangoproject.com/en/dev/topics/db/managers/#creating-manager-with-queryset-methods>`_. However, the ``Tracker`` feature is also used to track changes on the :class:`boardinghouse.models.Schema` model, to prevent modification of the `schema` attribute.
 
@@ -122,5 +122,6 @@ These all work without any required additions to your ``urls.py``.
 .. _Postgres: http://www.postgresql.org/
 .. _PostgresApp: http://postgresapp.com/
 .. _psycopg2: https://pypi.python.org/pypi/psycopg2/
+.. _psycopg2cffi: https://pypi.python.org/pypi/psycopg2cffi
 .. _django-model-utils: http://django-model-utils.readthedocs.org
 .. _South: http://south.readthedocs.org/
