@@ -19,6 +19,7 @@ LOGGER = logging.getLogger(__name__)
 LOGGER.addHandler(logging.NullHandler())
 global _active_schema
 
+
 class Forbidden(Exception):
     """
     An exception that will be raised when an attempt to activate a non-valid
@@ -37,7 +38,7 @@ class TemplateSchemaActivation(Forbidden):
 
 
 def get_schema_model():
-    return get_model('boardinghouse','schema')
+    return get_model('boardinghouse', 'schema')
 
 _active_schema = None
 

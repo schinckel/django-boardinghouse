@@ -51,6 +51,18 @@ else:
         remove_field = wrap('remove_field')
         alter_field = wrap('alter_field')
 
+        def __exit__(self, exc_type, exc_value, traceback):
+            # It seems that actions that add stuff to the deferred sql
+            # will fire per-schema, so we can end up with multiples.
+            # We'll reduce that to a unique list.
+            # Can't just do a set, as that may change ordering.
+            deferred_sql = []
+            for sql in self.deferred_sql:
+                if sql not in deferred_sql:
+                    deferred_sql.append(sql)
+            self.deferred_sql = deferred_sql
+            return super(DatabaseSchemaEditor, self).__exit__(exc_type, exc_value, traceback)
+
         def execute(self, sql, params=None):
             match = None
             if CREATE_INDEX.match(sql):
@@ -77,7 +89,6 @@ else:
                 execute(sql, params)
                 deactivate_schema()
             else:
-                execute('SET search_path TO public,__template__')
                 execute(sql, params)
 
 
