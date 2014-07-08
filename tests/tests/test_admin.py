@@ -41,7 +41,7 @@ class TestAdminAdditions(TestCase):
 
         self.client.login(username='su', password='su')
 
-        response = self.client.get('/admin/boardinghouse/awaremodel/')
+        response = self.client.get('/admin/tests/awaremodel/')
         # Should we handle this, and provide feedback?
         self.assertEquals(302, response.status_code)
 

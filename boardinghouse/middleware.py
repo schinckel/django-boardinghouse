@@ -20,24 +20,24 @@ logger = logging.getLogger('boardinghouse.middleware')
 def change_schema(request, schema):
     """
     Change the schema for the current request's session.
-    
+
     Note this does not actually _activate_ the schema, it only stores
     the schema name in the current request's session.
     """
     session = request.session
     user = request.user
-    
+
     # Allow clearing out the current schema.
     if not schema:
         session.pop('schema', None)
         return
-    
+
     # Anonymous users may not select a schema.
     # Should this be selectable?
     if user.is_anonymous():
         session.pop('schema', None)
         raise Forbidden()
-    
+
     # We actually want the schema name, so we can see if we
     # don't actually need to change the schema at all (if the
     # session is already set, then we assume that it's all good)
@@ -45,25 +45,26 @@ def change_schema(request, schema):
         schema_name = schema
     else:
         schema_name = schema.schema
-    
+
     # Don't allow anyone, even superusers, to select the template schema.
     if schema_name == '__template__':
         raise TemplateSchemaActivation()
-    
+
     # If the schema is already set to this name for this session, then
     # we can just exit early, saving some db access.
     if schema_name == session.get('schema', None):
         return
-    
+
     Schema = get_schema_model()
-    
+
     if user.is_superuser or user.is_staff:
         # Just a sanity check: that the schema actually
         # exists at all.
-        try:
-            schema = Schema.objects.get(schema=schema)
-        except Schema.DoesNotExist:
-            raise Forbidden()
+        if schema_name == schema:
+            try:
+                schema = Schema.objects.get(schema=schema_name)
+            except Schema.DoesNotExist:
+                raise Forbidden()
     else:
         # If we were passed in a schema object, rather than a string,
         # then we can check to see if that schema is active before
@@ -76,7 +77,7 @@ def change_schema(request, schema):
         # cache, which prevents hitting the database.
         if schema_name not in [schema.name for schema in user.visible_schemata]:
             raise Forbidden()
-    
+
     # Allow 3rd-party applications to listen for an attempt to change
     # the schema for a user/session, and prevent it from occurring by
     # raising an exception. We will just pass that exception up the
@@ -97,52 +98,52 @@ def change_schema(request, schema):
         user=request.user,
         session=request.session,
     )
-    
+
 
 class SchemaChangeMiddleware:
     """
     Middleware to set the postgres schema for the current request's session.
-    
+
     The schema that will be used is stored in the session. A lookup will
     occur (but this could easily be cached) on each request.
-    
+
     There are three ways to change the schema as part of a request.
-    
+
     1. Request a page with a querystring containg a ``__schema`` value::
-    
+
         https://example.com/page/?__schema=<schema-name>
-    
-      The schema will be changed (or cleared, if this user cannot view 
+
+      The schema will be changed (or cleared, if this user cannot view
       that schema), and the page will be re-loaded (if it was a GET). This
       method of changing schema allows you to have a link that changes the
       current schema and then loads the data with the new schema active.
 
       It is used within the admin for having a link to data from an
       arbitrary schema in the ``LogEntry`` history.
-      
+
       This type of schema change request should not be done with a POST
       request.
-    
+
     2. Add a request header::
-    
+
         X-Change-Schema: <schema-name>
-    
+
       This will not cause a redirect to the same page without query string. It
       is the only way to do a schema change within a POST request, but could
       be used for any request type.
-      
+
     3. Use a specific request::
-    
+
         https://example.com/__change_schema__/<schema-name>/
-    
+
       This is designed to be used from AJAX requests, or as part of
-      an API call, as it returns a status code (and a short message) 
+      an API call, as it returns a status code (and a short message)
       about the schema change request. If you were storing local data,
       and did one of these, you are probably going to have to invalidate
       much of that.
-      
+
     You could also come up with other methods.
-    
+
     """
     def process_request(self, request):
         FORBIDDEN = HttpResponseForbidden(_('You may not select that schema'))
@@ -156,14 +157,14 @@ class SchemaChangeMiddleware:
                 change_schema(request, schema)
             except Forbidden:
                 return FORBIDDEN
-            
+
             if 'schema' in request.session:
                 response = _('Schema changed to %s') % request.session['schema']
             else:
                 response = _('Schema deselected')
-        
+
             return HttpResponse(response)
-        
+
         # 2. GET querystring ...?__schema=<name>
         # This will change the query, and then redirect to the page
         # without the schema name included.
@@ -173,7 +174,7 @@ class SchemaChangeMiddleware:
                 change_schema(request, schema)
             except Forbidden:
                 return FORBIDDEN
-            
+
             if request.method == "GET":
                 data = request.GET.copy()
                 data.pop('__schema')
@@ -190,19 +191,19 @@ class SchemaChangeMiddleware:
         elif 'schema' not in request.session and len(request.user.visible_schemata) == 1:
             # Can we not require a db hit each request here?
             change_schema(request, request.user.visible_schemata[0])
-        
+
 
 class SchemaActivationMiddleware:
     """
     Middleware that actually activates the schema from the session.
-    
+
     This middleware does not do any checking for if request.user should
     have access to the schema: that's up to the :class:``SchemaChangeMiddleware``,
     which could be replaced or modified.
     """
     def process_request(self, request):
         deactivate_schema()
-        
+
         if 'schema' in request.session:
             try:
                 activate_schema(request.session['schema'])
@@ -216,7 +217,7 @@ class SchemaActivationMiddleware:
         schema set on ``request.session``, then look and see if the error
         that was provided by the database may indicate that we should have
         been looking inside a schema.
-        
+
         In the case we had a :class:`TemplateSchemaActivation` exception,
         then we want to remove that key from the session.
         """
@@ -226,7 +227,7 @@ class SchemaActivationMiddleware:
                 # Should we return an error, or redirect? When should we
                 # do one or the other? For an API, we would want an error
                 # but for a regular user, a redirect may be better.
-                
+
                 # Can we see if there is already a pending message for this
                 # request that has the same content as us?
                 messages.error(request,
