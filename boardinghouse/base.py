@@ -6,9 +6,9 @@ class MultiSchemaMixin(object):
     """
     A mixin that allows for fetching objects from multiple
     schemata in the one request.
-    
+
     Consider this experimental.
-    
+
     .. note:: You probably don't want want this on your QuerySet, just
         on your Manager.
     """
@@ -16,9 +16,9 @@ class MultiSchemaMixin(object):
         """
         Perform these queries across several schemata.
         """
-        qs = getattr(self, 'get_queryset', self.get_query_set)()
+        qs = self.get_queryset()
         query = str(qs.query)
-        
+
         if len(schemata) == 1 and hasattr(schemata[0], 'filter'):
             schemata = schemata[0]
 
@@ -32,7 +32,7 @@ class MultiSchemaMixin(object):
                 'FROM "', 'FROM "%s"."' % schema.schema
             ) for schema in schemata
         ]
-        
+
         return self.raw(" UNION ALL ".join(multi_query))
 
 class MultiSchemaManager(MultiSchemaMixin, models.Manager):
@@ -43,7 +43,7 @@ class MultiSchemaManager(MultiSchemaMixin, models.Manager):
 
 class SharedSchemaMixin(object):
     _is_shared_model = True
-    
+
 class SharedSchemaModel(SharedSchemaMixin, models.Model):
     """
     A Base class for models that should be in the shared schema.

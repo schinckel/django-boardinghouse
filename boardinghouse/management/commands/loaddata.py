@@ -9,6 +9,7 @@ will be used as a target.
 After completing the load, we ensure that any schemata that were
 loaded as part of this process exist as schemata in the database.
 """
+import django
 from django.core.management.commands import loaddata
 from django.core.management.base import CommandError
 from django.db import DatabaseError
@@ -18,11 +19,18 @@ from optparse import make_option
 from ...schema import get_schema_model, _create_all_schemata
 
 class Command(loaddata.Command):
-    option_list = loaddata.Command.option_list + (
-        make_option('--schema', action='store', dest='schema',
-            help='Specify which schema to load schema-aware models to',
-        ),
-    )
+    if django.VERSION < (1, 8):
+        option_list = loaddata.Command.option_list + (
+            make_option('--schema', action='store', dest='schema',
+                help='Specify which schema to load schema-aware models to',
+            ),
+        )
+
+    def add_arguments(self, parser):
+        super(Command, self).add_arguments(parser)
+        parser.add_argument('--schema', action='store', dest='schema',
+             help='Specify which schema to load schema-aware models to',
+        )
 
     def handle(self, *app_labels, **options):
         Schema = get_schema_model()
