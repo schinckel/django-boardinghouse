@@ -7,9 +7,10 @@ Subpackages
 .. toctree::
 
     boardinghouse.backends
+    boardinghouse.contrib
     boardinghouse.management
+    boardinghouse.migrations
     boardinghouse.templatetags
-    boardinghouse.tests
 
 Submodules
 ----------
@@ -66,6 +67,14 @@ boardinghouse.models module
 ---------------------------
 
 .. automodule:: boardinghouse.models
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+boardinghouse.operations module
+-------------------------------
+
+.. automodule:: boardinghouse.operations
     :members:
     :undoc-members:
     :show-inheritance:

@@ -36,14 +36,6 @@ boardinghouse.management.commands.migrate module
     :undoc-members:
     :show-inheritance:
 
-boardinghouse.management.commands.syncdb module
------------------------------------------------
-
-.. automodule:: boardinghouse.management.commands.syncdb
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 
 Module contents
 ---------------

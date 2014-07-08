@@ -8,18 +8,6 @@ Subpackages
 
     boardinghouse.backends.postgres
 
-Submodules
-----------
-
-boardinghouse.backends.south_backend module
--------------------------------------------
-
-.. automodule:: boardinghouse.backends.south_backend
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
 Module contents
 ---------------
 

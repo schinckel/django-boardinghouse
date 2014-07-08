@@ -8,15 +8,11 @@ Requirements
 * Django_
 * Postgres_
 * psycopg2_ or psycopg2cffi_ if using PyPy
-* django-model-utils_
 
-This application requires, and depends upon Django_ being installed. Currently, versions from 1.4 to 1.6 are supported, along with South_ for migrations. 
-
-Support for 1.7 is partial, and not completely tested. Testing of the new django migrations API is not quite as straightforward as South_.
+This application requires, and depends upon Django_ being installed. Only Django 1.7 and above is supported.
 
 Postgres is required to allow schema to be used. psycopg2_ or psycopg2cffi_ is required as per normal Django/Postgres integration.
 
-django-model-utils_ is used for ``PassThroughManager``, which, under Django 1.7 as be replaced by `QuerySet.as_manager() <https://docs.djangoproject.com/en/dev/topics/db/managers/#creating-manager-with-queryset-methods>`_. However, the ``Tracker`` feature is also used to track changes on the :class:`boardinghouse.models.Schema` model, to prevent modification of the `schema` attribute.
 
 Installation and Configuration
 ==============================
@@ -27,18 +23,9 @@ Install it using your favourite installer: mine is `pip`_::
 
 You will need to add ``boardinghouse`` to your ``settings.INSTALLED_APPS``.
 
-If you use South_, you must put it after ``south``. If you use the Django admin, put it before ``django.contrib.admin``. [Check this is still correct under 1.7].
-
 You will need to use the provided database engine in your ``settings.DATABASES``::
 
     'boardinghouse.backends.postgres'
-
-If you are using South, add the following to your settings::
-
-    SOUTH_DATABASE_ADAPTERS = {
-        'default': 'boardinghouse.backends.south_backend',
-        'boardinghouse.backends.postgres': 'boardinghouse.backends.south_backend',
-    }
 
 ``django-boardinghouse`` automatically installs a class to your middleware (see :ref:`middleware`), and a context processor (see :ref:`template_variables`). If you have the admin installed, it adds a column to the admin :class:`django.contrib.admin.models.LogEntry` class, to store the object schema when applicable.
 
@@ -68,9 +55,6 @@ Management commands
 -------------------
 
 When ``django-boardinghouse`` has been installed, it will override the following commands:
-
-.. automodule:: boardinghouse.management.commands.syncdb
-  :noindex:
 
 .. automodule:: boardinghouse.management.commands.migrate
   :noindex:
@@ -116,12 +100,9 @@ As outlined in :ref:`middleware`, there are three ways to change the schema: a `
 These all work without any required additions to your ``urls.py``.
 
 
-
 .. _pip: https://pip-installer.org/
 .. _Django: https://www.djangoproject.com/
 .. _Postgres: http://www.postgresql.org/
 .. _PostgresApp: http://postgresapp.com/
 .. _psycopg2: https://pypi.python.org/pypi/psycopg2/
 .. _psycopg2cffi: https://pypi.python.org/pypi/psycopg2cffi
-.. _django-model-utils: http://django-model-utils.readthedocs.org
-.. _South: http://south.readthedocs.org/
