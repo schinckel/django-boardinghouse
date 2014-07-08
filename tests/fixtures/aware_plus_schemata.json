@@ -1,17 +1,19 @@
 [
   {
     "pk": null,
-    "model": "boardinghouse.NaiveModel",
+    "schema": "b",
+    "model": "tests.AwareModel",
     "fields": {
-      "name": "naive1"
+      "name": "aware1"
     }
   },
   {
     "pk": null,
-    "model": "boardinghouse.NaiveModel",
+    "schema": "a",
+    "model": "tests.AwareModel",
     "fields": {
       "name": "🌊🌊🌊🌊🌊"
     }
   }
-  
+
 ]

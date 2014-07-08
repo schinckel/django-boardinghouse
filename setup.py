@@ -15,7 +15,6 @@ setup(
     install_requires = [
         'django',
         #'psycopg2', # or psycopg2cffi
-        'django-model-utils', # Only if django<1.7. Is there any way to do that?
     ],
     classifiers = [
         'Programming Language :: Python',
@@ -23,5 +22,5 @@ setup(
         'Operating System :: OS Independent',
         'Framework :: Django',
     ],
-    test_suite='tests.main',
+    test_suite='runtests.runtests',
 )

@@ -5,26 +5,26 @@ from django.test import TestCase
 
 from boardinghouse.schema import is_shared_model, is_shared_table
 
-from .models import *
+from ..models import *
 
 class TestIsSharedModel(TestCase):
     def test_aware_model(self):
         self.assertFalse(is_shared_model(AwareModel()))
-    
+
     def test_naive_model(self):
         self.assertTrue(is_shared_model(NaiveModel()))
-    
+
     def test_self_referential_model(self):
         self.assertFalse(is_shared_model(SelfReferentialModel()))
-    
+
     def test_co_referential_models(self):
         self.assertFalse(is_shared_model(CoReferentialModelA()))
         self.assertFalse(is_shared_model(CoReferentialModelB()))
-    
+
     def test_contrib_models(self):
         from django.contrib.admin.models import *
         from django.contrib.auth.models import *
-        
+
         self.assertTrue(is_shared_model(User()))
         self.assertTrue(is_shared_model(Permission()))
         self.assertTrue(is_shared_model(Group()))
@@ -34,17 +34,13 @@ class TestIsSharedTable(TestCase):
     def test_schema_table(self):
         self.assertTrue(is_shared_table('boardinghouse_schema'))
         self.assertTrue(is_shared_table('boardinghouse_schema_users'))
-    
+
     def test_aware_model_table(self):
         self.assertFalse(is_shared_table(AwareModel._meta.db_table))
-    
+
     def test_naive_model_table(self):
         self.assertTrue(is_shared_table(NaiveModel._meta.db_table))
-    
+
     def test_join_tables(self):
         self.assertTrue(is_shared_table('auth_group_permissions'))
         self.assertTrue(is_shared_table('auth_user_groups'))
-    
-    @unittest.skipIf('south' not in settings.INSTALLED_APPS, 'South not installed')
-    def test_south_table(self):
-        self.assertTrue(is_shared_table('south_migrationhistory'))

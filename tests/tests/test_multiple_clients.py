@@ -2,8 +2,8 @@ from unittest import TestCase
 
 from django.test import Client
 
-from ..schema import get_schema_model
-from .models import AwareModel, NaiveModel, User
+from boardinghouse.schema import get_schema_model
+from ..models import AwareModel, NaiveModel, User
 
 Schema = get_schema_model()
 

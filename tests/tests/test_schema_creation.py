@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.db import connection
 from django import forms
 
-from ..schema import (
+from boardinghouse.schema import (
     activate_schema, deactivate_schema,
     TemplateSchemaActivation,
     is_shared_model,

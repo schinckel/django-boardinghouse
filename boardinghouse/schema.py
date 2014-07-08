@@ -192,11 +192,11 @@ REQUIRED_SHARED_MODELS = [
     'auth.user',
     'auth.permission',
     'auth.group',
+    'boardinghouse.schema',
     'sites.site',
     'sessions.session',
     'contenttypes.contenttype',
     'admin.logentry',
-    'south.migrationhistory',
     'migrations.migration',
 ]
 
@@ -214,16 +214,10 @@ def is_shared_model(model):
     if model._is_shared_model:
         return True
 
-    if django.VERSION < (1, 6):
-        app_model = '%s.%s' % (
-            model._meta.app_label,
-            model._meta.object_name.lower()
-        )
-    else:
-        app_model = '%s.%s' % (
-            model._meta.app_label,
-            model._meta.model_name
-        )
+    app_model = '%s.%s' % (
+        model._meta.app_label,
+        model._meta.model_name
+    )
 
     if app_model in REQUIRED_SHARED_MODELS:
         return True
@@ -318,8 +312,7 @@ def _wrap_command(command):
         deactivate_schema()
 
         # We don't want just active schemata...
-        for schema in get_schema_model().objects.all():
-            schema.create_schema()
+        _create_all_schemata()
 
     return inner
 

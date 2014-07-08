@@ -3,6 +3,7 @@
 import logging
 
 import django
+from django.apps import apps
 from django.conf import settings
 from django.contrib import auth
 from django.core.cache import cache
@@ -12,24 +13,16 @@ from django.dispatch import receiver
 from django.forms import ValidationError
 from django.utils.translation import ugettext_lazy as _
 
-if django.VERSION < (1,7):
-    from model_utils.managers import PassThroughManager
-    from django.db.models import get_model
-else:
-    from django.apps import apps
-    get_model = apps.get_model
-
 import ensure_installation
 import signals
 
+from .base import SharedSchemaMixin
 from .schema import (
     create_schema, activate_schema, deactivate_schema, get_active_schema_name,
 )
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.addHandler(logging.NullHandler())
-
-USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.user')
 
 SCHEMA_NAME_VALIDATOR_MESSAGE = u'May only contain lowercase letters, digits and underscores. Must start with a letter.'
 
@@ -58,7 +51,7 @@ class SchemaQuerySet(models.query.QuerySet):
 
 
 
-class Schema(models.Model):
+class Schema(SharedSchemaMixin, models.Model):
     """
     The Schema model provides an abstraction for a Postgres schema.
 
@@ -66,7 +59,6 @@ class Schema(models.Model):
     when it is created, and also has the ability to activate and deactivate
     itself (at the start and end of the request cycle would be a good plan).
     """
-    _is_shared_model = True
 
     schema = models.CharField(max_length=36, primary_key=True, unique=True,
         validators=[schema_name_validator],
@@ -82,15 +74,12 @@ class Schema(models.Model):
     is_active = models.BooleanField(default=True,
         help_text=_(u'Use this instead of deleting schemata.')
     )
-    users = models.ManyToManyField(USER_MODEL,
+    users = models.ManyToManyField(settings.AUTH_USER_MODEL,
         null=True, blank=True, related_name='schemata',
         help_text=_(u'Which users may access data from this schema.')
     )
 
-    if django.VERSION < (1,7):
-        objects = PassThroughManager.for_queryset_class(SchemaQuerySet)()
-    else:
-        objects = SchemaQuerySet.as_manager()
+    objects = SchemaQuerySet.as_manager()
 
     class Meta:
         app_label = 'boardinghouse'
@@ -232,14 +221,6 @@ def visible_schemata(user):
 
     return schemata
 
-def add_visible_schemata_to_user():
-    UserModel = get_model(*USER_MODEL.split('.'))
-    if not getattr(UserModel, 'visible_schemata', None):
-        UserModel.visible_schemata = property(visible_schemata)
-
-if django.VERSION < (1, 7):
-    add_visible_schemata_to_user()
-
 
 # We also need to watch for changes to the user_schemata table, to invalidate
 # this cache.
@@ -269,17 +250,8 @@ def invalidate_all_user_caches(sender, **kwargs):
 # signal on our own app.
 # How can we clear out all user caches? It depends upon
 # the cache backend, right?
-if hasattr(models.signals, 'pre_migrate'):
-    @receiver(models.signals.pre_migrate)
-    def invalidate_all_caches(sender, **kwargs):
-        if sender.name == 'boardinghouse':
-            cache.delete('active-schemata')
-            cache.delete('all-schemata')
-elif hasattr(models.signals, 'pre_syncdb'):
-    @receiver(models.signals.pre_syncdb)
-    def invalidate_all_caches(sender, **kwargs):
-        if __name__ == sender.__name__:
-            cache.delete('active-schemata')
-            cache.delete('all-schemata')
-else:
-    print "What do here?"
+@receiver(models.signals.pre_migrate)
+def invalidate_all_caches(sender, **kwargs):
+    if sender.name == 'boardinghouse':
+        cache.delete('active-schemata')
+        cache.delete('all-schemata')

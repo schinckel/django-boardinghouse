@@ -11,7 +11,7 @@ class DatabaseCreation(creation.DatabaseCreation):
         it inserts it into the correct schema.
         """
         from ...schema import is_shared_model
-        
+
         final_output, pending_references = super(DatabaseCreation, self).sql_create_model(model, style, known_models)
         if not is_shared_model(model):
             for i in range(len(final_output)):

@@ -1,7 +1,7 @@
 from django.test import TestCase
 
-from ..schema import TemplateSchemaActivation, get_schema_model
-from .models import AwareModel, User
+from boardinghouse.schema import TemplateSchemaActivation, get_schema_model
+from ..models import AwareModel, User
 
 Schema = get_schema_model()
 

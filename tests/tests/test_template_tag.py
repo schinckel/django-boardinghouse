@@ -1,8 +1,8 @@
 from django.test import TestCase
 
-from .models import AwareModel, NaiveModel
-from ..templatetags.boardinghouse import schema_name, is_schema_aware, is_shared_model
-from ..models import Schema
+from ..models import AwareModel, NaiveModel
+from boardinghouse.templatetags.boardinghouse import schema_name, is_schema_aware, is_shared_model
+from boardinghouse.models import Schema
 
 class TestTemplateTags(TestCase):
     def test_is_schema_aware_filter(self):
