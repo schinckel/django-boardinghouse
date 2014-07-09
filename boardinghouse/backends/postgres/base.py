@@ -3,8 +3,7 @@ from django.db.backends.postgresql_psycopg2 import base
 
 from .creation import DatabaseCreation
 
-if django.VERSION > (1,7):
-    from .schema import DatabaseSchemaEditor
+from .schema import DatabaseSchemaEditor
 
 class DatabaseWrapper(base.DatabaseWrapper):
     """
@@ -14,6 +13,6 @@ class DatabaseWrapper(base.DatabaseWrapper):
     def __init__(self, *args, **kwargs):
         super(DatabaseWrapper, self).__init__(*args, **kwargs)
         self.creation = DatabaseCreation(self)
-    
+
     def schema_editor(self, *args, **kwargs):
         return DatabaseSchemaEditor(self, *args, **kwargs)

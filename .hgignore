@@ -5,3 +5,4 @@ doc/build
 .venv
 examples/.school
 .boarding-school
+htmlcov

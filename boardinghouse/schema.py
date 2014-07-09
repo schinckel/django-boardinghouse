@@ -6,12 +6,7 @@ from django.conf import settings
 from django.core.cache import cache
 from django.db import models, connection
 from django.utils.translation import ugettext_lazy as _
-
-try:
-    from django.apps import apps
-    get_model = apps.get_model
-except ImportError:
-    from django.db.models import get_model
+from django.apps import apps
 
 import signals
 
@@ -38,7 +33,7 @@ class TemplateSchemaActivation(Forbidden):
 
 
 def get_schema_model():
-    return get_model('boardinghouse', 'schema')
+    return apps.get_model('boardinghouse', 'schema')
 
 _active_schema = None
 
