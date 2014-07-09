@@ -1,7 +1,14 @@
 """
+Django Boardinghouse
+====================
+
+Multi-tenancy for Django applications, using Postgres Schemas.
+
+See full documentation at: http://django-boardinghouse.readthedocs.org
 """
 __version__ = '0.2'
 __release__ = '0.2a1'
+
 
 def inject_app_defaults():
     """

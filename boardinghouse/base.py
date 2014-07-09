@@ -2,6 +2,7 @@
 """
 from django.db import models
 
+
 class MultiSchemaMixin(object):
     """
     A mixin that allows for fetching objects from multiple
@@ -27,7 +28,7 @@ class MultiSchemaMixin(object):
         # so we can access it later.
         multi_query = [
             query.replace(
-                'SELECT ', "SELECT '%s' as _schema, "  % schema.schema
+                'SELECT ', "SELECT '%s' as _schema, " % schema.schema
             ).replace(
                 'FROM "', 'FROM "%s"."' % schema.schema
             ) for schema in schemata
@@ -35,14 +36,17 @@ class MultiSchemaMixin(object):
 
         return self.raw(" UNION ALL ".join(multi_query))
 
+
 class MultiSchemaManager(MultiSchemaMixin, models.Manager):
     """
     A Manager that allows for fetching objects from multiple schemata
     in the one request.
     """
 
+
 class SharedSchemaMixin(object):
     _is_shared_model = True
+
 
 class SharedSchemaModel(SharedSchemaMixin, models.Model):
     """
@@ -51,4 +55,3 @@ class SharedSchemaModel(SharedSchemaMixin, models.Model):
 
     class Meta:
         abstract = True
-

@@ -5,7 +5,7 @@ this in a rather hidden way: it injects the objects
 that it thinks should be installed into the settings.
 
 """
-import django
+
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 

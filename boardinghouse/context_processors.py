@@ -1,6 +1,7 @@
 
 from schema import get_schema_model
 
+
 def schemata(request):
     """
     A Django context_processor that provides access to the
@@ -8,12 +9,12 @@ def schemata(request):
     """
     if request.user.is_anonymous():
         return {}
-    
+
     if request.user.is_staff or request.user.is_superuser:
         available_schemata = get_schema_model().objects.all()
     else:
         available_schemata = request.user.visible_schemata
-    
+
     return {
         'schemata': available_schemata,
         'selected_schema': request.session.get('schema', None)

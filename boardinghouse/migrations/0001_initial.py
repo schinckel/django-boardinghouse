@@ -11,6 +11,7 @@ from boardinghouse.operations import AddField, LoadSQLFromScript
 
 PROTECT_SCHEMA_COLUMN = os.path.join(os.path.dirname(__file__), '..', 'sql', 'protect_schema_column.sql')
 
+
 class Migration(migrations.Migration):
 
     dependencies = [

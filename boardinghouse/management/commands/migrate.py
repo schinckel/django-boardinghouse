@@ -13,9 +13,8 @@ We wrap the django migrate command to ensure:
 TODO: Do this as a migration!
 
 """
-from django.db import connection
 from django.core.management.commands.migrate import Command
 
-from ...schema import _wrap_command, _sql_from_file, get_schema_model, get_template_schema
+from ...schema import _wrap_command
 
 Command.handle = _wrap_command(Command.handle)

@@ -2,7 +2,6 @@ import logging
 import re
 
 from django.contrib import messages
-from django.core.exceptions import ObjectDoesNotExist
 from django.db import DatabaseError, transaction
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import redirect

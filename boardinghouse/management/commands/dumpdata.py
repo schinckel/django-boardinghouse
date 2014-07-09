@@ -18,10 +18,10 @@ from django.db import models
 from optparse import make_option
 
 from ...schema import (
-    is_shared_model, get_active_schemata,
-    activate_template_schema, deactivate_schema,
+    is_shared_model, activate_template_schema, deactivate_schema,
     get_schema_model,
 )
+
 
 class Command(dumpdata.Command):
     if django.VERSION < (1, 8):
@@ -38,7 +38,6 @@ class Command(dumpdata.Command):
              help='Specify which schema to dump schema-aware models from',
              default='__template__',
         )
-
 
     def handle(self, *app_labels, **options):
         schema_name = options.get('schema')

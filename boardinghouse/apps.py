@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 
 from .models import visible_schemata
 
+
 class BoardingHouseConfig(AppConfig):
     name = 'boardinghouse'
 

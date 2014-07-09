@@ -1,12 +1,12 @@
 from django.contrib import admin
-from django.conf import settings
 
-from .schema import get_active_schema, is_shared_model, get_schema_model
+from .schema import get_active_schema, is_shared_model
 
 # We only want to install our SchemaAdmin if our schema model is the
 # one that is used: otherwise it's up to the project developer to
 # add it to the admin, if they want it.
 from .models import Schema
+
 
 class SchemaAdmin(admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
@@ -21,6 +21,7 @@ class SchemaAdmin(admin.ModelAdmin):
 
 admin.site.register(Schema, SchemaAdmin)
 
+
 def schemata(obj):
     """
     Useful function for adding schemata representation to admin
@@ -28,6 +29,7 @@ def schemata(obj):
     """
     return '<br>'.join([s.name for s in obj.schemata.all()])
 schemata.allow_tags = True
+
 
 def get_inline_instances(self, request, obj=None):
     """
@@ -42,5 +44,6 @@ def get_inline_instances(self, request, obj=None):
         inline(self.model, self.admin_site) for inline in self.inlines
         if schema or is_shared_model(inline.model)
     ]
+
 
 admin.ModelAdmin.get_inline_instances = get_inline_instances
