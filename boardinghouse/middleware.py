@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import logging
 import re
 
@@ -6,6 +8,7 @@ from django.db import DatabaseError, transaction
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import redirect
 from django.utils.translation import ugettext_lazy as _
+from django.utils import six
 
 from .schema import (
     TemplateSchemaActivation, Forbidden,
@@ -40,7 +43,7 @@ def change_schema(request, schema):
     # We actually want the schema name, so we can see if we
     # don't actually need to change the schema at all (if the
     # session is already set, then we assume that it's all good)
-    if isinstance(schema, basestring):
+    if isinstance(schema, six.string_types):
         schema_name = schema
     else:
         schema_name = schema.schema
@@ -221,7 +224,7 @@ class SchemaActivationMiddleware:
         then we want to remove that key from the session.
         """
         if isinstance(exception, DatabaseError) and not request.session.get('schema'):
-            if re.search('relation ".*" does not exist', exception.message):
+            if re.search('relation ".*" does not exist', exception.args[0]):
                 transaction.rollback()
                 # Should we return an error, or redirect? When should we
                 # do one or the other? For an API, we would want an error

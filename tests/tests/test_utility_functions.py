@@ -22,8 +22,8 @@ class TestIsSharedModel(TestCase):
         self.assertFalse(is_shared_model(CoReferentialModelB()))
 
     def test_contrib_models(self):
-        from django.contrib.admin.models import *
-        from django.contrib.auth.models import *
+        from django.contrib.admin.models import LogEntry
+        from django.contrib.auth.models import User, Group, Permission
 
         self.assertTrue(is_shared_model(User()))
         self.assertTrue(is_shared_model(Permission()))

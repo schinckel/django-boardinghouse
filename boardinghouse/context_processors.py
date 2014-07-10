@@ -1,5 +1,6 @@
+from __future__ import unicode_literals
 
-from schema import get_schema_model
+from .schema import get_schema_model
 
 
 def schemata(request):

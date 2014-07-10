@@ -1,10 +1,14 @@
+from __future__ import unicode_literals
+
 import unittest
 
 from django.test import TestCase
 from django.contrib import admin, auth
 from django.core.urlresolvers import reverse
+from django.utils import six
 
 from boardinghouse.schema import get_schema_model
+
 from ..models import AwareModel, NaiveModel, User
 
 Schema = get_schema_model()
@@ -72,7 +76,7 @@ class TestAdminAdditions(TestCase):
             user_id=user.pk,
             content_type_id=ContentType.objects.get_for_model(aware).pk,
             object_id=aware.pk,
-            object_repr=unicode(aware),
+            object_repr=six.text_type(aware),
             change_message='test',
             action_flag=ADDITION,
         )
@@ -98,7 +102,7 @@ class TestAdminAdditions(TestCase):
             user_id=user.pk,
             content_type_id=ContentType.objects.get_for_model(naive).pk,
             object_id=naive.pk,
-            object_repr=unicode(naive),
+            object_repr=six.text_type(naive),
             change_message='test',
             action_flag=ADDITION,
         )

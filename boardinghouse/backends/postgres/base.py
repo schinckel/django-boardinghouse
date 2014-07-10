@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import django
 from django.db.backends.postgresql_psycopg2 import base
 

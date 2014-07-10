@@ -13,8 +13,7 @@ from django.dispatch import receiver
 from django.forms import ValidationError
 from django.utils.translation import ugettext_lazy as _
 
-import ensure_installation
-import signals
+from boardinghouse import signals
 
 from .base import SharedSchemaMixin
 from .schema import (

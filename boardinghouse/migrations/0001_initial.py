@@ -5,6 +5,7 @@ import os
 from django.db import models, migrations
 from django.conf import settings
 import django.core.validators
+
 import boardinghouse.base
 
 from boardinghouse.operations import AddField, LoadSQLFromScript

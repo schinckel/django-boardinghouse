@@ -8,7 +8,7 @@ from django.db import models, connection
 from django.utils.translation import ugettext_lazy as _
 from django.apps import apps
 
-import signals
+from boardinghouse import signals
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.addHandler(logging.NullHandler())

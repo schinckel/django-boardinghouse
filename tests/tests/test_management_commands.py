@@ -3,7 +3,6 @@ import sys
 import unittest
 
 from contextlib import contextmanager
-from cStringIO import StringIO
 
 import django
 from django.core.management import call_command
@@ -11,6 +10,7 @@ from django.core.management.base import CommandError
 from django.db import connection, DatabaseError
 from django.db import transaction
 from django.test import TestCase
+from django.utils import six
 
 from boardinghouse.schema import get_active_schema, get_schema_model
 
@@ -22,7 +22,7 @@ SCHEMA_QUERY = "SELECT schema_name FROM information_schema.schemata WHERE schema
 
 @contextmanager
 def capture(command, *args, **kwargs):
-    out, sys.stdout = sys.stdout, StringIO()
+    out, sys.stdout = sys.stdout, six.StringIO()
     command(*args, **kwargs)
     sys.stdout.seek(0)
     yield sys.stdout.read()
@@ -30,7 +30,7 @@ def capture(command, *args, **kwargs):
 
 @contextmanager
 def capture_err(command, *args, **kwargs):
-    err, sys.stderr = sys.stderr, StringIO()
+    err, sys.stderr = sys.stderr, six.StringIO()
     command(*args, **kwargs)
     sys.stderr.seek(0)
     yield sys.stderr.read()
