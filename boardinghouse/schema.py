@@ -10,6 +10,9 @@ from boardinghouse import signals
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.addHandler(logging.NullHandler())
+
+# I'm not happy with this solution. Need a better way, that doesn't
+# do heaps of database hits...
 global _active_schema
 
 
