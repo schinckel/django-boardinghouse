@@ -11,6 +11,7 @@ EXPIRED = _('This invitation has expired.')
 ACCEPTED = _('This invitation has already been accepted.')
 DECLINED = _('This invitation has already been declined.')
 
+
 class InvitePersonForm(forms.ModelForm):
     """
     A form that can be used to create a new invitation for a person
@@ -33,11 +34,12 @@ class InvitePersonForm(forms.ModelForm):
         super(InvitePersonForm, self).__init__(*args, **kwargs)
 
     def save(self, *args, **kwargs):
-        self.instance.schema = get_schema()
+        self.instance.schema = get_active_schema()
         self.instance.redemption_code = uuid.uuid4()
         self.instance.sender = self.user
         # TODO: email the user.
         return super(InvitePersonForm, self).save(*args, **kwargs)
+
 
 class AcceptForm(forms.ModelForm):
     """
@@ -65,6 +67,7 @@ class AcceptForm(forms.ModelForm):
         self.user.schemata.add(self.instance.schema)
         self.instance.accepted_at = datetime.datetime.utcnow()
         return super(AcceptForm, self).save(*args, **kwargs)
+
 
 class DeclineForm(forms.ModelForm):
 

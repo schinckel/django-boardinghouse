@@ -1,6 +1,5 @@
 import datetime
 
-import django
 from django.conf import settings
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
@@ -13,13 +12,14 @@ from boardinghouse.base import SharedSchemaModel
 UserModel = getattr(settings, 'AUTH_USER_MODEL', 'auth.user')
 INVITATION_EXPIRY = getattr(settings, 'INVITATION_EXPIRY', datetime.timedelta(7))
 
+
 class InvitationQuerySet(models.query.QuerySet):
     def not_handled(self):
         return self.filter(declined_at=None).filter(accepted_at=None)
 
     def pending(self):
         return self.not_handled().filter(
-            created_at__gte=now()-INVITATION_EXPIRY
+            created_at__gte=now() - INVITATION_EXPIRY
         )
 
     def not_pending(self):
@@ -28,7 +28,7 @@ class InvitationQuerySet(models.query.QuerySet):
 
     def expired(self):
         return self.not_handled().filter(
-            created_at__lt=now()-INVITATION_EXPIRY
+            created_at__lt=now() - INVITATION_EXPIRY
         )
 
     def accepted(self):
@@ -39,6 +39,7 @@ class InvitationQuerySet(models.query.QuerySet):
 
     def for_email(self, email):
         return self.filter(email=email)
+
 
 class Invitation(SharedSchemaModel):
     email = models.EmailField(verbose_name=_('Email address'))

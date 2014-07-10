@@ -12,7 +12,6 @@ loaded as part of this process exist as schemata in the database.
 import django
 from django.core.management.commands import loaddata
 from django.core.management.base import CommandError
-from django.db import DatabaseError
 
 from optparse import make_option
 
@@ -23,15 +22,13 @@ class Command(loaddata.Command):
     if django.VERSION < (1, 8):
         option_list = loaddata.Command.option_list + (
             make_option('--schema', action='store', dest='schema',
-                help='Specify which schema to load schema-aware models to',
-            ),
+                help='Specify which schema to load schema-aware models to'),
         )
 
     def add_arguments(self, parser):
         super(Command, self).add_arguments(parser)
         parser.add_argument('--schema', action='store', dest='schema',
-             help='Specify which schema to load schema-aware models to',
-        )
+             help='Specify which schema to load schema-aware models to')
 
     def handle(self, *app_labels, **options):
         Schema = get_schema_model()

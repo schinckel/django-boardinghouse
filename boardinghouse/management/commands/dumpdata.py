@@ -19,8 +19,7 @@ from optparse import make_option
 
 from ...schema import (
     is_shared_model, activate_template_schema, deactivate_schema,
-    get_schema_model,
-)
+    get_schema_model,)
 
 
 class Command(dumpdata.Command):
@@ -28,16 +27,14 @@ class Command(dumpdata.Command):
         option_list = dumpdata.Command.option_list + (
             make_option('--schema', action='store', dest='schema',
                 help='Specify which schema to dump schema-aware models from',
-                default='__template__',
-            ),
+                default='__template__',),
         )
 
     def add_arguments(self, parser):
         super(Command, self).add_arguments(parser)
         parser.add_argument('--schema', action='store', dest='schema',
              help='Specify which schema to dump schema-aware models from',
-             default='__template__',
-        )
+             default='__template__',)
 
     def handle(self, *app_labels, **options):
         schema_name = options.get('schema')

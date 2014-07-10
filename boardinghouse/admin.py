@@ -10,6 +10,7 @@ from .schema import get_active_schema, is_shared_model
 from .models import Schema
 
 
+@admin.register(Schema)
 class SchemaAdmin(admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         """
@@ -20,8 +21,6 @@ class SchemaAdmin(admin.ModelAdmin):
         return ()
 
     filter_horizontal = ('users',)
-
-admin.site.register(Schema, SchemaAdmin)
 
 
 def schemata(obj):
@@ -54,8 +53,6 @@ admin.ModelAdmin.get_inline_instances = get_inline_instances
 from django.contrib.admin.models import LogEntry
 from django.db import models
 from django.dispatch import receiver
-
-from .schema import is_shared_model
 
 if not getattr(LogEntry, 'object_schema', None):
     LogEntry.add_to_class(
