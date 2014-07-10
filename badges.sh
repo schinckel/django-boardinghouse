@@ -9,7 +9,7 @@ elif [[ $COV < '75%' ]] ; then
 elif [[ $COV < '90%' ]] ; then
   COLOUR=yellow ;
 else
-  COLOUR=brightgreen ;
+  COLOUR=green ;
 fi
 
 curl -# http://img.shields.io/badge/coverage-$COV-$COLOUR.svg > coverage-status.svg
