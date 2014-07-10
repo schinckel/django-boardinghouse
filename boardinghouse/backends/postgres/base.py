@@ -1,11 +1,11 @@
 from __future__ import unicode_literals
 
-import django
 from django.db.backends.postgresql_psycopg2 import base
 
 from .creation import DatabaseCreation
 
 from .schema import DatabaseSchemaEditor
+
 
 class DatabaseWrapper(base.DatabaseWrapper):
     """

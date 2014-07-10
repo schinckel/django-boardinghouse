@@ -6,3 +6,4 @@ doc/build
 examples/.school
 .boarding-school
 htmlcov
+coverage-status.svg

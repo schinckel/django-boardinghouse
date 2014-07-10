@@ -4,11 +4,9 @@ import unittest
 
 from contextlib import contextmanager
 
-import django
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.db import connection, DatabaseError
-from django.db import transaction
 from django.test import TestCase
 from django.utils import six
 

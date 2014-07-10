@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 from django.db.backends.postgresql_psycopg2 import creation
 
+
 class DatabaseCreation(creation.DatabaseCreation):
     """
     The only change we make to the original Postgres `DatabaseCreation`

@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from django.apps import apps, AppConfig
+from django.apps import AppConfig
 from django.core.checks import register, Error
 
 
@@ -13,9 +13,8 @@ class BoardingHouseConfig(AppConfig):
         monkey_patch_user()
 
 
-DB_ENGINES = [
-    'boardinghouse.backends.postgres'
-]
+DB_ENGINES = ['boardinghouse.backends.postgres']
+
 
 @register('settings')
 def check_db_backend(app_configs, **kwargs):
@@ -34,6 +33,7 @@ def check_db_backend(app_configs, **kwargs):
 
     return errors
 
+
 @register('settings')
 def check_session_middleware_installed(app_configs, **kwargs):
     from django.conf import settings
@@ -46,7 +46,6 @@ def check_session_middleware_installed(app_configs, **kwargs):
         hint="Add 'django.contrib.sessions.middleware.SessionMiddleware' to your MIDDLEWARE_CLASSES",
         id='boardinghouse.E002',
     )]
-
 
 
 def monkey_patch_user():
@@ -71,7 +70,6 @@ def load_app_settings():
 
 def inject_required_settings():
     from django.conf import settings
-    from django.core.exceptions import ImproperlyConfigured
 
     MIDDLEWARE = (
         'boardinghouse.middleware.SchemaChangeMiddleware',

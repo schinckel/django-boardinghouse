@@ -1,12 +1,10 @@
 import logging
 import os
 
-import django
+from django.apps import apps
 from django.conf import settings
 from django.core.cache import cache
 from django.db import models, connection
-from django.utils.translation import ugettext_lazy as _
-from django.apps import apps
 
 from boardinghouse import signals
 
@@ -20,6 +18,7 @@ class Forbidden(Exception):
     An exception that will be raised when an attempt to activate a non-valid
     schema is made.
     """
+
 
 class TemplateSchemaActivation(Forbidden):
     """
@@ -37,6 +36,7 @@ def get_schema_model():
 
 _active_schema = None
 
+
 def _get_search_path():
     cursor = connection.cursor()
     cursor.execute('SHOW search_path')
@@ -44,10 +44,12 @@ def _get_search_path():
     cursor.close()
     return search_path.split(',')
 
+
 def _set_search_path(search_path):
     cursor = connection.cursor()
     cursor.execute('SET search_path TO %s,public;', [search_path])
     cursor.close()
+
 
 def _schema_exists(schema_name, cursor=None):
     if cursor:
@@ -59,6 +61,7 @@ def _schema_exists(schema_name, cursor=None):
         return _schema_exists(schema_name, cursor)
     finally:
         cursor.close()
+
 
 def get_active_schema_name():
     """
@@ -80,11 +83,13 @@ def get_active_schema_name():
 
     return _active_schema
 
+
 def get_active_schema():
     """
     Get the (internal) name of the currently active schema.
     """
     return _get_schema(get_active_schema_name())
+
 
 def get_active_schemata():
     """
@@ -96,6 +101,7 @@ def get_active_schemata():
         cache.set('active-schemata', schemata)
     return schemata
 
+
 def get_all_schemata():
     """
     Get a (cached) list of all schemata.
@@ -105,6 +111,7 @@ def get_all_schemata():
         schemata = get_schema_model().objects.all()
         cache.set('all-schemata', schemata)
     return schemata
+
 
 def _get_schema(schema_name):
     """
@@ -118,6 +125,7 @@ def _get_schema(schema_name):
             return schema
         if schema_name == schema:
             return schema
+
 
 def activate_schema(schema_name):
     """
@@ -140,6 +148,7 @@ def activate_schema(schema_name):
     signals.schema_post_activate.send(sender=None, schema_name=schema_name)
     _active_schema = schema_name
 
+
 def activate_template_schema():
     """
     Activate the template schema. You probably don't want to do this.
@@ -147,13 +156,14 @@ def activate_template_schema():
     global _active_schema
     _active_schema = None
     schema_name = '__template__'
-    cursor = connection.cursor()
     signals.schema_pre_activate.send(sender=None, schema_name=schema_name)
     _set_search_path(schema_name)
     signals.schema_post_activate.send(sender=None, schema_name=schema_name)
 
+
 def get_template_schema():
     return get_schema_model()('__template__')
+
 
 def deactivate_schema(schema=None):
     """
@@ -182,6 +192,7 @@ def create_schema(schema_name):
 
     LOGGER.info('New schema created: %s' % schema_name)
 
+
 #: These models are required to be shared by the system.
 REQUIRED_SHARED_MODELS = [
     'auth.user',
@@ -195,11 +206,13 @@ REQUIRED_SHARED_MODELS = [
     'migrations.migration',
 ]
 
+
 def _is_join_model(model):
     return all([
         (field.primary_key or field.rel)
         for field in model._meta.fields
     ])
+
 
 def is_shared_model(model):
     """
@@ -236,6 +249,7 @@ def is_shared_model(model):
 
     return False
 
+
 def is_shared_table(table):
     """
     Is the model from the provided database table name shared?
@@ -269,12 +283,12 @@ def is_shared_table(table):
         # Assume this is not a shared table...
         return False
     else:
-        import pdb; pdb.set_trace()
         return is_shared_model(model)
 
     return is_shared_model(model) and is_shared_model(rel_model)
 
-## Internal helper functions.
+
+# Internal helper functions.
 
 def _sql_from_file(filename):
     """
@@ -284,11 +298,12 @@ def _sql_from_file(filename):
     file.
     """
     cursor = connection.cursor()
-    sql_file= os.path.join(os.path.abspath(os.path.dirname(__file__)), 'sql', '%s.sql' % filename)
+    sql_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'sql', '%s.sql' % filename)
     function = " ".join([x.strip() for x in open(sql_file).readlines() if not x.strip().startswith('--')])
     function = function.replace("%", "%%")
     cursor.execute(function)
     cursor.close()
+
 
 def _wrap_command(command):
     def inner(self, *args, **kwargs):
@@ -310,6 +325,7 @@ def _wrap_command(command):
         _create_all_schemata()
 
     return inner
+
 
 def _create_all_schemata():
     """

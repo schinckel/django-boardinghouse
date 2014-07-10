@@ -47,14 +47,6 @@ boardinghouse.context_processors module
     :undoc-members:
     :show-inheritance:
 
-boardinghouse.ensure_installation module
-----------------------------------------
-
-.. automodule:: boardinghouse.ensure_installation
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 boardinghouse.middleware module
 -------------------------------
 

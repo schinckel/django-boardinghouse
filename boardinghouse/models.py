@@ -2,13 +2,10 @@
 """
 import logging
 
-import django
-from django.apps import apps
 from django.conf import settings
-from django.contrib import auth
 from django.core.cache import cache
 from django.core.validators import RegexValidator
-from django.db import models, connection, transaction
+from django.db import models
 from django.dispatch import receiver
 from django.forms import ValidationError
 from django.utils.translation import ugettext_lazy as _
@@ -17,7 +14,7 @@ from boardinghouse import signals
 
 from .base import SharedSchemaMixin
 from .schema import (
-    create_schema, activate_schema, deactivate_schema, get_active_schema_name,
+    create_schema, activate_schema, deactivate_schema,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -29,6 +26,7 @@ schema_name_validator = RegexValidator(
     regex='^[a-z][a-z0-9_]*$',
     message=_(SCHEMA_NAME_VALIDATOR_MESSAGE)
 )
+
 
 class SchemaQuerySet(models.query.QuerySet):
     def bulk_create(self, *args, **kwargs):
@@ -47,7 +45,6 @@ class SchemaQuerySet(models.query.QuerySet):
 
     def inactive(self):
         return self.filter(is_active=False)
-
 
 
 class Schema(SharedSchemaMixin, models.Model):
@@ -134,18 +131,20 @@ class Schema(SharedSchemaMixin, models.Model):
 # This is a bit of fancy trickery to stick the property _is_shared_model
 # on every model class, returning False, unless it has been explicitly
 # set to True in the model definition (see base.py for examples).
-
 class ClassProperty(property):
     def __get__(self, cls, owner):
         return self.fget.__get__(None, owner)()
+
 
 def _is_shared_model(cls):
     return cls._meta.auto_created and cls._meta.auto_created._is_shared_model
 
 models.Model._is_shared_model = ClassProperty(classmethod(_is_shared_model))
 
+
 # We need to monkey-patch __eq__ on models.Model
 __old_eq__ = models.Model.__eq__
+
 
 def __eq__(self, other):
     from .schema import is_shared_model
@@ -154,6 +153,7 @@ def __eq__(self, other):
     return __old_eq__(self, other) and self._schema == other._schema
 
 models.Model.__eq__ = __eq__
+
 
 def inject_schema_attribute(sender, instance, **kwargs):
     """
@@ -210,6 +210,7 @@ if 'django.contrib.auth' in settings.INSTALLED_APPS:
     AnonymousUser.schemata = Schema.objects.none()
     AnonymousUser.visible_schemata = Schema.objects.none()
 
+
 # Add a cached method that prevents user.schemata.all() queries from
 # being needlessly duplicated.
 def visible_schemata(user):
@@ -232,6 +233,7 @@ def invalidate_cache(sender, **kwargs):
             for pk in kwargs['pk_set']:
                 cache.delete('visible-schemata-%s' % pk)
 
+
 # In addition, we need to clear out the schemata cache for all users
 # related to a schema if that schema is changed - specifically, if it's
 # active status is changed. However, we can't track this with
@@ -244,6 +246,7 @@ def invalidate_all_user_caches(sender, **kwargs):
     cache.delete('all-schemata')
     for user in kwargs['instance'].users.values('pk'):
         cache.delete('visible-schemata-%s' % user['pk'])
+
 
 # We also want to clear out all caches when we get a syncdb or migrate
 # signal on our own app.

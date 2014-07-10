@@ -19,6 +19,7 @@ from .signals import session_requesting_schema_change, session_schema_changed
 
 logger = logging.getLogger('boardinghouse.middleware')
 
+
 def change_schema(request, schema):
     """
     Change the schema for the current request's session.
@@ -183,6 +184,7 @@ class SchemaChangeMiddleware:
                 if data:
                     return redirect(request.path + '?' + data.urlencode())
                 return redirect(request.path)
+
         # 3. Header "X-Change-Schema: <name>"
         elif 'HTTP_X_CHANGE_SCHEMA' in request.META:
             schema = request.META['HTTP_X_CHANGE_SCHEMA']
@@ -190,6 +192,7 @@ class SchemaChangeMiddleware:
                 change_schema(request, schema)
             except Forbidden:
                 return FORBIDDEN
+
         elif 'schema' not in request.session and len(request.user.visible_schemata) == 1:
             # Can we not require a db hit each request here?
             change_schema(request, request.user.visible_schemata[0])
