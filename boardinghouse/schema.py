@@ -121,9 +121,7 @@ def _get_schema(schema_name):
     if not schema_name:
         return
     for schema in get_active_schemata():
-        if schema_name == schema.schema:
-            return schema
-        if schema_name == schema:
+        if schema_name == schema.schema or schema_name = schema:
             return schema
 
 

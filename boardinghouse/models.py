@@ -155,6 +155,7 @@ def __eq__(self, other):
 models.Model.__eq__ = __eq__
 
 
+@receiver(models.signals.post_init, sender=None)
 def inject_schema_attribute(sender, instance, **kwargs):
     """
     A signal listener that injects the current schema on the object
@@ -168,8 +169,6 @@ def inject_schema_attribute(sender, instance, **kwargs):
         return
     if not getattr(instance, '_schema', None):
         instance._schema = get_active_schema_name()
-
-models.signals.post_init.connect(inject_schema_attribute)
 
 
 # Add a cached method that prevents user.schemata.all() queries from
