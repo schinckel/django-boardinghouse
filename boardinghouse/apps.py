@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from django.apps import AppConfig
+from django.apps import apps, AppConfig
 from django.core.checks import register, Error
 
 
@@ -49,11 +49,21 @@ def check_session_middleware_installed(app_configs, **kwargs):
 
 
 def monkey_patch_user():
-    from django.contrib.auth import get_user_model
-    from .models import visible_schemata
+    """
+    We want to add a property to the defined user model that gives
+    us the visible schemata: this will be cached.
+
+    We also want to add properties to the AnonymousUser that
+    always return an empty queryset.
+    """
+    from django.contrib.auth import get_user_model, models
+    from .models import visible_schemata, Schema
     User = get_user_model()
     if not getattr(User, 'visible_schemata', None):
         User.visible_schemata = property(visible_schemata)
+
+    models.AnonymousUser.schemata = Schema.objects.none()
+    models.AnonymousUser.visible_schemata = Schema.objects.none()
 
 
 def load_app_settings():

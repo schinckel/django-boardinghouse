@@ -49,3 +49,33 @@ def get_inline_instances(self, request, obj=None):
 
 
 admin.ModelAdmin.get_inline_instances = get_inline_instances
+
+
+from django.contrib.admin.models import LogEntry
+from django.db import models
+from django.dispatch import receiver
+
+from .schema import is_shared_model
+
+if not getattr(LogEntry, 'object_schema', None):
+    LogEntry.add_to_class(
+        'object_schema',
+        models.ForeignKey('boardinghouse.schema', blank=True, null=True)
+    )
+
+    @receiver(models.signals.pre_save, sender=LogEntry)
+    def update_object_schema(sender, instance, **kwargs):
+        obj = instance.get_edited_object()
+
+        if not is_shared_model(obj):
+            instance.object_schema_id = obj._schema
+
+    get_admin_url = LogEntry.get_admin_url
+
+    def get_admin_url_with_schema(self):
+        if self.object_schema_id:
+            return get_admin_url(self) + '?__schema=%s' % self.object_schema_id
+
+        return get_admin_url(self)
+
+    LogEntry.get_admin_url = get_admin_url_with_schema
