@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 
 COV=$(coverage report | tail -n 1 | rev | cut -f 1 -d " " | rev)
 

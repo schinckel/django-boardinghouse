@@ -23,7 +23,7 @@ Contents:
    development
    todo
    code
-      
+
 Indices and tables
 ==================
 
@@ -33,7 +33,7 @@ Indices and tables
 
 
 .. |status| image:: https://drone.io/bitbucket.org/schinckel/django-boardinghouse/status.png
-.. |coverage| image:: https://drone.io/bitbucket.org/schinckel/django-boardinghouse/files/.coverage/coverage_status.png
+.. |coverage| image:: https://drone.io/bitbucket.org/schinckel/django-boardinghouse/files/coverage-status.svg
 .. |deps| image:: https://requires.io/bitbucket/schinckel/django-boardinghouse/requirements.png?branch=default
    :target: https://requires.io/bitbucket/schinckel/django-boardinghouse/requirements/?branch=default
    :alt: Requirements Status
