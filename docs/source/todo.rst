@@ -12,14 +12,6 @@ Tests to write
 
 * Test middleware handling of :exc:`boardinghouse.schema.TemplateSchemaActivated`.
 
-* :meth:`boardinghouse.backends.south_backend.DatabaseOperations.add_deferred_sql`
-
-* :meth:`boardinghouse.backends.south_backend.DatabaseOperations.lookup_constraint`, when columns is provided.
-
-* :mod:`boardinghouse.ensure_installation` - this is pretty hard to test automatically without having multiple projects.
-
-* Test :meth:`boardinghouse.models.SchemaQuerySet.inactive`
-
 * Ensure get_admin_url (non-schema-aware model) still works.
 
 User.visible_schemata property testing:

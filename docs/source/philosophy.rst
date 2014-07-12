@@ -29,7 +29,7 @@ It is possible to build a complex, large multi-tenanted application purely using
 
 This turns out to not be such a great idea, in practice. Having an extra column in every field in the database means your queries become a bit more complex. You can do away with some of the relationships (`invoices` have a relationship to `customers`, so items with a relationship to `invoices` have an implicit relationship to customers), however this becomes ever more difficult to run reports.
 
-There are still some nice side effects to using this approach: the first and foremost is that you only need to run database migrations once. 
+There are still some nice side effects to using this approach: the first and foremost is that you only need to run database migrations once.
 
 The other common approach is to use the same code-base, but a different database per-tenant. Each tenant has their own domain name, and requests are routed according to the domain name. There are a couple of django applications that do this, indeed some even use Postgres schemata instead of databases.
 
@@ -50,7 +50,7 @@ How it works
 
 Within the system, there is a special model: :class:`boardinghouse.models.Schema`. Whenever new instances of this model are created, the system creates a new Postgres schema with that name, and clones a copy of the table structure into that (from a special `__template__` schema, which never contains data).
 
-Whenever Django changes the table structure (for instance, using ``syncdb``, or ``migrate`` from South), the DDL changes are applied to each known schema in turn.
+Whenever Django changes the table structure (for instance, using ``migrate``), the DDL changes are applied to each known schema in turn.
 
 Whenever a request comes in, :class:`boardinghouse.middleware.SchemaMiddleware` determines which schema should be active, and sets the Postgres ``search_path`` accordingly. If a user may change schema, they may request a schema activation for one of their other available schemata, and any future requests will only present data from that schema.
 
