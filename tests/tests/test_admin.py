@@ -1,10 +1,6 @@
 from __future__ import unicode_literals
 
-import unittest
-
 from django.test import TestCase
-from django.contrib import admin, auth
-from django.core.urlresolvers import reverse
 from django.utils import six
 
 from boardinghouse.schema import get_schema_model
@@ -13,11 +9,12 @@ from ..models import AwareModel, NaiveModel, User
 
 Schema = get_schema_model()
 
+
 class TestAdminAdditions(TestCase):
     def test_ensure_schema_schema_is_not_editable(self):
-        Schema.objects.mass_create('a','b','c')
+        Schema.objects.mass_create('a', 'b', 'c')
 
-        user = User.objects.create_superuser(
+        User.objects.create_superuser(
             username="su",
             password="su",
             email="su@example.com"
@@ -35,9 +32,9 @@ class TestAdminAdditions(TestCase):
         self.assertTrue('schema' in form.fields, 'Schema.schema should be editable on create.')
 
     def test_schema_aware_models_when_no_schema_selected(self):
-        Schema.objects.mass_create('a','b','c')
+        Schema.objects.mass_create('a', 'b', 'c')
 
-        user = User.objects.create_superuser(
+        User.objects.create_superuser(
             username="su",
             password="su",
             email="su@example.com"
@@ -55,7 +52,7 @@ class TestAdminAdditions(TestCase):
         user = User.objects.create_user(
             username='user', password='password', email='user@example.com'
         )
-        Schema.objects.mass_create('a','b','c')
+        Schema.objects.mass_create('a', 'b', 'c')
         self.assertEquals('', schemata(user))
 
         user.schemata.add(*Schema.objects.all())

@@ -1,8 +1,7 @@
-from django.conf import settings
-from django.contrib.auth.models import User
 from django.db import models
 
 from boardinghouse.base import SharedSchemaModel, MultiSchemaManager
+
 
 class AwareModel(models.Model):
     name = models.CharField(max_length=10, unique=True)
@@ -12,6 +11,7 @@ class AwareModel(models.Model):
 
     class Meta:
         app_label = 'tests'
+
 
 class NaiveModel(SharedSchemaModel):
     name = models.CharField(max_length=10, unique=True)
@@ -41,6 +41,7 @@ class CoReferentialModelA(models.Model):
 
     class Meta:
         app_label = 'tests'
+
 
 class CoReferentialModelB(models.Model):
     name = models.CharField(max_length=10, unique=True)

@@ -3,6 +3,12 @@ from django.db.migrations.operations.base import Operation
 
 
 class AddField(migrations.AddField):
+    """
+    Allow adding a field to a model from a different application.
+
+    This enables us to add the field to contrib.admin.LogEntry that
+    stores the schema for an aware object.
+    """
     def __init__(self, *args, **kwargs):
         self.app_label = kwargs.pop('app_label')
         super(AddField, self).__init__(*args, **kwargs)

@@ -18,6 +18,7 @@ Schema = get_schema_model()
 
 SCHEMA_QUERY = "SELECT schema_name FROM information_schema.schemata WHERE schema_name = %s"
 
+
 @contextmanager
 def capture(command, *args, **kwargs):
     out, sys.stdout = sys.stdout, six.StringIO()
@@ -26,6 +27,7 @@ def capture(command, *args, **kwargs):
     yield sys.stdout.read()
     sys.stdout = out
 
+
 @contextmanager
 def capture_err(command, *args, **kwargs):
     err, sys.stderr = sys.stderr, six.StringIO()
@@ -33,6 +35,7 @@ def capture_err(command, *args, **kwargs):
     sys.stderr.seek(0)
     yield sys.stderr.read()
     sys.stderr = err
+
 
 class TestLoadData(TestCase):
     def test_invalid_schema_causes_error(self):
@@ -59,13 +62,11 @@ class TestLoadData(TestCase):
             self.assertEquals('Installed 2 object(s) from 1 fixture(s)\n', output)
         NaiveModel.objects.get(name="naive1")
 
-
     def test_loading_naive_data_works_with_schema_passed_in(self):
         Schema.objects.create(name='a', schema='a')
         with capture(call_command, 'loaddata', 'tests/fixtures/naive.json', schema='a', commit=False) as output:
             self.assertEquals('Installed 2 object(s) from 1 fixture(s)\n', output)
         NaiveModel.objects.get(name="naive1")
-
 
     def test_loading_aware_data_without_a_schema_fails(self):
         with self.assertRaises(DatabaseError):
@@ -103,7 +104,6 @@ class TestDumpData(TestCase):
         with self.assertRaises(CommandError):
             call_command('dumpdata', 'tests', schema='foo')
 
-
     def test_dumpdata_on_naive_models_does_not_require_schema(self):
         with capture(call_command, 'dumpdata', 'boardinghouse') as output:
             self.assertEquals('[]', output)
@@ -124,7 +124,6 @@ class TestDumpData(TestCase):
         self.assertEquals('boardinghouse.schema', data[1]['model'])
         self.assertEquals({"status": False, "name": "foo"}, data[2]['fields'])
 
-
         with capture(call_command, 'dumpdata', 'tests', 'boardinghouse', schema='b') as output:
             data = sorted(json.loads(output), key=by_model)
 
@@ -135,4 +134,3 @@ class TestDumpData(TestCase):
     def test_dumpdata_on_aware_model_requires_schema(self):
         with self.assertRaises(CommandError):
             call_command('dumpdata', 'tests.awaremodel')
-

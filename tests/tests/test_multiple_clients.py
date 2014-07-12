@@ -5,9 +5,10 @@ from unittest import TestCase
 from django.test import Client
 
 from boardinghouse.schema import get_schema_model
-from ..models import AwareModel, NaiveModel, User
+from ..models import AwareModel, User
 
 Schema = get_schema_model()
+
 
 class TestMultipleClients(TestCase):
     def test_simultaneous_access(self):

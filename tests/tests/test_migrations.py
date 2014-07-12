@@ -1,21 +1,9 @@
 import unittest
 
-import django
-from django.conf import settings
 from django.db import connection, models
 from django.test import TestCase
 
-if django.VERSION < (1,7):
-    try:
-        from south.db import db
-    except ImportError:
-        db = None
-else:
-    from django.db import migrations
-    db = None
-
-from boardinghouse.schema import get_schema_model, get_template_schema, activate_template_schema
-from ..models import AwareModel
+from boardinghouse.schema import get_schema_model, get_template_schema
 
 Schema = get_schema_model()
 template_schema = get_template_schema()
@@ -27,6 +15,7 @@ WHERE table_name = '%(table_name)s'
 AND table_schema = '%(table_schema)s'
 AND column_name = '%(column_name)s';
 """
+
 
 @unittest.skip
 class DjangoMigrate(TestCase):

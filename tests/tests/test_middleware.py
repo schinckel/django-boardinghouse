@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from django.test import TestCase
 
-from boardinghouse.schema import TemplateSchemaActivation, get_schema_model
+from boardinghouse.schema import get_schema_model
 from ..models import AwareModel, User
 
 Schema = get_schema_model()
@@ -17,26 +17,25 @@ SU_CREDENTIALS = {
     'email': 'su@example.com',
 }
 
+
 class TestMiddleware(TestCase):
     def test_view_without_schema_aware_models_works_without_activation(self):
         resp = self.client.get('/')
         self.assertEquals(200, resp.status_code)
         self.assertEquals(b'None', resp.content)
 
-
     def test_unauth_cannot_change_schema(self):
-        first = Schema.objects.create(name='first', schema='first')
-        second = Schema.objects.create(name='second', schema='second')
+        Schema.objects.create(name='first', schema='first')
+        Schema.objects.create(name='second', schema='second')
 
         resp = self.client.get('/', HTTP_X_CHANGE_SCHEMA='first')
         self.assertEquals(403, resp.status_code)
 
-
     def test_invalid_schema(self):
-        first = Schema.objects.create(name='first', schema='first')
-        second = Schema.objects.create(name='second', schema='second')
+        Schema.objects.create(name='first', schema='first')
+        Schema.objects.create(name='second', schema='second')
 
-        user = User.objects.create_superuser(
+        User.objects.create_superuser(
             username="su",
             password="su",
             email="su@example.com"
@@ -65,12 +64,11 @@ class TestMiddleware(TestCase):
         resp = self.client.get('/')
         self.assertEquals(b'first', resp.content)
 
-
     def test_middleware_activation(self):
-        first = Schema.objects.create(name='first', schema='first')
-        second = Schema.objects.create(name='second', schema='second')
+        Schema.objects.create(name='first', schema='first')
+        Schema.objects.create(name='second', schema='second')
 
-        user = User.objects.create_superuser(
+        User.objects.create_superuser(
             username="su",
             password="su",
             email="su@example.com"
@@ -82,17 +80,17 @@ class TestMiddleware(TestCase):
         resp = self.client.get('/')
         self.assertEquals(b'second', resp.content)
 
-        resp = self.client.get('/', {'__schema':'first'}, follow=True)
+        resp = self.client.get('/', {'__schema': 'first'}, follow=True)
         self.assertEquals(b'first', resp.content)
 
-        resp = self.client.get('/', {'__schema':'second', 'foo': 'bar'}, follow=True)
+        resp = self.client.get('/', {'__schema': 'second', 'foo': 'bar'}, follow=True)
         self.assertEquals(b'second\nfoo=bar', resp.content)
 
         resp = self.client.get('/', HTTP_X_CHANGE_SCHEMA='first')
         self.assertEquals(b'first', resp.content)
 
     def test_non_superuser_schemata(self):
-        Schema.objects.mass_create('a','b','c')
+        Schema.objects.mass_create('a', 'b', 'c')
         user = User.objects.create_user(**CREDENTIALS)
         self.client.login(**CREDENTIALS)
         resp = self.client.get('/', {'__schema': 'a'}, follow=True)
@@ -111,7 +109,7 @@ class TestMiddleware(TestCase):
         AwareModel.objects.create(name='foo')
         AwareModel.objects.create(name='bar')
 
-        user = User.objects.create_user(**CREDENTIALS)
+        User.objects.create_user(**CREDENTIALS)
         self.client.login(**CREDENTIALS)
         resp = self.client.get('/')
         self.assertEquals(200, resp.status_code)
@@ -121,7 +119,7 @@ class TestMiddleware(TestCase):
         self.assertEquals(302, resp.status_code)
 
     def test_attempt_to_activate_template_schema(self):
-        user = User.objects.create_user(**CREDENTIALS)
+        User.objects.create_user(**CREDENTIALS)
         self.client.login(**CREDENTIALS)
 
         resp = self.client.get('/', {'__schema': '__template__'}, follow=True)
@@ -161,9 +159,10 @@ class TestMiddleware(TestCase):
         resp = self.client.get('/__change_schema__//')
         self.assertEquals(b'Schema deselected', resp.content)
 
+
 class TestContextProcessor(TestCase):
     def setUp(self):
-        Schema.objects.mass_create('a','b','c')
+        Schema.objects.mass_create('a', 'b', 'c')
 
     def test_no_schemata_if_anonymous(self):
         response = self.client.get('/change/')
@@ -181,14 +180,14 @@ class TestContextProcessor(TestCase):
         self.assertIn(schemata[1], resp.context['schemata'])
         self.assertEquals(None, resp.context['selected_schema'])
 
-        resp = self.client.get('/change/',  HTTP_X_CHANGE_SCHEMA='a')
+        resp = self.client.get('/change/', HTTP_X_CHANGE_SCHEMA='a')
         self.assertEquals(2, len(resp.context['schemata']))
         self.assertIn(schemata[0], resp.context['schemata'])
         self.assertIn(schemata[1], resp.context['schemata'])
         self.assertEquals('a', resp.context['selected_schema'])
 
     def user_has_no_schemata(self):
-        user = User.objects.create_user(**CREDENTIALS)
+        User.objects.create_user(**CREDENTIALS)
         self.client.login(**CREDENTIALS)
         resp = self.client.get('/change/')
         self.assertEquals([], list(resp.context['schemata']))
