@@ -65,6 +65,11 @@ def _schema_exists(schema_name, cursor=None):
     finally:
         cursor.close()
 
+def _schema_table_exists():
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM information_schema.tables WHERE table_name = 'boardinghouse_schema'")
+    return bool(cursor.fetchone())
+
 
 def get_active_schema_name():
     """
@@ -291,26 +296,8 @@ def is_shared_table(table):
 
 # Internal helper functions.
 
-def _sql_from_file(filename):
-    """
-    A large part of this project is based around how simple it is to
-    clone a schema's structure into a new schema. This is encapsulated in
-    an SQL script: this function will install a function from an arbitrary
-    file.
-    """
-    cursor = connection.cursor()
-    sql_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'sql', '%s.sql' % filename)
-    function = " ".join([x.strip() for x in open(sql_file).readlines() if not x.strip().startswith('--')])
-    function = function.replace("%", "%%")
-    cursor.execute(function)
-    cursor.close()
-
-
 def _wrap_command(command):
     def inner(self, *args, **kwargs):
-        _sql_from_file('clone_schema')
-        get_template_schema().create_schema()
-
         cursor = connection.cursor()
         # In the case of create table statements, we want to make sure
         # they go to the public schema, but want reads to come from

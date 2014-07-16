@@ -34,7 +34,7 @@ class TestPartitioning(TestCase):
 
         first.activate()
         AwareModel.objects.create(name="Foo object").name
-        bar = AwareModel.objects.create(name="Bar object").name
+        AwareModel.objects.create(name="Bar object").name
 
         second.activate()
         baz = AwareModel.objects.create(name="Baz object").name

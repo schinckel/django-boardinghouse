@@ -17,7 +17,6 @@ class TestSchemaQuerysetMethods(TestCase):
             set(Schema.objects.active().values_list('schema', flat=True))
         )
 
-
     def test_inactive(self):
         Schema.objects.mass_create('a', 'b', 'c')
         self.assertEquals(

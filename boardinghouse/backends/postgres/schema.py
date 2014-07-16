@@ -6,7 +6,7 @@ import re
 from django.db.backends.postgresql_psycopg2 import schema
 
 from ...schema import is_shared_model, is_shared_table
-from ...schema import get_schema_model
+from ...schema import get_schema_model, _schema_table_exists
 from ...schema import deactivate_schema, activate_template_schema
 
 
@@ -21,9 +21,11 @@ def wrap(name):
         if '_apply_to_all' in [x[3] for x in inspect.stack()[1:]]:
             return method(self, model, *args, **kwargs)
 
-        for each in get_schema_model().objects.all():
-            each.activate()
-            method(self, model, *args, **kwargs)
+        # Only do this if our table exists!
+        if _schema_table_exists():
+            for each in get_schema_model().objects.all():
+                each.activate()
+                method(self, model, *args, **kwargs)
 
         activate_template_schema()
         result = method(self, model, *args, **kwargs)
@@ -75,9 +77,10 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         execute = super(DatabaseSchemaEditor, self).execute
 
         if match and not is_shared_table(match['table_name']):
-            for each in get_schema_model().objects.all():
-                each.activate()
-                execute(sql, params)
+            if _schema_table_exists():
+                for each in get_schema_model().objects.all():
+                    each.activate()
+                    execute(sql, params)
 
             activate_template_schema()
             execute(sql, params)

@@ -2,11 +2,11 @@
 Tests for the RAW sql functions.
 """
 
-from django.conf import settings
 from django.test import TestCase
 from django.db import connection
 
 from boardinghouse.models import Schema
+
 
 class TestRejectSchemaColumnChange(TestCase):
     def test_exception_is_raised(self):
