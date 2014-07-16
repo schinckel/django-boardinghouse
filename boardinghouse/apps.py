@@ -1,10 +1,7 @@
 from __future__ import unicode_literals
 
-import os
-
 from django.apps import AppConfig
 from django.core.checks import register, Error
-from django.db import connection
 
 
 class BoardingHouseConfig(AppConfig):
@@ -14,8 +11,7 @@ class BoardingHouseConfig(AppConfig):
         load_app_settings()
         inject_required_settings()
         monkey_patch_user()
-        sql_from_file('clone_schema')
-        create_template_schema()
+
 
 DB_ENGINES = ['boardinghouse.backends.postgres']
 
@@ -96,23 +92,3 @@ def inject_required_settings():
 
     if CONTEXT not in settings.TEMPLATE_CONTEXT_PROCESSORS:
         settings.TEMPLATE_CONTEXT_PROCESSORS += (CONTEXT,)
-
-
-def sql_from_file(filename):
-    """
-    A large part of this project is based around how simple it is to
-    clone a schema's structure into a new schema. This is encapsulated in
-    an SQL script: this function will install a function from an arbitrary
-    file.
-    """
-    cursor = connection.cursor()
-    sql_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'sql', '%s.sql' % filename)
-    function = " ".join([x.strip() for x in open(sql_file).readlines() if not x.strip().startswith('--')])
-    function = function.replace("%", "%%")
-    cursor.execute(function)
-    cursor.close()
-
-
-def create_template_schema():
-    from .schema import get_template_schema
-    get_template_schema().create_schema()
