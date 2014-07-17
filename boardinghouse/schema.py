@@ -35,7 +35,9 @@ class TemplateSchemaActivation(Forbidden):
 
 
 def get_schema_model():
-    return apps.get_model('boardinghouse', 'schema')
+    return apps.get_model(
+        getattr(settings, 'BOARDINGHOUSE_SCHEMA_MODEL', 'boardinghouse.Schema')
+    )
 
 _active_schema = None
 
