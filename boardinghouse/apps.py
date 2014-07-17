@@ -57,7 +57,9 @@ def monkey_patch_user():
     always return an empty queryset.
     """
     from django.contrib.auth import get_user_model, models
-    from .models import visible_schemata, Schema
+    from .schema import get_schema_model
+    from .models import visible_schemata
+    Schema = get_schema_model()
     User = get_user_model()
     if not getattr(User, 'visible_schemata', None):
         User.visible_schemata = property(visible_schemata)

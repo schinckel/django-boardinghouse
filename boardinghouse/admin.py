@@ -1,26 +1,27 @@
 from __future__ import unicode_literals
 
+from django.conf import settings
 from django.contrib import admin
 
-from .schema import get_active_schema, is_shared_model
+from .schema import get_active_schema, is_shared_model, get_schema_model
 
 # We only want to install our SchemaAdmin if our schema model is the
 # one that is used: otherwise it's up to the project developer to
 # add it to the admin, if they want it.
 from .models import Schema
 
+if get_schema_model() == Schema:
+    @admin.register(Schema)
+    class SchemaAdmin(admin.ModelAdmin):
+        def get_readonly_fields(self, request, obj=None):
+            """
+            Prevents `schema` from being editable once created.
+            """
+            if obj is not None:
+                return ('schema',)
+            return ()
 
-@admin.register(Schema)
-class SchemaAdmin(admin.ModelAdmin):
-    def get_readonly_fields(self, request, obj=None):
-        """
-        Prevents `schema` from being editable once created.
-        """
-        if obj is not None:
-            return ('schema',)
-        return ()
-
-    filter_horizontal = ('users',)
+        filter_horizontal = ('users',)
 
 
 def schemata(obj):
@@ -57,7 +58,7 @@ from django.dispatch import receiver
 if not getattr(LogEntry, 'object_schema', None):
     LogEntry.add_to_class(
         'object_schema',
-        models.ForeignKey('boardinghouse.schema', blank=True, null=True)
+        models.ForeignKey(getattr(settings, 'BOARDINGHOUSE_SCHEMA_MODEL', 'boardinghouse.Schema'), blank=True, null=True)
     )
 
     @receiver(models.signals.pre_save, sender=LogEntry)

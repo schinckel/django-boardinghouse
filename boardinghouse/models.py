@@ -15,7 +15,7 @@ from boardinghouse import signals
 from .base import SharedSchemaMixin
 from .schema import (
     create_schema, activate_schema, deactivate_schema,
-    _schema_exists,
+    _schema_exists, get_schema_model
 )
 
 LOGGER = logging.getLogger(__name__)
