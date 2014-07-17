@@ -36,7 +36,6 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-) + (('south', ) if django.VERSION < 1.7 else ()) + (
     'boardinghouse',
     'django.contrib.admin',
 )
@@ -65,10 +64,6 @@ DATABASES = {
     }
 }
 
-SOUTH_DATABASE_ADAPTERS = {
-    'default': 'boardinghouse.backends.south_backend',
-    'boardinghouse.backends.postgres': 'boardinghouse.backends.south_backend',
-}
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.6/topics/i18n/
@@ -102,10 +97,3 @@ PASSWORD_HASHERS = (
 COVERAGE_REPORT_HTML_OUTPUT_DIR = os.path.join(BASE_DIR, '.coverage')
 COVERAGE_USE_STDOUT = True
 COVERAGE_PATH_EXCLUDES = ['.hg', 'templates', 'tests', 'sql', '__pycache__']
-
-# if os.environ.get('COVERAGE', None):
-#     from django_coverage import coverage_runner
-#     test_runner = coverage_runner.CoverageRunner
-# else:
-#     from django.test.utils import get_runner
-#     test_runner = get_runner(global_settings)

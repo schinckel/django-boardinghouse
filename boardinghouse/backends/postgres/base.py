@@ -1,9 +1,13 @@
-from django.db.backends.postgresql_psycopg2.base import DatabaseWrapper as DBW
-from django.conf import settings
+from __future__ import unicode_literals
 
-from creation import DatabaseCreation
+from django.db.backends.postgresql_psycopg2 import base
 
-class DatabaseWrapper(DBW):
+from .creation import DatabaseCreation
+
+from .schema import DatabaseSchemaEditor
+
+
+class DatabaseWrapper(base.DatabaseWrapper):
     """
     This is a simple subclass of the Postrges DatabaseWrapper,
     but using our new :class:`DatabaseCreation` class.
@@ -11,3 +15,6 @@ class DatabaseWrapper(DBW):
     def __init__(self, *args, **kwargs):
         super(DatabaseWrapper, self).__init__(*args, **kwargs)
         self.creation = DatabaseCreation(self)
+
+    def schema_editor(self, *args, **kwargs):
+        return DatabaseSchemaEditor(self, *args, **kwargs)

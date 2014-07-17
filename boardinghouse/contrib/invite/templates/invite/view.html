@@ -1,0 +1,16 @@
+<h1>Invitation to {{ invitation.schema.name }}</h1>
+
+<p>You have been invited to...</p>
+
+<p>{{ invitation.message }}</p>
+
+<form method="POST" action="{% url 'invite:accept' invitation.redemption_code %}">
+  {% csrf_token %}
+  <button type="submit">Accept Invitation</button>
+</form>
+
+<form method="POST" action="{% url 'invite:decline' invitation.redemption_code %}">
+  {% csrf_token %}
+  <button type="submit">Decline Invitation</button>
+</form>
+

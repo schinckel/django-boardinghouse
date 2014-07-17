@@ -1,0 +1,20 @@
+<h1>Invitation to {{ invitation.schema.name }}</h1>
+
+<p>You are accepting the invitation.</p>
+
+{% if logged_in %}
+  <form method="POST" action="{% url 'invite:confirm' invitation.redemption_code %}">
+    {% csrf_token %}
+    <button type="submit">Accept with this account</button>
+  </form>
+{% else %}
+  <form method="POST" action="">
+    {% csrf_token %}
+    <button type="submit">Login to accept</button>
+  </form>
+{% endif %}
+
+<form method="POST">
+  {% csrf_token %}
+  <button type="submit">Register a new account</button>
+</form>

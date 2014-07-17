@@ -5,3 +5,6 @@ doc/build
 .venv
 examples/.school
 .boarding-school
+htmlcov
+coverage-status.svg
+status.svg

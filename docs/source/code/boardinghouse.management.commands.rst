@@ -12,6 +12,14 @@ boardinghouse.management.commands.dumpdata module
     :undoc-members:
     :show-inheritance:
 
+boardinghouse.management.commands.flush module
+----------------------------------------------
+
+.. automodule:: boardinghouse.management.commands.flush
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 boardinghouse.management.commands.loaddata module
 -------------------------------------------------
 
@@ -24,14 +32,6 @@ boardinghouse.management.commands.migrate module
 ------------------------------------------------
 
 .. automodule:: boardinghouse.management.commands.migrate
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-boardinghouse.management.commands.syncdb module
------------------------------------------------
-
-.. automodule:: boardinghouse.management.commands.syncdb
     :members:
     :undoc-members:
     :show-inheritance:

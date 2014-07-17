@@ -19,3 +19,5 @@ When prompted, you will need to create a superuser. Then::
   ./manage.py runserver 127.0.0.1:8088
 
 Finally, visit http://127.0.0.1:8088/admin/ and log in with your superuser's credentials. There is a fully functioning django project, with two schemata (schools) installed, and a smattering of data.
+
+At this stage, all of the functionality is contained within the admin interface.

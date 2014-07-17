@@ -1,16 +1,24 @@
-from django.conf import settings
+SHARED_MODELS = []
+"""
+Models that should be in the public/shared schema,
+rather than in each tenant's schema.
 
-SHARED_MODELS = [
-    'auth.user',
-    'auth.permission',
-    'auth.group',
-    'sites.site',
-    'sessions.session',
-    'contenttypes.contenttype',
-    'admin.logentry',
-    'south.migrationhistory'
+Note that some models are _always_ shared, which you
+can see in :attr:`boardinghouse.schema.REQUIRED_SHARED_MODELS`
+"""
+
+PRIVATE_MODELS = [
+    # 'auth.user_permissions',
+    # 'auth.user_groups',
 ]
+"""
+Overrides for models that should be place in each schema.
 
-SCHEMA_MODEL = 'boardinghouse.schema'
+This enables us to do magic like have the m2m join table for a pair
+of shared models be schema-aware.
 
-locals().update(getattr(settings, 'BOARDINGHOUSE', {}))
+Can we annotate a ForeignKey field, or perhaps do something in the
+Model.Meta to set this?
+
+Perhaps we could have a SchemaAwareManyToManyField()...
+"""

@@ -23,6 +23,8 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'docs.django_settings'
 import django
 import boardinghouse
 
+django.setup()
+
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -250,7 +252,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('index', 'django-boardinghouse', u'django-boardinghouse Documentation',
-   u'Matthew Schinckel', 'django-boardinghouse', 'One line description of project.',
+   u'Matthew Schinckel', 'django-boardinghouse', 'Django partitioning using postgres schemata',
    'Miscellaneous'),
 ]
 

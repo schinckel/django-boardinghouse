@@ -1,14 +1,17 @@
+from __future__ import unicode_literals
+
 """
 """
 from django.db import models
+
 
 class MultiSchemaMixin(object):
     """
     A mixin that allows for fetching objects from multiple
     schemata in the one request.
-    
+
     Consider this experimental.
-    
+
     .. note:: You probably don't want want this on your QuerySet, just
         on your Manager.
     """
@@ -16,9 +19,9 @@ class MultiSchemaMixin(object):
         """
         Perform these queries across several schemata.
         """
-        qs = getattr(self, 'get_queryset', self.get_query_set)()
+        qs = self.get_queryset()
         query = str(qs.query)
-        
+
         if len(schemata) == 1 and hasattr(schemata[0], 'filter'):
             schemata = schemata[0]
 
@@ -27,13 +30,14 @@ class MultiSchemaMixin(object):
         # so we can access it later.
         multi_query = [
             query.replace(
-                'SELECT ', "SELECT '%s' as _schema, "  % schema.schema
+                'SELECT ', "SELECT '%s' as _schema, " % schema.schema
             ).replace(
                 'FROM "', 'FROM "%s"."' % schema.schema
             ) for schema in schemata
         ]
-        
+
         return self.raw(" UNION ALL ".join(multi_query))
+
 
 class MultiSchemaManager(MultiSchemaMixin, models.Manager):
     """
@@ -41,9 +45,11 @@ class MultiSchemaManager(MultiSchemaMixin, models.Manager):
     in the one request.
     """
 
+
 class SharedSchemaMixin(object):
     _is_shared_model = True
-    
+
+
 class SharedSchemaModel(SharedSchemaMixin, models.Model):
     """
     A Base class for models that should be in the shared schema.
@@ -51,4 +57,3 @@ class SharedSchemaModel(SharedSchemaMixin, models.Model):
 
     class Meta:
         abstract = True
-

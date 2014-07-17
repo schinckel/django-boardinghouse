@@ -1,6 +1,9 @@
-from django.db.backends.postgresql_psycopg2.creation import *
+from __future__ import unicode_literals
 
-class DatabaseCreation(DatabaseCreation):
+from django.db.backends.postgresql_psycopg2 import creation
+
+
+class DatabaseCreation(creation.DatabaseCreation):
     """
     The only change we make to the original Postgres `DatabaseCreation`
     class is to allow a schema name.
@@ -11,7 +14,7 @@ class DatabaseCreation(DatabaseCreation):
         it inserts it into the correct schema.
         """
         from ...schema import is_shared_model
-        
+
         final_output, pending_references = super(DatabaseCreation, self).sql_create_model(model, style, known_models)
         if not is_shared_model(model):
             for i in range(len(final_output)):

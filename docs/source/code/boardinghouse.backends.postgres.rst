@@ -20,6 +20,14 @@ boardinghouse.backends.postgres.creation module
     :undoc-members:
     :show-inheritance:
 
+boardinghouse.backends.postgres.schema module
+---------------------------------------------
+
+.. automodule:: boardinghouse.backends.postgres.schema
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------

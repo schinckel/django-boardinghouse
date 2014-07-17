@@ -7,9 +7,10 @@ Subpackages
 .. toctree::
 
     boardinghouse.backends
+    boardinghouse.contrib
     boardinghouse.management
+    boardinghouse.migrations
     boardinghouse.templatetags
-    boardinghouse.tests
 
 Submodules
 ----------
@@ -18,6 +19,14 @@ boardinghouse.admin module
 --------------------------
 
 .. automodule:: boardinghouse.admin
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+boardinghouse.apps module
+-------------------------
+
+.. automodule:: boardinghouse.apps
     :members:
     :undoc-members:
     :show-inheritance:
@@ -38,14 +47,6 @@ boardinghouse.context_processors module
     :undoc-members:
     :show-inheritance:
 
-boardinghouse.ensure_installation module
-----------------------------------------
-
-.. automodule:: boardinghouse.ensure_installation
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 boardinghouse.middleware module
 -------------------------------
 
@@ -58,6 +59,14 @@ boardinghouse.models module
 ---------------------------
 
 .. automodule:: boardinghouse.models
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+boardinghouse.operations module
+-------------------------------
+
+.. automodule:: boardinghouse.operations
     :members:
     :undoc-members:
     :show-inheritance:

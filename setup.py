@@ -14,8 +14,7 @@ setup(
     include_package_data=True,
     install_requires = [
         'django',
-        'psycopg2',
-        'django-model-utils',
+        #'psycopg2', # or psycopg2cffi
     ],
     classifiers = [
         'Programming Language :: Python',
@@ -23,5 +22,5 @@ setup(
         'Operating System :: OS Independent',
         'Framework :: Django',
     ],
-    test_suite='tests.main',
+    test_suite='runtests.runtests',
 )
