@@ -31,8 +31,8 @@ class Migration(migrations.Migration):
                 ('users', models.ManyToManyField(to=settings.AUTH_USER_MODEL, null=True, blank=True)),
             ],
             options={
-                'swappable': b'BOARDINGHOUSE_SCHEMA_MODEL',
-                'verbose_name_plural': b'schemata',
+                'swappable': 'BOARDINGHOUSE_SCHEMA_MODEL',
+                'verbose_name_plural': 'schemata',
             },
             bases=(boardinghouse.base.SharedSchemaMixin, models.Model),
         ),
