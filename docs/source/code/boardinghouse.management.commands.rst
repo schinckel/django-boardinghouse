@@ -4,43 +4,16 @@ boardinghouse.management.commands package
 Submodules
 ----------
 
-boardinghouse.management.commands.dumpdata module
--------------------------------------------------
+.. toctree::
 
-.. automodule:: boardinghouse.management.commands.dumpdata
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-boardinghouse.management.commands.flush module
-----------------------------------------------
-
-.. automodule:: boardinghouse.management.commands.flush
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-boardinghouse.management.commands.loaddata module
--------------------------------------------------
-
-.. automodule:: boardinghouse.management.commands.loaddata
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-boardinghouse.management.commands.migrate module
-------------------------------------------------
-
-.. automodule:: boardinghouse.management.commands.migrate
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
+   boardinghouse.management.commands.dumpdata
+   boardinghouse.management.commands.flush
+   boardinghouse.management.commands.loaddata
+   boardinghouse.management.commands.migrate
 
 Module contents
 ---------------
 
 .. automodule:: boardinghouse.management.commands
     :members:
-    :undoc-members:
     :show-inheritance:

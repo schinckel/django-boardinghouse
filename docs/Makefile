@@ -7,11 +7,11 @@ SPHINXBUILD   = sphinx-build
 PAPER         =
 BUILDDIR      = build
 
-APIDOC        = sphinx-apidoc
+APIDOC        = SPHINX_APIDOC_OPTIONS=members,show-inheritance sphinx-apidoc
 APISOURCE     = ../boardinghouse
 APITARGET     = source/code
-APIOPTS       = -f -T
-APIIGNORES    = ../boardinghouse/tests
+APIOPTS       = -f -T -e
+APIIGNORES    = ../tests
 
 # User-friendly check for sphinx-build
 ifeq ($(shell which $(SPHINXBUILD) >/dev/null 2>&1; echo $$?), 1)

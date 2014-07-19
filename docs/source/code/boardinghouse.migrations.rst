@@ -4,19 +4,13 @@ boardinghouse.migrations package
 Submodules
 ----------
 
-boardinghouse.migrations.0001_initial module
---------------------------------------------
+.. toctree::
 
-.. automodule:: boardinghouse.migrations.0001_initial
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
+   boardinghouse.migrations.0001_initial
 
 Module contents
 ---------------
 
 .. automodule:: boardinghouse.migrations
     :members:
-    :undoc-members:
     :show-inheritance:

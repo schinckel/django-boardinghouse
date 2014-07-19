@@ -1,27 +1,35 @@
+"""
+
+"""
 from __future__ import unicode_literals
 
 from django.conf import settings
 from django.contrib import admin
 
+from .models import Schema
 from .schema import get_active_schema, is_shared_model, get_schema_model
+
+
+class SchemaAdmin(admin.ModelAdmin):
+    """
+    The `ModelAdmin` for the schema class should protect the `schema`
+    field, but only once the object has been saved.
+    """
+    def get_readonly_fields(self, request, obj=None):
+        """
+        Prevents `schema` from being editable once created.
+        """
+        if obj is not None:
+            return ('schema',)
+        return ()
+
+    filter_horizontal = ('users',)
 
 # We only want to install our SchemaAdmin if our schema model is the
 # one that is used: otherwise it's up to the project developer to
 # add it to the admin, if they want it.
-from .models import Schema
-
 if get_schema_model() == Schema:
-    @admin.register(Schema)
-    class SchemaAdmin(admin.ModelAdmin):
-        def get_readonly_fields(self, request, obj=None):
-            """
-            Prevents `schema` from being editable once created.
-            """
-            if obj is not None:
-                return ('schema',)
-            return ()
-
-        filter_horizontal = ('users',)
+    admin.site.register(Schema, SchemaAdmin)
 
 
 def schemata(obj):

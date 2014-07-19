@@ -4,19 +4,13 @@ boardinghouse.templatetags package
 Submodules
 ----------
 
-boardinghouse.templatetags.boardinghouse module
------------------------------------------------
+.. toctree::
 
-.. automodule:: boardinghouse.templatetags.boardinghouse
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
+   boardinghouse.templatetags.boardinghouse
 
 Module contents
 ---------------
 
 .. automodule:: boardinghouse.templatetags
     :members:
-    :undoc-members:
     :show-inheritance:

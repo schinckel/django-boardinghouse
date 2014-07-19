@@ -76,7 +76,7 @@ Middleware
 
 The included middleware is always installed:
 
-.. autoclass:: boardinghouse.middleware.SchemaActivationMiddleware
+.. autoclass:: boardinghouse.middleware.SchemaMiddleware
   :noindex:
 
 .. _template_variables:
@@ -89,6 +89,7 @@ settings for a project using django-boardinghouse.
 
 .. autofunction:: boardinghouse.context_processors.schemata
   :noindex:
+
 
 .. _changing_schema:
 

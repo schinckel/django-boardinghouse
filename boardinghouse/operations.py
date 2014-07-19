@@ -30,9 +30,7 @@ class LoadSQLFromScript(Operation):
     def __init__(self, filename):
         self.filename = filename
 
-    @property
-    def reversible(self):
-        return False
+    reversible = False
 
     def state_forwards(self, app_label, state):
         pass
