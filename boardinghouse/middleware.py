@@ -103,7 +103,7 @@ def change_schema(request, schema):
     )
 
 
-class SchemaChangeMiddleware:
+class SchemaMiddleware:
     """
     Middleware to set the postgres schema for the current request's session.
 
@@ -149,6 +149,8 @@ class SchemaChangeMiddleware:
 
     """
     def process_request(self, request):
+        deactivate_schema()
+
         FORBIDDEN = HttpResponseForbidden(_('You may not select that schema'))
         # Ways of changing the schema.
         # 1. URL /__change_schema__/<name>/
@@ -178,12 +180,17 @@ class SchemaChangeMiddleware:
             except Forbidden:
                 return FORBIDDEN
 
+            data = request.GET.copy()
+            data.pop('__schema')
+
             if request.method == "GET":
-                data = request.GET.copy()
-                data.pop('__schema')
+                # redirect so we strip the schema out of the querystring.
                 if data:
                     return redirect(request.path + '?' + data.urlencode())
                 return redirect(request.path)
+
+            # method == 'POST' or other
+            request.GET = data
 
         # 3. Header "X-Change-Schema: <name>"
         elif 'HTTP_X_CHANGE_SCHEMA' in request.META:
@@ -197,24 +204,8 @@ class SchemaChangeMiddleware:
             # Can we not require a db hit each request here?
             change_schema(request, request.user.visible_schemata[0])
 
-
-class SchemaActivationMiddleware:
-    """
-    Middleware that actually activates the schema from the session.
-
-    This middleware does not do any checking for if request.user should
-    have access to the schema: that's up to the :class:``SchemaChangeMiddleware``,
-    which could be replaced or modified.
-    """
-    def process_request(self, request):
-        deactivate_schema()
-
         if 'schema' in request.session:
-            try:
-                activate_schema(request.session['schema'])
-            except TemplateSchemaActivation:
-                request.session.pop('schema', None)
-                return HttpResponseForbidden(_('You may not select that schema'))
+            activate_schema(request.session['schema'])
 
     def process_exception(self, request, exception):
         """

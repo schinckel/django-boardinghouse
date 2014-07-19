@@ -83,14 +83,11 @@ def load_app_settings():
 def inject_required_settings():
     from django.conf import settings
 
-    MIDDLEWARE = (
-        'boardinghouse.middleware.SchemaChangeMiddleware',
-        'boardinghouse.middleware.SchemaActivationMiddleware'
-    )
+    MIDDLEWARE = 'boardinghouse.middleware.SchemaMiddleware'
     CONTEXT = 'boardinghouse.context_processors.schemata'
 
-    if MIDDLEWARE[0] not in settings.MIDDLEWARE_CLASSES:
-        settings.MIDDLEWARE_CLASSES += MIDDLEWARE
+    if MIDDLEWARE not in settings.MIDDLEWARE_CLASSES:
+        settings.MIDDLEWARE_CLASSES += (MIDDLEWARE,)
 
     if CONTEXT not in settings.TEMPLATE_CONTEXT_PROCESSORS:
         settings.TEMPLATE_CONTEXT_PROCESSORS += (CONTEXT,)

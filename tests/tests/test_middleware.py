@@ -89,6 +89,32 @@ class TestMiddleware(TestCase):
         resp = self.client.get('/', HTTP_X_CHANGE_SCHEMA='first')
         self.assertEquals(b'first', resp.content)
 
+    def test_middleware_activation_on_post(self):
+        Schema.objects.create(name='first', schema='first')
+        Schema.objects.create(name='second', schema='second')
+
+        User.objects.create_superuser(
+            username="su",
+            password="su",
+            email="su@example.com"
+        )
+
+        self.client.login(username='su', password='su')
+
+        self.client.post('/__change_schema__/second/')
+        resp = self.client.post('/')
+        self.assertEquals(b'second', resp.content)
+
+        resp = self.client.post('/?__schema=first', follow=True)
+        self.assertEquals(b'first', resp.content)
+
+        resp = self.client.post('/?__schema=second&foo=bar', follow=True)
+        self.assertEquals(b'second\nfoo=bar', resp.content)
+
+        resp = self.client.post('/', HTTP_X_CHANGE_SCHEMA='first')
+        self.assertEquals(b'first', resp.content)
+
+
     def test_non_superuser_schemata(self):
         Schema.objects.mass_create('a', 'b', 'c')
         user = User.objects.create_user(**CREDENTIALS)
@@ -159,6 +185,15 @@ class TestMiddleware(TestCase):
         resp = self.client.get('/__change_schema__//')
         self.assertEquals(b'Schema deselected', resp.content)
 
+    def test_schema_set_to_same_value(self):
+        Schema.objects.mass_create('a', 'b', 'c')
+        user = User.objects.create_user(**CREDENTIALS)
+        user.schemata.add(Schema.objects.get(schema='a'))
+        self.client.login(**CREDENTIALS)
+        resp = self.client.get('/', {'__schema': 'a'}, follow=True)
+        self.assertEquals(b'a', resp.content)
+        resp = self.client.get('/', {'__schema': 'a'}, follow=True)
+        self.assertEquals(b'a', resp.content)
 
 class TestContextProcessor(TestCase):
     def setUp(self):
