@@ -47,12 +47,20 @@ class MultiSchemaManager(MultiSchemaMixin, models.Manager):
 
 
 class SharedSchemaMixin(object):
+    """
+    A Mixin that ensures a subclass will be available in the
+    shared schema.
+    """
     _is_shared_model = True
 
 
 class SharedSchemaModel(SharedSchemaMixin, models.Model):
     """
     A Base class for models that should be in the shared schema.
+
+    You should inherit from this class if your model _must_ be in
+    the shared schema. Just setting the `_is_shared_model` attribute
+    will not be picked up for migrations.
     """
 
     class Meta:

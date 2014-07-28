@@ -5,8 +5,8 @@ import os
 from django.db import models, migrations
 from django.conf import settings
 import django.core.validators
-
 import boardinghouse.base
+
 
 from boardinghouse.operations import AddField, LoadSQLFromScript
 
@@ -17,6 +17,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        migrations.swappable_dependency(getattr(settings, 'BOARDINGHOUSE_SCHEMA_MODEL', 'boardinghouse.Schema')),
         ('admin', '0001_initial'),
     ]
 
@@ -30,7 +31,8 @@ class Migration(migrations.Migration):
                 ('users', models.ManyToManyField(to=settings.AUTH_USER_MODEL, null=True, blank=True)),
             ],
             options={
-                'verbose_name_plural': b'schemata',
+                'swappable': 'BOARDINGHOUSE_SCHEMA_MODEL',
+                'verbose_name_plural': 'schemata',
             },
             bases=(boardinghouse.base.SharedSchemaMixin, models.Model),
         ),
@@ -38,7 +40,7 @@ class Migration(migrations.Migration):
             app_label='admin',
             model_name='logentry',
             name='object_schema',
-            field=models.ForeignKey(blank=True, to='boardinghouse.Schema', null=True),
+            field=models.ForeignKey(blank=True, to=getattr(settings, 'BOARDINGHOUSE_SCHEMA_MODEL', 'boardinghouse.Schema'), null=True),
             preserve_default=True,
         ),
         LoadSQLFromScript(PROTECT_SCHEMA_COLUMN)

@@ -5,6 +5,9 @@ from django.core.checks import register, Error
 
 
 class BoardingHouseConfig(AppConfig):
+    """
+    Default AppConfig for django-boardinghouse.
+    """
     name = 'boardinghouse'
 
     def ready(self):
@@ -18,6 +21,7 @@ DB_ENGINES = ['boardinghouse.backends.postgres']
 
 @register('settings')
 def check_db_backend(app_configs, **kwargs):
+    "Ensure all database backends are using a backend that we work with."
     from django.conf import settings
     errors = []
 
@@ -36,6 +40,11 @@ def check_db_backend(app_configs, **kwargs):
 
 @register('settings')
 def check_session_middleware_installed(app_configs, **kwargs):
+    """Ensure that SessionMiddleware is installed.
+
+    Without it, we would be unable to store which schema should
+    be active for a given request.
+    """
     from django.conf import settings
     for middleware in settings.MIDDLEWARE_CLASSES:
         if middleware.endswith('.SessionMiddleware'):
@@ -50,14 +59,15 @@ def check_session_middleware_installed(app_configs, **kwargs):
 
 def monkey_patch_user():
     """
-    We want to add a property to the defined user model that gives
-    us the visible schemata: this will be cached.
+    Add a property to the defined user model that gives us the visible schemata.
 
-    We also want to add properties to the AnonymousUser that
-    always return an empty queryset.
+    Add properties to :class:`django.contrib.auth.models.AnonymousUser` that
+    return empty querysets for visible and all schemata.
     """
     from django.contrib.auth import get_user_model, models
-    from .models import visible_schemata, Schema
+    from .schema import get_schema_model
+    from .models import visible_schemata
+    Schema = get_schema_model()
     User = get_user_model()
     if not getattr(User, 'visible_schemata', None):
         User.visible_schemata = property(visible_schemata)
@@ -67,6 +77,11 @@ def monkey_patch_user():
 
 
 def load_app_settings():
+    """
+    Load up the app settings defaults.
+
+    See :mod:`boardinghouse.settings`
+    """
     from boardinghouse import settings as app_settings
     from django.conf import settings, global_settings
 
@@ -79,16 +94,18 @@ def load_app_settings():
 
 
 def inject_required_settings():
+    """Inject our middleware and context processor.
+
+    :class:`boardinghouse.middleware.SchemaMiddleware`
+    :class:`boardinghouse.context_processors.schemata`
+    """
     from django.conf import settings
 
-    MIDDLEWARE = (
-        'boardinghouse.middleware.SchemaChangeMiddleware',
-        'boardinghouse.middleware.SchemaActivationMiddleware'
-    )
+    MIDDLEWARE = 'boardinghouse.middleware.SchemaMiddleware'
     CONTEXT = 'boardinghouse.context_processors.schemata'
 
-    if MIDDLEWARE[0] not in settings.MIDDLEWARE_CLASSES:
-        settings.MIDDLEWARE_CLASSES += MIDDLEWARE
+    if MIDDLEWARE not in settings.MIDDLEWARE_CLASSES:
+        settings.MIDDLEWARE_CLASSES += (MIDDLEWARE,)
 
     if CONTEXT not in settings.TEMPLATE_CONTEXT_PROCESSORS:
         settings.TEMPLATE_CONTEXT_PROCESSORS += (CONTEXT,)

@@ -15,6 +15,7 @@ from boardinghouse import signals
 from .base import SharedSchemaMixin
 from .schema import (
     create_schema, activate_schema, deactivate_schema,
+    _schema_exists, get_schema_model
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -37,7 +38,7 @@ class SchemaQuerySet(models.query.QuerySet):
         return created
 
     def mass_create(self, *args):
-        self.bulk_create([Schema(name=x, schema=x) for x in args])
+        self.bulk_create([self.model(name=x, schema=x) for x in args])
         cache.delete('active-schemata')
 
     def active(self):
@@ -46,8 +47,11 @@ class SchemaQuerySet(models.query.QuerySet):
     def inactive(self):
         return self.filter(is_active=False)
 
+    def delete(self):
+        self.update(is_active=False)
 
-class Schema(SharedSchemaMixin, models.Model):
+
+class AbstractSchema(SharedSchemaMixin, models.Model):
     """
     The Schema model provides an abstraction for a Postgres schema.
 
@@ -70,19 +74,14 @@ class Schema(SharedSchemaMixin, models.Model):
     is_active = models.BooleanField(default=True,
         help_text=_(u'Use this instead of deleting schemata.')
     )
-    users = models.ManyToManyField(settings.AUTH_USER_MODEL,
-        null=True, blank=True, related_name='schemata',
-        help_text=_(u'Which users may access data from this schema.')
-    )
 
     objects = SchemaQuerySet.as_manager()
 
     class Meta:
-        app_label = 'boardinghouse'
-        verbose_name_plural = 'schemata'
+        abstract = True
 
     def __init__(self, *args, **kwargs):
-        super(Schema, self).__init__(*args, **kwargs)
+        super(AbstractSchema, self).__init__(*args, **kwargs)
         self._initial_schema = self.schema
 
     def __unicode__(self):
@@ -92,22 +91,22 @@ class Schema(SharedSchemaMixin, models.Model):
         self._meta.get_field_by_name('schema')[0].run_validators(self.schema)
 
         # We want to prevent someone creating a new schema with
-        # the same internal name as an existing one. We assume if we
-        # were 'initialised' then we were loaded from the database
-        # with those values.
+        # the same internal name as an existing one. We assume that
+        # if we haven't been saved, then there should not be a
+        # schema in the database with this name.
         if self._initial_schema in [None, ''] or 'force_insert' in kwargs:
-            try:
-                self.__class__.objects.get(schema=self.schema)
-            except self.__class__.DoesNotExist:
-                pass
-            else:
+            if _schema_exists(self.schema):
                 raise ValidationError(_('Schema %s already in use') % self.schema)
         elif self.schema != self._initial_schema:
             raise ValidationError(_('may not change schema after creation.'))
 
         self.create_schema()
 
-        return super(Schema, self).save(*args, **kwargs)
+        return super(AbstractSchema, self).save(*args, **kwargs)
+
+    def delete(self):
+        self.is_active = False
+        self.save()
 
     def create_schema(self, cursor=None):
         """
@@ -126,6 +125,18 @@ class Schema(SharedSchemaMixin, models.Model):
     @classmethod
     def deactivate(cls, cursor=None):
         deactivate_schema()
+
+
+class Schema(AbstractSchema):
+    users = models.ManyToManyField(settings.AUTH_USER_MODEL,
+        blank=True, related_name='schemata',
+        help_text=_(u'Which users may access data from this schema.')
+    )
+
+    class Meta:
+        app_label = 'boardinghouse'
+        verbose_name_plural = 'schemata'
+        swappable = 'BOARDINGHOUSE_SCHEMA_MODEL'
 
 
 # This is a bit of fancy trickery to stick the property _is_shared_model

@@ -13,5 +13,4 @@ Module contents
 
 .. automodule:: boardinghouse.management
     :members:
-    :undoc-members:
     :show-inheritance:

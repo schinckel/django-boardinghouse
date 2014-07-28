@@ -8,3 +8,4 @@ examples/.school
 htmlcov
 coverage-status.svg
 status.svg
+dist

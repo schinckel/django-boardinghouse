@@ -35,7 +35,9 @@ class TemplateSchemaActivation(Forbidden):
 
 
 def get_schema_model():
-    return apps.get_model('boardinghouse', 'schema')
+    return apps.get_model(
+        getattr(settings, 'BOARDINGHOUSE_SCHEMA_MODEL', 'boardinghouse.Schema')
+    )
 
 _active_schema = None
 
@@ -292,8 +294,9 @@ def is_shared_table(table):
 # Internal helper functions.
 
 def _schema_table_exists():
+    table_name = get_schema_model()._meta.db_table
     cursor = connection.cursor()
-    cursor.execute("SELECT * FROM information_schema.tables WHERE table_name = 'boardinghouse_schema'")
+    cursor.execute("SELECT * FROM information_schema.tables WHERE table_name = %s", [table_name])
     return bool(cursor.fetchone())
 
 

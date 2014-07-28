@@ -24,8 +24,14 @@ class TestSchemaQuerysetMethods(TestCase):
             set(Schema.objects.inactive().values_list('schema', flat=True))
         )
 
-        Schema.objects.filter(schema='a').update(is_active=False)
+        Schema.objects.filter(schema='a').delete()
         self.assertEquals(
             set(['a']),
+            set(Schema.objects.inactive().values_list('schema', flat=True))
+        )
+
+        Schema.objects.get(schema='b').delete()
+        self.assertEquals(
+            set(['a', 'b']),
             set(Schema.objects.inactive().values_list('schema', flat=True))
         )

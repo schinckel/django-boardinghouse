@@ -14,6 +14,12 @@ Tests to write
 
 * Ensure get_admin_url (non-schema-aware model) still works.
 
+* Test backwards migration of :class:`boardinghouse.operations.AddField`
+
+* Test running migration (:meth:`boardinghouse.backends.postgres.schema.wrap`, specifically.)
+
+* Test saving a schema clears the global active schemata cache
+
 User.visible_schemata property testing:
 
 * Test adding schemata to a user clears the cache.
@@ -22,7 +28,6 @@ User.visible_schemata property testing:
 * Test removing users from a schema clears the cache.
 * Test saving a schema clears the cache for all associated users.
 
-* Test saving a schema clears the global active schemata cache
 
 
 Example Project
