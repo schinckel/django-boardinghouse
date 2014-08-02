@@ -78,7 +78,8 @@ def change_schema(request, schema):
         # Ensure that this user has access to this schema,
         # and that this schema is active. We can do this using the
         # cache, which prevents hitting the database.
-        if schema_name not in [schema.name for schema in user.visible_schemata]:
+        visible_schemata = [schema.schema for schema in user.visible_schemata]
+        if schema_name not in visible_schemata:
             raise Forbidden()
 
     # Allow 3rd-party applications to listen for an attempt to change
