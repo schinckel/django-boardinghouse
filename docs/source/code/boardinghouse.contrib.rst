@@ -6,6 +6,7 @@ Subpackages
 
 .. toctree::
 
+    boardinghouse.contrib.demo
     boardinghouse.contrib.invite
 
 Module contents
