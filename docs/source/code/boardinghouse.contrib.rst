@@ -8,6 +8,7 @@ Subpackages
 
     boardinghouse.contrib.demo
     boardinghouse.contrib.invite
+    boardinghouse.contrib.template
 
 Module contents
 ---------------
