@@ -1,16 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-import os
 
 from django.db import models, migrations
 from django.conf import settings
 import django.core.validators
 import boardinghouse.base
-
-
-from boardinghouse.operations import AddField, LoadSQLFromScript
-
-PROTECT_SCHEMA_COLUMN = os.path.join(os.path.dirname(__file__), '..', 'sql', 'protect_schema_column.sql')
 
 
 class Migration(migrations.Migration):
@@ -36,12 +30,4 @@ class Migration(migrations.Migration):
             },
             bases=(boardinghouse.base.SharedSchemaMixin, models.Model),
         ),
-        AddField(
-            app_label='admin',
-            model_name='logentry',
-            name='object_schema',
-            field=models.ForeignKey(blank=True, to=getattr(settings, 'BOARDINGHOUSE_SCHEMA_MODEL', 'boardinghouse.Schema'), null=True),
-            preserve_default=True,
-        ),
-        LoadSQLFromScript(PROTECT_SCHEMA_COLUMN)
     ]
