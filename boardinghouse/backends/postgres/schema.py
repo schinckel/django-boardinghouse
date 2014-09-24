@@ -48,7 +48,7 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
     column_sql = wrap('column_sql')
     create_model = wrap('create_model')
     delete_model = wrap('delete_model')
-    alter_unique_together = wrap('alter_unique_together')
+    # alter_unique_together = wrap('alter_unique_together')
     alter_index_together = wrap('alter_index_together')
     alter_db_table = wrap('alter_db_table')
     add_field = wrap('add_field')
