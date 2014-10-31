@@ -129,7 +129,7 @@ class AbstractSchema(SharedSchemaMixin, models.Model):
 
 class Schema(AbstractSchema):
     users = models.ManyToManyField(settings.AUTH_USER_MODEL,
-        blank=True, null=True, related_name='schemata',
+        blank=True, related_name='schemata',
         help_text=_(u'Which users may access data from this schema.')
     )
 
