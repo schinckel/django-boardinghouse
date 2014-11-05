@@ -191,7 +191,8 @@ def create_schema(schema_name):
     cursor.execute("SELECT clone_schema('__template__', %s)", [schema_name])
     cursor.close()
 
-    signals.schema_created.send(sender=get_schema_model(), schema=schema_name)
+    if schema_name != '__template__':
+        signals.schema_created.send(sender=get_schema_model(), schema=schema_name)
 
     LOGGER.info('New schema created: %s' % schema_name)
 
