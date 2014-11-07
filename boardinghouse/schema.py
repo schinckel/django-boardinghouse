@@ -52,7 +52,7 @@ def _get_search_path():
 
 def _set_search_path(search_path):
     cursor = connection.cursor()
-    cursor.execute('SET search_path TO %s,public;', [search_path])
+    cursor.execute('SET search_path TO %s,public', [search_path])
     cursor.close()
 
 
@@ -175,7 +175,7 @@ def deactivate_schema(schema=None):
     global _active_schema
     cursor = connection.cursor()
     signals.schema_pre_activate.send(sender=None, schema_name=None)
-    cursor.execute('SET search_path TO "$user",public;')
+    cursor.execute('SET search_path TO "$user",public')
     signals.schema_post_activate.send(sender=None, schema_name=None)
     _active_schema = None
     cursor.close()
@@ -188,10 +188,11 @@ def create_schema(schema_name):
         LOGGER.warn('Attempt to create an existing schema: %s' % schema_name)
         return
 
-    cursor.execute("SELECT clone_schema('__template__', %s);", [schema_name])
+    cursor.execute("SELECT clone_schema('__template__', %s)", [schema_name])
     cursor.close()
 
-    signals.schema_created.send(sender=None, schema=schema_name)
+    if schema_name != '__template__':
+        signals.schema_created.send(sender=get_schema_model(), schema=schema_name)
 
     LOGGER.info('New schema created: %s' % schema_name)
 
@@ -324,7 +325,7 @@ def _wrap_command(command):
         # In the case of create table statements, we want to make sure
         # they go to the public schema, but want reads to come from
         # __template__.
-        cursor.execute('SET search_path TO public,__template__;')
+        cursor.execute('SET search_path TO public,__template__')
         cursor.close()
 
         command(self, *args, **kwargs)
@@ -342,7 +343,7 @@ def _create_all_schemata():
     Create all of the schemata, just in case they haven't yet been created.
     """
     cursor = connection.cursor()
-    cursor.execute("SELECT count(*)>0 FROM information_schema.tables WHERE table_name = 'boardinghouse_schema';")
+    cursor.execute("SELECT count(*)>0 FROM information_schema.tables WHERE table_name = 'boardinghouse_schema'")
     if cursor.fetchone() == (True,):
         for schema in get_schema_model().objects.all():
             schema.create_schema()

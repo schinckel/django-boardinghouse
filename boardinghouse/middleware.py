@@ -150,8 +150,6 @@ class SchemaMiddleware:
 
     """
     def process_request(self, request):
-        deactivate_schema()
-
         FORBIDDEN = HttpResponseForbidden(_('You may not select that schema'))
         # Ways of changing the schema.
         # 1. URL /__change_schema__/<name>/
@@ -207,6 +205,8 @@ class SchemaMiddleware:
 
         if 'schema' in request.session:
             activate_schema(request.session['schema'])
+        else:
+            deactivate_schema()
 
     def process_exception(self, request, exception):
         """

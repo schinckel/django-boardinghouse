@@ -6,6 +6,8 @@ Included Extensions
 boardinghouse.contrib.invite
 ----------------------------
 
+.. note:: This app is incomplete.
+
 One of the real ideas for how this type of system might work is `Xero`_, which allows a user to invite other people to access their application. This is a little more than just the normal registration process, as if the user is an existing Xero user, they will get the opportunity to link this Xero Organisation to their existing account.
 
 Then, when they use Xero, they get the option to switch between organisations... sound familiar?
@@ -34,6 +36,23 @@ It is possible for a logged in user to see the following things (dependent upon 
 
 .. _Xero: http://www.xero.com
 
+.. _template:
+
+boardinghouse.contrib.template
+------------------------------
+
+.. note:: This app has not been developed.
+
+Introduces the concept of "Template" schemata, which can be used to create a schema that contains initial data.
+
+Actions:
+
+* Create schema from template
+* Create template from schema
+
+Template schema have schema names like: `__template_<id>`, and can only be activated by users who have the relevant permission.
+
+
 .. _roles:
 
 boardinghouse.contrib.roles
@@ -57,7 +76,7 @@ This app alters the `django.contrib.auth` application, so that, whilst the `Grou
 
 This basically requires us just to move the `auth_group_permissions` table into the various schemata.
 
-Can we just do this by having a 
+Can we just do this by having a
 
 .. _demo:
 
@@ -68,11 +87,19 @@ boardinghouse.contrib.demo
 
 Borrowing again from `Xero`_, we have the ability to create a demo schema: there can be at most one per user, and it expires after a certain period of time, can be reset at any time by the user, and can have several template demos to be based upon.
 
+Actions:
 
-.. _audit:
+* Create a new demo schema for the logged in user (replacing any existing one), from the provided demo-template.
 
-boardinghouse.contrib.audit
----------------------------
+Automated tasks:
+
+* Delete any demo schemata that have expired.
+
+
+.. _access:
+
+boardinghouse.contrib.access
+----------------------------
 
 .. note:: This app is still being planned.
 
