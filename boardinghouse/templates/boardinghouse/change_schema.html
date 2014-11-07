@@ -1,22 +1,31 @@
 {% if not selected_schema or schemata.count > 1 %}
-  <label style="font-size: small">
-    Viewing:
-  
-    {% comment %}
-      We should make it so that the page we are viewing is able to provide us
-      with a url we should redirect to in the case there is no object at the
-      url when we have changed schema.
-    {% endcomment %}
-    <select {% if disabled %}disabled="disabled"{% endif %} id="__schemalist" onchange="window.location.search = '?__schema=' + document.getElementById('__schemalist').value;">
-      <option value="">No schema. Please select...</option>
-      {% for schema in schemata %}
-        <option value="{{ schema.pk }}" {% if schema.pk|lower == selected_schema %}selected="selected"{% endif %}>
-          {{ schema.name }}
-        </option>
-      {% endfor %}
-    </select>
+  <form>
 
-  </label>
+    <label style="font-size: small">
+      Viewing:
+
+      {% comment %}
+        We should make it so that the page we are viewing is able to provide us
+        with a url we should redirect to in the case there is no object at the
+        url when we have changed schema.
+      {% endcomment %}
+
+      <select {% if disabled %}disabled="disabled"{% endif %} name="__schema" id="__schemalist" onchange="window.location.search = '?__schema=' + this.value;">
+        <option value="">No schema. Please select...</option>
+        {% for schema in schemata %}
+          <option value="{{ schema.pk }}" {% if schema.pk|lower == selected_schema %}selected="selected"{% endif %}>
+            {{ schema.name }}
+          </option>
+        {% endfor %}
+      </select>
+
+    </label>
+
+    <button type="submit" id="schema-change-submit">
+      >>
+    </button>
+
+  </form>
 
   {% if disabled %}
     <span style="font-size: small">
@@ -24,4 +33,12 @@
     </span>
   {% endif %}
 
+<script>
+  // Remove the button: we will be auto-submitting on change.
+  document.getElementById('schema-change-submit').remove();
+  {% if schemata|length > 15 %}
+  // Replace the select with a datalist.
+
+  {% endif %}
+</script>
 {% endif %}
