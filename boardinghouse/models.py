@@ -193,6 +193,7 @@ def visible_schemata(user):
     return schemata
 
 
+
 # We also need to watch for changes to the user_schemata table, to invalidate
 # this cache.
 @receiver(models.signals.m2m_changed, sender=Schema.users.through)
@@ -211,7 +212,7 @@ def invalidate_cache(sender, **kwargs):
 # django-model-utils, due to a bug in django.
 # We will also clear out the global active schemata cache.
 @receiver(models.signals.post_save, sender=Schema)
-@receiver(signals.schema_created, sender=Schema)
+# @receiver(signals.schema_created, sender=Schema)
 def invalidate_all_user_caches(sender, **kwargs):
     cache.delete('active-schemata')
     cache.delete('all-schemata')
