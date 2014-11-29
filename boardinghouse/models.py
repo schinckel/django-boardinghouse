@@ -10,13 +10,8 @@ from django.dispatch import receiver
 from django.forms import ValidationError
 from django.utils.translation import ugettext_lazy as _
 
-from boardinghouse import signals
-
 from .base import SharedSchemaMixin
-from .schema import (
-    create_schema, activate_schema, deactivate_schema,
-    _schema_exists, get_schema_model
-)
+from .schema import create_schema, activate_schema, deactivate_schema, _schema_exists
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.addHandler(logging.NullHandler())
@@ -191,7 +186,6 @@ def visible_schemata(user):
         cache.set('visible-schemata-%s' % user.pk, schemata)
 
     return schemata
-
 
 
 # We also need to watch for changes to the user_schemata table, to invalidate

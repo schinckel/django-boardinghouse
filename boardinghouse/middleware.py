@@ -220,7 +220,11 @@ class SchemaMiddleware:
         """
         if isinstance(exception, DatabaseError) and not request.session.get('schema'):
             if re.search('relation ".*" does not exist', exception.args[0]):
-                transaction.rollback()
+                # I'm not sure if this should be done or not, but it does
+                # fail without the if statement from django 1.8+
+                # if not transaction.get_autocommit():
+                #     transaction.rollback()
+
                 # Should we return an error, or redirect? When should we
                 # do one or the other? For an API, we would want an error
                 # but for a regular user, a redirect may be better.
