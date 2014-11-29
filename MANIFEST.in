@@ -1,0 +1,2 @@
+recursive-include boardinghouse/templates *.html
+recursive-include boardinghouse/sql *.sql
