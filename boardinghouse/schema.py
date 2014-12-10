@@ -231,6 +231,8 @@ def is_shared_model(model):
         model._meta.model_name
     )
 
+    # These should be case insensitive!
+
     if app_model in REQUIRED_SHARED_MODELS:
         return True
 
