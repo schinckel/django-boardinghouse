@@ -6,6 +6,7 @@ from django.db.migrations.state import ProjectState
 from django.db.transaction import atomic
 from django.db.utils import IntegrityError
 from django.test import TransactionTestCase
+from django.utils import six
 
 from boardinghouse.schema import get_schema_model, get_template_schema
 
@@ -38,21 +39,32 @@ class MigrationTestBase(TransactionTestCase):
     Contains an extended set of asserts for testing migrations and schema operations.
     """
 
-    available_apps = ["boardinghouse", "tests"]
+    available_apps = [
+        "boardinghouse",
+        "tests",
+        "django.contrib.auth",
+        "django.contrib.admin",
+        "django.contrib.contenttypes",
+    ]
 
     def get_table_description(self, table):
         with connection.cursor() as cursor:
             return connection.introspection.get_table_description(cursor, table)
 
+    def get_table_list(self):
+        with connection.cursor() as cursor:
+            table_list = connection.introspection.get_table_list(cursor)
+        if table_list and not isinstance(table_list[0], six.string_types):
+            table_list = [table.name for table in table_list]
+        return table_list
+
     @all_schemata
     def assertTableExists(self, table):
-        with connection.cursor() as cursor:
-            self.assertIn(table, connection.introspection.get_table_list(cursor))
+        self.assertIn(table, self.get_table_list())
 
     @all_schemata
     def assertTableNotExists(self, table):
-        with connection.cursor() as cursor:
-            self.assertNotIn(table, connection.introspection.get_table_list(cursor))
+        self.assertNotIn(table, self.get_table_list())
 
     @all_schemata
     def assertColumnExists(self, table, column):

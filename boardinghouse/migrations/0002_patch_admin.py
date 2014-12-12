@@ -15,6 +15,8 @@ class Migration(migrations.Migration):
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         migrations.swappable_dependency(getattr(settings, 'BOARDINGHOUSE_SCHEMA_MODEL', 'boardinghouse.Schema')),
+        # I really need to be able to ignore this dependency if django.contrib.admin
+        # is not installed. Indeed, this whole migration needn't run if it isn't.
         ('admin', '0001_initial'),
         ('boardinghouse', '0001_initial'),
     ]
