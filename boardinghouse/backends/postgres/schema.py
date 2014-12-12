@@ -134,12 +134,12 @@ def get_constraints(cursor, table_name):
     return constraints
 
 STATEMENTS = [
-    re.compile(r'^\W*CREATE INDEX\W+(?P<index_name>.+?) ON "(?P<table_name>.+?)" \("(?P<column_name>.+?)"\)$'),
+    re.compile(r'^\W*CREATE INDEX\W+(?P<index_name>.+?) ON "?(?P<table_name>.+?)"?\W*\("?(?P<column_name>.+?)"?\)$'),
     re.compile(r'^\W*ALTER TABLE\W+"?(?P<table_name>.+?)"? ADD (?P<type>(CONSTRAINT)|(CHECK)|(EXCLUDE))'),
-    re.compile(r'^\W*CREATE\W+TRIGGER\W+(?P<trigger_name>.+?)\W+.*?\W+ON\W+"?(?P<table_name>.+?)"?\W'),
-    re.compile(r'^\W*DROP\W+TRIGGER\W+(?P<trigger_name>.+?)\W+ON\W+"?(?P<table_name>.+?)"?'),
-    re.compile(r'^\W*CREATE( OR REPLACE)? VIEW\W+(?P<table_name>.+?) '),
-    re.compile(r'^\W*DROP VIEW( IF EXISTS)?\W+(?P<table_name>[^;\W]+)'),
+    re.compile(r'^\W*CREATE\W+TRIGGER\W+"?(?P<trigger_name>.+?)"?\W+.*?\W+ON\W+"?(?P<table_name>.+?)"?\W'),
+    re.compile(r'^\W*DROP\W+TRIGGER\W+"?(?P<trigger_name>.+?)"?\W+ON\W+"?(?P<table_name>.+?)"?'),
+    re.compile(r'^\W*CREATE( OR REPLACE)? (VIEW|TABLE)\W+"?(?P<table_name>.+?)"? '),
+    re.compile(r'^\W*DROP (VIEW|TABLE)( IF EXISTS)?\W+"?(?P<table_name>[^;\W]+)"?'),
 ]
 
 

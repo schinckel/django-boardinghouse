@@ -212,10 +212,17 @@ REQUIRED_SHARED_MODELS = [
 
 
 def _is_join_model(model):
+    """
+    We define a model as a join model if all of it's
+    fields are related fields (or it's primary key),
+    and there is more than just one field.
+
+    I am not 100% happy with this definition.
+    """
     return all([
         (field.primary_key or field.rel)
         for field in model._meta.fields
-    ])
+    ]) and len(model._meta.fields) > 1
 
 
 def is_shared_model(model):
