@@ -38,8 +38,6 @@ def get_schema_model():
         getattr(settings, 'BOARDINGHOUSE_SCHEMA_MODEL', 'boardinghouse.Schema')
     )
 
-_active_schema = None
-
 
 def _get_search_path():
     cursor = connection.cursor()
