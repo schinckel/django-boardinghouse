@@ -43,7 +43,7 @@ _active_schema = None
 
 def _get_search_path():
     cursor = connection.cursor()
-    cursor.execute('SHOW search_path')
+    cursor.execute('SELECT current_schema()')
     search_path = cursor.fetchone()[0]
     cursor.close()
     return search_path.split(',')
