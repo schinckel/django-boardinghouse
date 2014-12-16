@@ -1,5 +1,6 @@
 import logging
 import os
+import threading
 
 from django.apps import apps
 from django.conf import settings
@@ -11,9 +12,7 @@ from boardinghouse import signals
 LOGGER = logging.getLogger(__name__)
 LOGGER.addHandler(logging.NullHandler())
 
-# I'm not happy with this solution. Need a better way, that doesn't
-# do heaps of database hits...
-global _active_schema
+_thread_locals = threading.local()
 
 
 class Forbidden(Exception):
@@ -74,19 +73,19 @@ def get_active_schema_name():
 
     This requires a database query to ask it what the current `search_path` is.
     """
-    global _active_schema
+    active_schema = getattr(_thread_locals, 'schema', None)
 
-    if _active_schema:
-        return _active_schema
+    if not active_schema:
+        reported_schema = _get_search_path()[0]
 
-    reported_schema = _get_search_path()[0]
+        if _get_schema(reported_schema):
+            active_schema = reported_schema
+        else:
+            active_schema = None
 
-    if _get_schema(reported_schema):
-        _active_schema = reported_schema
-    else:
-        _active_schema = None
+        _thread_locals.schema = active_schema
 
-    return _active_schema
+    return active_schema
 
 
 def get_active_schema():
@@ -145,19 +144,17 @@ def activate_schema(schema_name):
     if schema_name == '__template__':
         raise TemplateSchemaActivation()
 
-    global _active_schema
     signals.schema_pre_activate.send(sender=None, schema_name=schema_name)
     _set_search_path(schema_name)
     signals.schema_post_activate.send(sender=None, schema_name=schema_name)
-    _active_schema = schema_name
+    _thread_locals.schema = schema_name
 
 
 def activate_template_schema():
     """
     Activate the template schema. You probably don't want to do this.
     """
-    global _active_schema
-    _active_schema = None
+    _thread_locals.schema = None
     schema_name = '__template__'
     signals.schema_pre_activate.send(sender=None, schema_name=schema_name)
     _set_search_path(schema_name)
@@ -172,12 +169,11 @@ def deactivate_schema(schema=None):
     """
     Deactivate the provided (or current) schema.
     """
-    global _active_schema
     cursor = connection.cursor()
     signals.schema_pre_activate.send(sender=None, schema_name=None)
     cursor.execute('SET search_path TO "$user",public')
     signals.schema_post_activate.send(sender=None, schema_name=None)
-    _active_schema = None
+    _thread_locals.schema = None
     cursor.close()
 
 
