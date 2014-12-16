@@ -1,7 +1,7 @@
 Development
 ===========
 
-|status| |coverage| |deps|
+|status| |coverage| |deps| |docs|
 
 You can run tests across all supported versions using tox_. Make sure you have a checked-out version of the project from:
 
@@ -17,4 +17,6 @@ Bugs and feature requests can be reported on BitBucket, and Pull Requests may be
 .. |deps| image:: https://requires.io/bitbucket/schinckel/django-boardinghouse/requirements.png?branch=default
    :target: https://requires.io/bitbucket/schinckel/django-boardinghouse/requirements/?branch=default
    :alt: Requirements Status
-.. |docs| image:: https://readthedocs.org/projects/django-boardinghouse/?badge=latest
+.. |docs| image:: https://readthedocs.org/projects/django-boardinghouse/badge/?version=latest
+   :target: https://readthedocs.org/projects/django-boardinghouse/?badge=latest
+   :alt: Documentation Status
