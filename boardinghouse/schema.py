@@ -49,9 +49,12 @@ def _get_search_path():
 
 def _set_search_path(search_path):
     cursor = connection.cursor()
-    cursor.execute('SET search_path TO %s,public', [search_path])
+    cursor.execute('SET search_path TO %s,{}'.format(_get_public_schema()), [search_path])
     cursor.close()
 
+
+def _get_public_schema():
+    return getattr(settings, 'PUBLIC_SCHEMA', 'public')
 
 def _schema_exists(schema_name, cursor=None):
     if cursor:
@@ -169,7 +172,7 @@ def deactivate_schema(schema=None):
     """
     cursor = connection.cursor()
     signals.schema_pre_activate.send(sender=None, schema_name=None)
-    cursor.execute('SET search_path TO "$user",public')
+    cursor.execute('SET search_path TO "$user",{}'.format(_get_public_schema()))
     signals.schema_post_activate.send(sender=None, schema_name=None)
     _thread_locals.schema = None
     cursor.close()
@@ -328,7 +331,7 @@ def _wrap_command(command):
         # In the case of create table statements, we want to make sure
         # they go to the public schema, but want reads to come from
         # __template__.
-        cursor.execute('SET search_path TO public,__template__')
+        cursor.execute('SET search_path TO {},__template__'.format(_get_public_schema()))
         cursor.close()
 
         command(self, *args, **kwargs)

@@ -3,7 +3,7 @@ SHARED_MODELS = []
 Models that should be in the public/shared schema,
 rather than in each tenant's schema.
 
-Note that some models are _always_ shared, which you
+Note that some models are *always* shared, which you
 can see in :attr:`boardinghouse.schema.REQUIRED_SHARED_MODELS`
 """
 
@@ -21,4 +21,10 @@ Can we annotate a ForeignKey field, or perhaps do something in the
 Model.Meta to set this?
 
 Perhaps we could have a SchemaAwareManyToManyField()...
+"""
+
+PUBLIC_SCHEMA = 'public'
+"""
+The name of the public schema. The default should work for all cases,
+other than where you know you need to change it.
 """
