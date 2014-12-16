@@ -9,6 +9,7 @@ from django.test import TransactionTestCase
 from django.utils import six
 
 from boardinghouse.schema import get_schema_model, get_template_schema
+from boardinghouse.schema import activate_template_schema, deactivate_schema
 
 Schema = get_schema_model()
 template_schema = get_template_schema()
@@ -24,13 +25,12 @@ AND column_name = '%(column_name)s';
 
 def all_schemata(test):
     def inner(self, *args, **kwargs):
-        with connection.cursor() as cursor:
-            cursor.execute('SET search_path TO __template__,public')
+        activate_template_schema()
         test(self, *args, **kwargs)
         for schema in Schema.objects.all():
             schema.activate()
             test(self, *args, **kwargs)
-            schema.deactivate()
+        deactivate_schema()
     return inner
 
 
