@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from django.db import ProgrammingError
 from django.test import TestCase
 
 from boardinghouse.schema import get_schema_model
@@ -55,12 +56,9 @@ class TestMiddleware(TestCase):
         first = Schema.objects.create(name='first', schema='first')
         self.assertEquals(1, Schema.objects.count())
 
-        user = User.objects.create_user(
-            username="test",
-            password="test",
-        )
+        user = User.objects.create_user(**CREDENTIALS)
         user.schemata.add(first)
-        self.client.login(username='test', password='test')
+        self.client.login(**CREDENTIALS)
         resp = self.client.get('/')
         self.assertEquals(b'first', resp.content)
 
@@ -68,12 +66,7 @@ class TestMiddleware(TestCase):
         Schema.objects.create(name='first', schema='first')
         Schema.objects.create(name='second', schema='second')
 
-        User.objects.create_superuser(
-            username="su",
-            password="su",
-            email="su@example.com"
-        )
-
+        User.objects.create_superuser(**SU_CREDENTIALS)
         self.client.login(username='su', password='su')
 
         self.client.get('/__change_schema__/second/')
@@ -93,12 +86,7 @@ class TestMiddleware(TestCase):
         Schema.objects.create(name='first', schema='first')
         Schema.objects.create(name='second', schema='second')
 
-        User.objects.create_superuser(
-            username="su",
-            password="su",
-            email="su@example.com"
-        )
-
+        User.objects.create_superuser(**SU_CREDENTIALS)
         self.client.login(username='su', password='su')
 
         self.client.post('/__change_schema__/second/')
@@ -113,7 +101,6 @@ class TestMiddleware(TestCase):
 
         resp = self.client.post('/', HTTP_X_CHANGE_SCHEMA='first')
         self.assertEquals(b'first', resp.content)
-
 
     def test_non_superuser_schemata(self):
         Schema.objects.mass_create('a', 'b', 'c')
@@ -168,12 +155,23 @@ class TestMiddleware(TestCase):
 
     def test_superuser_allowed_to_activate_inactive_schema(self):
         schema = Schema.objects.create(schema='a', name='a', is_active=False)
+        Schema.objects.mass_create('b', 'c')
         superuser = User.objects.create_superuser(email='su@example.com', **CREDENTIALS)
         superuser.schemata.add(schema)
 
         self.client.login(**CREDENTIALS)
         resp = self.client.get('/', {'__schema': 'a'}, follow=True)
         self.assertEquals(200, resp.status_code, 'Superuser attempt to activate inactive schema failed!')
+
+    def test_superuser_allowed_to_implicitly_activate_only_schema(self):
+        schema = Schema.objects.create(schema='a', name='a')
+        Schema.objects.mass_create('b', 'c')
+        superuser = User.objects.create_superuser(email='su@example.com', **CREDENTIALS)
+        superuser.schemata.add(schema)
+
+        self.client.login(**CREDENTIALS)
+        resp = self.client.get('/')
+        self.assertEquals(200, resp.status_code, 'Superuser attempt to implicitly activate only schema failed!')
 
     def test_deactivate_schema(self):
         schema = Schema.objects.create(schema='a', name='a', is_active=False)
@@ -194,6 +192,13 @@ class TestMiddleware(TestCase):
         self.assertEquals(b'a', resp.content)
         resp = self.client.get('/', {'__schema': 'a'}, follow=True)
         self.assertEquals(b'a', resp.content)
+
+    def test_other_db_error_not_handled_by_us(self):
+        self.assertRaises(ProgrammingError, self.client.get, '/sql/error/?sql=foo')
+
+    def test_missing_table_when_schema_set(self):
+        self.assertRaises(ProgrammingError, self.client.get, '/sql/error/?sql=SELECT+1+FROM+foo')
+
 
 class TestContextProcessor(TestCase):
     def setUp(self):

@@ -1,10 +1,10 @@
 from __future__ import unicode_literals
 
 from django.conf.urls import patterns, include, url
+from django.db import connection
 from django.http import HttpResponse
 from django.shortcuts import render
 
-# Uncomment the next two lines to enable the admin:
 from django.contrib import admin
 admin.autodiscover()
 
@@ -30,8 +30,13 @@ def aware_objects_view(request):
     return HttpResponse(obj.name)
 
 
+def sql_error(request):
+    connection.cursor().execute('foo')
+
+
 urlpatterns = patterns('',
     url(r'^$', echo_schema),
+    url(r'^sql/error/$', sql_error),
     url(r'^change/$', change_schema_view),
     url(r'^aware/$', aware_objects_view),
     url(r'^admin/', include(admin.site.urls)),

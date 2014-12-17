@@ -4,7 +4,7 @@ import logging
 import re
 
 from django.contrib import messages
-from django.db import DatabaseError, transaction
+from django.db import ProgrammingError
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import redirect
 from django.utils.translation import ugettext_lazy as _
@@ -62,7 +62,8 @@ def change_schema(request, schema):
 
     if user.is_superuser or user.is_staff:
         # Just a sanity check: that the schema actually
-        # exists at all.
+        # exists at all, when the superuser attempts to set
+        # the schema.
         if schema_name == schema:
             try:
                 schema = Schema.objects.get(schema=schema_name)
@@ -73,6 +74,9 @@ def change_schema(request, schema):
         # then we can check to see if that schema is active before
         # having to hit the database.
         if isinstance(schema, Schema):
+            # I'm not sure that it's logically possible to get this
+            # line to return True - we only pass in data from user.visible_schemata,
+            # which excludes inactives.
             if not schema.is_active:
                 raise Forbidden()
         # Ensure that this user has access to this schema,
@@ -218,7 +222,7 @@ class SchemaMiddleware:
         In the case we had a :class:`TemplateSchemaActivation` exception,
         then we want to remove that key from the session.
         """
-        if isinstance(exception, DatabaseError) and not request.session.get('schema'):
+        if isinstance(exception, ProgrammingError) and not request.session.get('schema'):
             if re.search('relation ".*" does not exist', exception.args[0]):
                 # I'm not sure if this should be done or not, but it does
                 # fail without the if statement from django 1.8+
