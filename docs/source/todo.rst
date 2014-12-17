@@ -18,6 +18,12 @@ Tests to write
 
 * Test running migration (:meth:`boardinghouse.backends.postgres.schema.wrap`, specifically.)
 
+* Test :meth:`boardinghouse.schema.is_shared_mode`
+
+* Test :meth:`boardinghouse.schema.is_shared_table`
+
+* Test :meth:`boardinghouse.schema.get_active_schema_name`
+
 * Test saving a schema clears the global active schemata cache
 
 User.visible_schemata property testing:
