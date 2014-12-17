@@ -20,7 +20,7 @@ DB_ENGINES = ['boardinghouse.backends.postgres']
 
 
 @register('settings')
-def check_db_backend(app_configs, **kwargs):
+def check_db_backend(app_configs=None, **kwargs):
     "Ensure all database backends are using a backend that we work with."
     from django.conf import settings
     errors = []
@@ -39,7 +39,7 @@ def check_db_backend(app_configs, **kwargs):
 
 
 @register('settings')
-def check_session_middleware_installed(app_configs, **kwargs):
+def check_session_middleware_installed(app_configs=None, **kwargs):
     """Ensure that SessionMiddleware is installed.
 
     Without it, we would be unable to store which schema should
