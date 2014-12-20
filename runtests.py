@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-import os, sys
+import os
+import sys
 
 from django.conf import settings
 import django
@@ -24,7 +25,7 @@ DEFAULT_SETTINGS = dict(
     DATABASES={
         "default": {
             'ENGINE': 'boardinghouse.backends.postgres',
-            'NAME': os.environ['USER']
+            'NAME': 'boardinghouse-{DB_NAME}'.format(**os.environ)
         }
     },
     ROOT_URLCONF='tests.urls',
