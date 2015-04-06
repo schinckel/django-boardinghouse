@@ -5,7 +5,7 @@ import threading
 from django.apps import apps
 from django.conf import settings
 from django.core.cache import cache
-from django.db import models, connection
+from django.db import connection
 
 from boardinghouse import signals
 
@@ -269,7 +269,7 @@ def is_shared_table(table):
     """
     # Get a mapping of all table names to models.
     table_map = dict([
-        (x._meta.db_table, x) for x in models.get_models()
+        (x._meta.db_table, x) for x in apps.get_models()
         if not x._meta.proxy
     ])
 
@@ -332,7 +332,7 @@ def _wrap_command(command):
         # they go to the public schema, but want reads to come from
         # __template__.
         cursor.execute('SET search_path TO {},__template__'.format(_get_public_schema()))
-        cursor.close()
+        # cursor.close()
 
         command(self, *args, **kwargs)
 

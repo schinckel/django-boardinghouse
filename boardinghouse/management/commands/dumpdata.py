@@ -11,9 +11,9 @@ If any models are supplied as arguments (using the ``app_label.model_name``
 notation) that are not shared models, it is an error to fail to pass a schema.
 """
 import django
+from django.apps import apps
 from django.core.management.commands import dumpdata
 from django.core.management.base import CommandError
-from django.db import models
 
 from optparse import make_option
 
@@ -42,11 +42,10 @@ class Command(dumpdata.Command):
 
         # If we have have any explicit models that are aware, then we should
         # raise an exception if we weren't handed a schema.
-        get_model = models.get_model
+        get_model = apps.get_model
         aware_required = any([
             not is_shared_model(get_model(*label.split('.')))
-            for label in app_labels if '.' in label
-            and get_model(*label.split('.'))
+            for label in app_labels if '.' in label and get_model(*label.split('.'))
         ])
 
         if schema_name == '__template__':
