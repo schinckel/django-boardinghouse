@@ -79,9 +79,11 @@ if not getattr(LogEntry, 'object_schema', None):
     get_admin_url = LogEntry.get_admin_url
 
     def get_admin_url_with_schema(self):
-        if self.object_schema_id:
-            return get_admin_url(self) + '?__schema=%s' % self.object_schema_id
+        url = get_admin_url(self)
 
-        return get_admin_url(self)
+        if self.object_schema_id and url:
+            return '{}?__schema={}'.format(url, self.object_schema_id)
+
+        return url
 
     LogEntry.get_admin_url = get_admin_url_with_schema
