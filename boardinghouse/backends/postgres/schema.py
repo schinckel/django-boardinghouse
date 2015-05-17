@@ -133,14 +133,14 @@ def get_constraints(cursor, table_name):
             }
     return constraints
 
-STATEMENTS = [
-    re.compile(r'^\W*CREATE INDEX\W+(?P<index_name>.+?) ON "?(?P<table_name>.+?)"?\W*\("?(?P<column_name>.+?)"?\)$'),
-    re.compile(r'^\W*ALTER TABLE\W+"?(?P<table_name>.+?)"? ADD (?P<type>(CONSTRAINT)|(CHECK)|(EXCLUDE))'),
-    re.compile(r'^\W*CREATE\W+TRIGGER\W+"?(?P<trigger_name>.+?)"?\W+.*?\W+ON\W+"?(?P<table_name>.+?)"?\W'),
-    re.compile(r'^\W*DROP\W+TRIGGER\W+"?(?P<trigger_name>.+?)"?\W+ON\W+"?(?P<table_name>.+?)"?'),
-    re.compile(r'^\W*CREATE( OR REPLACE)? (VIEW|TABLE)\W+"?(?P<table_name>.+?)"? '),
-    re.compile(r'^\W*DROP (VIEW|TABLE)( IF EXISTS)?\W+"?(?P<table_name>[^;\W]+)"?'),
-]
+STATEMENTS = {
+    'create-index': re.compile(r'^\W*CREATE\W*(UNIQUE)?\W*INDEX\W+(?P<index_name>.+?)\W*ON\W*"?(?P<table_name>.+?)"?'),
+    # 'drop-index': # No way to know table...
+    'alter-table': re.compile(r'^\W*ALTER TABLE\W+"?(?P<table_name>.+?)"?'),
+    'trigger': re.compile(r'^\W*(CREATE|DROP)\W+TRIGGER\W+"?(?P<trigger_name>.+?)"?(\W+.*?)?\W+ON\W+"?(?P<table_name>.+?)"?'),
+    'create-table': re.compile(r'^\W*CREATE( OR REPLACE)? (VIEW|TABLE)\W+"?(?P<table_name>.+?)"? '),
+    'drop-table': re.compile(r'^\W*DROP (VIEW|TABLE)( IF EXISTS)?\W+"?(?P<table_name>[^;\W]+)"?'),
+}
 
 
 class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
@@ -168,7 +168,7 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
 
     def execute(self, sql, params=None):
         match = None
-        for stmt in STATEMENTS:
+        for which, stmt in STATEMENTS.items():
             if stmt.match(sql):
                 match = stmt.match(sql).groupdict()
                 break
