@@ -60,7 +60,7 @@ WSGI_APPLICATION = 'boardinghouse.test.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'boardinghouse.backends.postgres',
-        'NAME': os.environ['USER']
+        'NAME': 'boardinghouse-docs'
     }
 }
 
