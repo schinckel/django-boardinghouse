@@ -1,9 +1,13 @@
 from __future__ import unicode_literals
 
+from collections import defaultdict
 import inspect
 import re
 
 from django.db.backends.postgresql_psycopg2 import schema
+
+import sqlparse
+from sqlparse.tokens import DDL, Keyword
 
 from ...schema import is_shared_model, is_shared_table
 from ...schema import get_schema_model, _schema_table_exists
@@ -139,8 +143,34 @@ STATEMENTS = {
     'alter-table': re.compile(r'^\W*ALTER TABLE\W+"?(?P<table_name>.+?)"?'),
     'trigger': re.compile(r'^\W*(CREATE|DROP)\W+TRIGGER\W+"?(?P<trigger_name>.+?)"?(\W+.*?)?\W+ON\W+"?(?P<table_name>.+?)"?'),
     'create-table': re.compile(r'^\W*CREATE( OR REPLACE)? (VIEW|TABLE)\W+"?(?P<table_name>.+?)"? '),
-    'drop-table': re.compile(r'^\W*DROP (VIEW|TABLE)( IF EXISTS)?\W+"?(?P<table_name>[^;\W]+)"?'),
+    'drop-table': re.compile(r'^\W*DROP (VIEW|TABLE)( IF EXISTS)?\W+"?(?P<table_name>[^;\W]+)"?\W*(CASCADE)?'),
 }
+
+
+def get_table_and_schema(sql):
+    parsed = sqlparse.parse(sql)[0]
+    grouped = defaultdict(list)
+    identifiers = []
+
+    for token in parsed.tokens:
+        if token.ttype:
+            grouped[token.ttype].append(token.value)
+        elif token.get_name():
+            identifiers.append(token)
+
+    if grouped[DDL] and grouped[DDL][0] in ['CREATE', 'DROP', 'ALTER']:
+        # We may care about this.
+        keywords = grouped[Keyword]
+        if 'VIEW' in keywords or 'TABLE' in keywords:
+            # We care about identifier 0
+            if identifiers:
+                return identifiers[0].get_name(), identifiers[0].get_parent_name()
+        elif 'TRIGGER' in keywords or 'INDEX' in keywords:
+            # We care about identifier 1
+            if len(identifiers) > 1:
+                return identifiers[1].get_name(), identifiers[1].get_parent_name()
+
+    return None, None
 
 
 class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
@@ -167,15 +197,14 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         return super(DatabaseSchemaEditor, self).__exit__(exc_type, exc_value, traceback)
 
     def execute(self, sql, params=None):
-        match = None
-        for which, stmt in STATEMENTS.items():
-            if stmt.match(sql):
-                match = stmt.match(sql).groupdict()
-                break
-
         execute = super(DatabaseSchemaEditor, self).execute
 
-        if match and not is_shared_table(match['table_name']) and not in_apply_to_all():
+        if in_apply_to_all():
+            return execute(sql, params)
+
+        table_name, schema_name = get_table_and_schema(sql)
+
+        if table_name and not schema_name and not is_shared_table(table_name):
             if _schema_table_exists():
                 for each in get_schema_model().objects.all():
                     each.activate()
