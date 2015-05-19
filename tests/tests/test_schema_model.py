@@ -1,6 +1,7 @@
 from django.test import TestCase
 
 from boardinghouse.models import Schema
+from boardinghouse.schema import get_active_schema_name
 
 
 class TestSchemaQuerysetMethods(TestCase):
@@ -35,3 +36,12 @@ class TestSchemaQuerysetMethods(TestCase):
             set(['a', 'b']),
             set(Schema.objects.inactive().values_list('schema', flat=True))
         )
+
+    def test_queryset_activate_method(self):
+        Schema.objects.mass_create('a', 'b', 'c')
+
+        self.assertEquals(None, get_active_schema_name())
+
+        Schema.objects.activate('a')
+
+        self.assertEquals('a', get_active_schema_name())

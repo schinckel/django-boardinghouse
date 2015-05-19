@@ -45,6 +45,9 @@ class SchemaQuerySet(models.query.QuerySet):
     def delete(self):
         self.update(is_active=False)
 
+    def activate(self, pk):
+        self.get(pk=pk).activate()
+
 
 class AbstractSchema(SharedSchemaMixin, models.Model):
     """
