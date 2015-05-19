@@ -32,7 +32,7 @@ Indices and tables
 * :ref:`search`
 
 
-.. |status| image:: https://drone.io/bitbucket.org/schinckel/django-boardinghouse/status.png
+.. |status| image:: https://codeship.com/projects/1bb05180-f1e5-0131-7f50-2a3c58ccd78c/status?branch=default
 .. |coverage| image:: https://drone.io/bitbucket.org/schinckel/django-boardinghouse/files/coverage-status.svg
 .. |deps| image:: https://requires.io/bitbucket/schinckel/django-boardinghouse/requirements.png?branch=default
    :target: https://requires.io/bitbucket/schinckel/django-boardinghouse/requirements/?branch=default
