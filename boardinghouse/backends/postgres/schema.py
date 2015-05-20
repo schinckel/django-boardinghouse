@@ -137,6 +137,8 @@ def get_constraints(cursor, table_name):
             }
     return constraints
 
+# These are no longer used, but I'll keep them here until I have written some tests that ensure
+# the replacement function works.
 STATEMENTS = {
     'create-index': re.compile(r'^\W*CREATE\W*(UNIQUE)?\W*INDEX\W+(?P<index_name>.+?)\W*ON\W*"?(?P<table_name>.+?)"?'),
     # 'drop-index': # No way to know table...
@@ -158,7 +160,7 @@ def get_table_and_schema(sql):
         elif token.get_name():
             identifiers.append(token)
 
-    if grouped[DDL] and grouped[DDL][0] in ['CREATE', 'DROP', 'ALTER']:
+    if grouped[DDL] and grouped[DDL][0] in ['CREATE', 'DROP', 'ALTER', 'CREATE OR REPLACE']:
         # We may care about this.
         keywords = grouped[Keyword]
         if 'VIEW' in keywords or 'TABLE' in keywords:
