@@ -30,6 +30,12 @@ class TestIsSharedModel(TestCase):
         self.assertTrue(is_shared_model(Group()))
         self.assertTrue(is_shared_model(LogEntry()))
 
+    def test_prefix(self):
+        self.assertFalse(is_shared_model(ModelA))
+        self.assertFalse(is_shared_model(ModelB))
+        self.assertFalse(is_shared_model(ModelBPrefix))
+
+
 class TestIsSharedTable(TestCase):
     def test_schema_table(self):
         self.assertTrue(is_shared_table('boardinghouse_schema'))
@@ -46,4 +52,4 @@ class TestIsSharedTable(TestCase):
         self.assertTrue(is_shared_table('auth_user_groups'))
 
     def test_prefix_clash(self):
-        self.assertTrue(is_shared_table('tests_modelb'))
+        self.assertFalse(is_shared_table('tests_modelb'))

@@ -205,6 +205,8 @@ REQUIRED_SHARED_MODELS = [
     'contenttypes.contenttype',
     'admin.logentry',
     'migrations.migration',
+    settings.BOARDINGHOUSE_SCHEMA_MODEL,
+    settings.AUTH_USER_MODEL,
 ]
 
 
