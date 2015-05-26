@@ -56,4 +56,31 @@ class Migration(migrations.Migration):
             name='other',
             field=models.ForeignKey(related_name='model_a', blank=True, to='tests.CoReferentialModelB', null=True),
         ),
+        migrations.CreateModel(
+            name='ModelA',
+            fields=[
+                ('id', models.AutoField())
+            ],
+            bases=(models.Model,)
+        ),
+        migrations.CreateModel(
+            name='ModelB',
+            fields=[
+                ('id', models.AutoField())
+            ],
+            bases=(models.Model,)
+        ),
+        migrations.CreateModel(
+            name='ModelBPrefix',
+            fields=[
+                ('id', models.AutoField())
+            ],
+            bases=(models.Model,)
+        ),
+        migrations.AddField(
+            model_name='modelbprefix',
+            name='a',
+            field=models.ForeignKey(related_name='model_b', blank=True, to='tests.ModelA', null=True),
+        ),
+
     ]

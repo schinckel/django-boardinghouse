@@ -44,3 +44,6 @@ class TestIsSharedTable(TestCase):
     def test_join_tables(self):
         self.assertTrue(is_shared_table('auth_group_permissions'))
         self.assertTrue(is_shared_table('auth_user_groups'))
+
+    def test_prefix_clash(self):
+        self.assertTrue(is_shared_table('tests_modelb'))

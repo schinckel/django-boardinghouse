@@ -50,3 +50,16 @@ class CoReferentialModelB(models.Model):
 
     class Meta:
         app_label = 'tests'
+
+
+# We do prefix testing to determine if a model is shared.
+class ModelA(models.Model):
+    pass
+
+
+class ModelB(models.Model):
+    pass
+
+
+class ModelBPrefix(models.Model):
+    a = models.ManyToManyField(ModelA)
