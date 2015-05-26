@@ -1,47 +1,47 @@
 [
 {
-  "pk": "hamilton", 
-  "model": "school.school", 
+  "pk": "hamilton",
+  "model": "school.school",
   "fields": {}
 },
 {
-  "pk": "naracoorte_hs", 
-  "model": "school.school", 
+  "pk": "naracoorte_hs",
+  "model": "school.school",
   "fields": {}
 },
 {
-  "pk": 1, 
-  "model": "school.staffmember", 
+  "pk": 1,
+  "model": "school.staffmember",
   "fields": {
-    "staff_id": "55345213", 
+    "staff_id": "55345213",
     "name": "Sue Pannell"
   }
 },
 {
-  "pk": 1, 
-  "model": "school.student", 
+  "pk": 1,
+  "model": "school.student",
   "fields": {
-    "student_id": "1136524632", 
+    "student_id": "1136524632",
     "name": "Matthew Schinckel"
   }
 },
 {
-  "pk": 1, 
-  "model": "school.subject", 
+  "pk": 1,
+  "model": "school.subject",
   "fields": {
     "name": "Maths"
   }
 },
 {
-  "pk": 2, 
-  "model": "school.subject", 
+  "pk": 2,
+  "model": "school.subject",
   "fields": {
     "name": "English"
   }
 },
 {
-  "pk": 3, 
-  "model": "school.subject", 
+  "pk": 3,
+  "model": "school.subject",
   "fields": {
     "name": "Agricultural Studies"
   }

@@ -7,15 +7,17 @@ virtualenv:
 
 install-packages:
 	.boarding-school/bin/pip install -e ../..
+	.boarding-school/bin/pip install psycopg2
 
 load-data:
-	./manage.py syncdb
+	./manage.py migrate
+	./manage.py loaddata user
 	./manage.py loaddata schools
 	./manage.py loaddata --schema hamilton hamilton
 	./manage.py loaddata --schema naracoorte_hs naracoorte_hs
 
 clean:
-	dropdb school-demo
+	dropdb school-demo || true
 	rm -rf .boarding-school
 
 runserver:
