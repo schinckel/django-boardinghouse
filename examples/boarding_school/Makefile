@@ -27,7 +27,7 @@ sync-unattended:
 	./manage.py syncdb --noinput
 
 test:
-	DJANGO_SETTINGS_MODULE=settings django-admin.py migrate
+	./manage.py test
 
 all: database virtualenv install-packages load-data
 unattended: database sync-unattended load-data
