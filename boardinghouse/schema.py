@@ -195,7 +195,7 @@ def create_schema(schema_name):
 
 
 #: These models are required to be shared by the system.
-REQUIRED_SHARED_MODELS = [
+REQUIRED_SHARED_MODELS = filter(lambda x: x, [
     'auth.user',
     'auth.permission',
     'auth.group',
@@ -205,9 +205,9 @@ REQUIRED_SHARED_MODELS = [
     'contenttypes.contenttype',
     'admin.logentry',
     'migrations.migration',
-    settings.BOARDINGHOUSE_SCHEMA_MODEL,
-    settings.AUTH_USER_MODEL,
-]
+    getattr(settings, 'BOARDINGHOUSE_SCHEMA_MODEL', None),
+    getattr(settings, 'AUTH_USER_MODEL', None),
+])
 
 
 def _is_join_model(model):
