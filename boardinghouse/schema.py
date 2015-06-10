@@ -1,4 +1,5 @@
 import logging
+import inspect
 import os
 import threading
 
@@ -55,6 +56,7 @@ def _set_search_path(search_path):
 
 def _get_public_schema():
     return getattr(settings, 'PUBLIC_SCHEMA', 'public')
+
 
 def _schema_exists(schema_name, cursor=None):
     if cursor:
@@ -232,10 +234,7 @@ def is_shared_model(model):
     if model._is_shared_model:
         return True
 
-    app_model = '%s.%s' % (
-        model._meta.app_label,
-        model._meta.model_name
-    )
+    app_model = '{m.app_label}.{m.model_name}'.format(m=model._meta).lower()
 
     # These should be case insensitive!
 
@@ -270,8 +269,16 @@ def is_shared_table(table):
     this table joins.
     """
     # Get a mapping of all table names to models.
+    get_models = apps.get_models
+
+    # If we are in a migration, we need to look in that for models.
+    for frame in inspect.stack():
+        if frame[3] in ['unapply_migration', 'apply_migration']:
+            get_models = frame[0].f_locals['state'].apps.get_models
+            break
+
     table_map = dict([
-        (x._meta.db_table, x) for x in apps.get_models()
+        (x._meta.db_table, x) for x in get_models()
         if not x._meta.proxy
     ])
 
