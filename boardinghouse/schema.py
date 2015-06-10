@@ -269,16 +269,25 @@ def is_shared_table(table):
     this table joins.
     """
     # Get a mapping of all table names to models.
-    get_models = apps.get_models
+    models = apps.get_models()
 
     # If we are in a migration, we need to look in that for models.
     for frame in inspect.stack():
         if frame[3] in ['unapply_migration', 'apply_migration']:
-            get_models = frame[0].f_locals['state'].apps.get_models
-            break
+            frame_locals = frame[0].f_locals
+            assert 'state' in frame_locals or 'project_state' in frame_locals, "Unable to find (project_)state in frame."
+            if 'state' in frame_locals:
+                models = frame_locals['state'].apps.get_models()
+                break
+            elif 'project_state' in frame_locals:
+                project_state = frame_locals['project_state']
+                migration = frame_locals['migration']
+                to_state = migration.mutate_state(project_state)
+                models = to_state.render().get_models()
+                break
 
     table_map = dict([
-        (x._meta.db_table, x) for x in get_models()
+        (x._meta.db_table, x) for x in models
         if not x._meta.proxy
     ])
 
