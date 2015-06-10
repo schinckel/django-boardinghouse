@@ -39,6 +39,7 @@ class TestSchemaQuerysetMethods(TestCase):
 
     def test_queryset_activate_method(self):
         Schema.objects.mass_create('a', 'b', 'c')
+        Schema().deactivate()
 
         self.assertEquals(None, get_active_schema_name())
 
