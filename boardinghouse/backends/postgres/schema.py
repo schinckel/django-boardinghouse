@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 from collections import defaultdict
 import inspect
-import re
 
 from django.db.backends.postgresql_psycopg2 import schema
 
@@ -136,17 +135,6 @@ def get_constraints(cursor, table_name):
                 "index": True,
             }
     return constraints
-
-# These are no longer used, but I'll keep them here until I have written some tests that ensure
-# the replacement function works.
-STATEMENTS = {
-    'create-index': re.compile(r'^\W*CREATE\W*(UNIQUE)?\W*INDEX\W+(?P<index_name>.+?)\W*ON\W*"?(?P<table_name>.+?)"?'),
-    # 'drop-index': # No way to know table...
-    'alter-table': re.compile(r'^\W*ALTER TABLE\W+"?(?P<table_name>.+?)"?'),
-    'trigger': re.compile(r'^\W*(CREATE|DROP)\W+TRIGGER\W+"?(?P<trigger_name>.+?)"?(\W+.*?)?\W+ON\W+"?(?P<table_name>.+?)"?'),
-    'create-table': re.compile(r'^\W*CREATE( OR REPLACE)? (VIEW|TABLE)\W+"?(?P<table_name>.+?)"? '),
-    'drop-table': re.compile(r'^\W*DROP (VIEW|TABLE)( IF EXISTS)?\W+"?(?P<table_name>[^;\W]+)"?\W*(CASCADE)?'),
-}
 
 
 def get_table_and_schema(sql):
