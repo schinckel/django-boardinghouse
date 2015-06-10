@@ -242,6 +242,15 @@ class TestMigrations(MigrationTestBase):
             operation.database_backwards('tests', editor, new_state, project_state)
         self.assertColumnExists('tests_pony', 'pink')
 
+    def test_remove_foreign_key_field(self):
+        project_state = self.set_up_test_model()
+        operation = migrations.RemoveField('Rider', 'pony')
+        new_state = project_state.clone()
+        operation.state_forwards('tests', new_state)
+        with connection.schema_editor() as editor:
+            operation.database_forwards('tests', editor, project_state, new_state)
+        self.assertColumnNotExists('tests_rider', 'pony_id')
+
     def test_alter_model_table(self):
         project_state = self.set_up_test_model()
         operation = migrations.AlterModelTable('Pony', 'tests_pony_2')
