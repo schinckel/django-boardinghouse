@@ -57,6 +57,10 @@ def explode(filename):
             else:
                 a['href'] = u'#{}'.format(a['href'])
 
+    for img in soup.find_all('img'):
+        encoded = open(img['src'], 'rb').read().encode('base64')
+        img['src'] = u'data:image/{};base64,{}'.format(img['src'].split('.')[-1], encoded)
+
 
 TEMPLATE = u'''<!DOCTYPE html>
 <html>
