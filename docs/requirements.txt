@@ -2,4 +2,3 @@ django
 psycopg2
 sphinx
 sqlparse
--e ../boardinghouse
