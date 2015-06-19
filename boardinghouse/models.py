@@ -19,7 +19,7 @@ LOGGER.addHandler(logging.NullHandler())
 SCHEMA_NAME_VALIDATOR_MESSAGE = u'May only contain lowercase letters, digits and underscores. Must start with a letter.'
 
 schema_name_validator = RegexValidator(
-    regex='^[a-z][a-z0-9_]*$',
+    regex=r'^[a-z][a-z0-9_]*$',
     message=_(SCHEMA_NAME_VALIDATOR_MESSAGE)
 )
 
