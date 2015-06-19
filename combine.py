@@ -1,10 +1,7 @@
 import codecs
-import re
 import os
 
 from bs4 import BeautifulSoup
-
-ONREADY = re.compile('\W*jQuery\(document\).ready\((?P<handler>.*)\);\W*')
 
 scripts = []
 styles = []
@@ -13,34 +10,46 @@ processed = []
 
 
 def explode(filename):
+    # We want to turn the body element into a div so we can use it
+    # in one page with all of the other body elements.
     processed.append(filename)
-    soup = BeautifulSoup(codecs.open(filename, encoding='utf-8'), "lxml")
+    soup = BeautifulSoup(codecs.open(filename, encoding='utf-8'))
     body = soup.body
     body.name = 'div'
     body['id'] = filename
-    # body['style'] = u'display: none'
     body['class'] = 'body'
     bodies.append(body)
+
+    # Ensure that we grab all of the scripts that are required by
+    # this page.
     for script in soup.find_all('script'):
         if 'src' in script.attrs:
-            if script['src'] not in scripts:
-                scripts.append(script['src'])
-                print 'added {}'.format(script['src'])
-        elif ONREADY.match(script.string):
-            body['data-on-show'] = ONREADY.match(script.string).groupdict()['handler']
-            print u'handler: {}'.format(body['data-on-show'])
+            content = codecs.open(script['src'], encoding='utf-8').read()
+        else:
+            content = script.string
+        if content not in scripts:
+            scripts.append(content)
+
+    # Likewise for the link[stylesheet] elements.
     for link in soup.find_all('link'):
-        if link['href'] not in styles:
-            styles.append(link['href'])
+        content = codecs.open(link['href'], encoding='utf-8').read()
+        if content not in styles:
+            styles.append(content)
+
     for a in soup.find_all('a'):
+        # Make sure all local-links are rewritten to point to a more
+        # fully-qualified name (these are line number links).
         if a['href'][0] == '#':
             anchor = u'{}-{}'.format(filename, a['href'][1:])
-            print anchor
+
             a['href'] = u'#{}'.format(anchor)
             a.parent['id'] = anchor
         elif a['href'] in processed:
+            # Pages we have already seen, we want to have a local link.
             a['href'] = u'#{}'.format(a['href'])
         else:
+            # Otherwise, we want to see if we have a file that matches
+            # the href, and embed that. Yay recursion.
             try:
                 explode(a['href'])
             except IOError:
@@ -63,12 +72,29 @@ TEMPLATE = u'''<!DOCTYPE html>
 </html>
 '''
 
+# Fire off the tree walking with htmlcov/index.html
 os.chdir('htmlcov')
-body = explode('index.html')
+explode('index.html')
+
+# Override the toggle_lines function to limit it to just our code block.
+scripts.append('''
+coverage.toggle_lines = function (btn, cls) {
+    btn = $(btn);
+    var hide = "hide_"+cls;
+    if (btn.hasClass(hide)) {
+        btn.closest('.body').find("#source ."+cls).removeClass(hide);
+        btn.removeClass(hide);
+    }
+    else {
+        $("#source ."+cls).addClass(hide);
+        btn.addClass(hide);
+    }
+};
+''')
 
 result = TEMPLATE.format(
-    styles=u'\n'.join([codecs.open(f, encoding='utf-8').read() for f in styles]),
-    scripts=u'\n'.join([codecs.open(f, encoding='utf-8').read() for f in scripts]),
+    styles=u'\n'.join(styles),
+    scripts=u'\n'.join(scripts),
     body=u'\n'.join([unicode(x) for x in bodies])
 )
 
