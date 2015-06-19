@@ -90,6 +90,10 @@ coverage.toggle_lines = function (btn, cls) {
         btn.addClass(hide);
     }
 };
+
+var file = document.createElement('style');
+file.innerHTML = '.body {min-height: ' + (window.innerHeight - 125) + 'px; margin-bottom: 125px;}';
+document.head.appendChild(file);
 ''')
 
 result = TEMPLATE.format(
