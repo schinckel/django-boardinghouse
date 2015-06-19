@@ -16,10 +16,18 @@ setup(
         # 'psycopg2',  # or psycopg2cffi under pypy
     ],
     classifiers=[
-        'Programming Language :: Python',
+        'Development Status :: 4 - Beta',
+        'Framework :: Django :: 1.7',
+        'Framework :: Django :: 1.8',
+        'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
-        'Framework :: Django',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: Implementation :: CPython',
+        'Programming Language :: Python :: Implementation :: PyPy',
+        'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     test_suite='runtests.runtests',
 )
