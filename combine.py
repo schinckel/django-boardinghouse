@@ -1,9 +1,13 @@
 import codecs
 import os
+import re
 
 from bs4 import BeautifulSoup
 
+ONREADY = re.compile(r'\W*jQuery\(document\)\.ready\(coverage\.(?P<handler>.*)\);\W*')
+
 scripts = []
+loadscripts = []
 styles = []
 bodies = []
 processed = []
@@ -18,6 +22,7 @@ def explode(filename):
     body.name = 'div'
     body['id'] = filename
     body['class'] = 'body'
+    body['data-on-show'] = 'x'
     bodies.append(body)
 
     # Ensure that we grab all of the scripts that are required by
@@ -25,10 +30,11 @@ def explode(filename):
     for script in soup.find_all('script'):
         if 'src' in script.attrs:
             content = codecs.open(script['src'], encoding='utf-8').read()
-        else:
-            content = script.string
-        if content not in scripts:
-            scripts.append(content)
+            if content not in scripts:
+                scripts.append(content)
+        elif ONREADY.match(script.string):
+            print ONREADY.match(script.string).groupdict()['handler']
+            body['data-on-show'] = ONREADY.match(script.string).groupdict()['handler']
 
     # Likewise for the link[stylesheet] elements.
     for link in soup.find_all('link'):
@@ -95,14 +101,70 @@ coverage.toggle_lines = function (btn, cls) {
     }
 };
 
+coverage.wire_up_help_panel = function () {
+    $(".content > img").click(function (event) {
+        var body = $(event.target).closest('.body');
+        // Show the help panel, and position it so the keyboard icon in the
+        // panel is in the same place as the keyboard icon in the header.
+        body.find(".help_panel").show();
+        var koff = body.find("#keyboard_icon").offset();
+        var poff = body.find("#panel_icon").position();
+        body.find(".help_panel").offset({
+            top: koff.top-poff.top,
+            left: koff.left-poff.left
+        });
+    });
+    $(".help_panel > img").click(function (event) {
+        $(event.target).closest('.body').find(".help_panel").hide();
+    });
+};
+
+
 var file = document.createElement('style');
-file.innerHTML = '.body {min-height: ' + (window.innerHeight - 125) + 'px; margin-bottom: 125px;}';
+file.innerHTML = '.body {}';
 document.head.appendChild(file);
+
+
+function updateVisibility(id) {
+    console.log(id);
+    // id may have dots in it: $(#id) won't work.
+    var target = $(document.getElementById(id)).closest('.body');
+    if (target.length) {
+        $('.body').hide();
+        target.show();
+        if (target.data('on-show')) {
+            coverage[target.data('on-show')]($);
+        }
+    }
+}
+
+function clickHandler(event) {
+    console.log(event);
+    event.preventDefault();
+    if (event.target.hash) {
+        var id = event.target.hash.split('#')[1];
+        updateVisibility(id)
+    }
+}
+// document.addEventListener('click', clickHandler);
+
+// document.addEventListener('hashchange', clickHandler);
+
 ''')
+
+bodies.append("""<script>
+updateVisibility(location.hash.split('#')[1]);
+window.onhashchange = function(event){
+    console.log(event);
+    event.preventDefault();
+    updateVisibility(event.newURL.split('#')[1]);
+};
+</script>""")
+# Need to tweak CSS rules for
 
 result = TEMPLATE.format(
     styles=u'\n'.join(styles),
-    scripts=u'\n'.join(scripts),
+    scripts=u'\n'.join(scripts + loadscripts),
     body=u'\n'.join([unicode(x) for x in bodies])
 )
 
