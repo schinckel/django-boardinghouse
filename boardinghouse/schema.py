@@ -7,6 +7,7 @@ from django.apps import apps
 from django.conf import settings
 from django.core.cache import cache
 from django.db import connection
+from django.db.migrations import Migration
 
 from boardinghouse import signals
 
@@ -273,18 +274,14 @@ def is_shared_table(table):
 
     # If we are in a migration, we need to look in that for models.
     for frame in inspect.stack():
-        if frame[3] in ['unapply_migration', 'apply_migration']:
-            frame_locals = frame[0].f_locals
-            assert 'state' in frame_locals or 'project_state' in frame_locals, "Unable to find (project_)state in frame."
-            if 'state' in frame_locals:
-                models = frame_locals['state'].apps.get_models()
-                break
-            elif 'project_state' in frame_locals:
-                project_state = frame_locals['project_state']
-                migration = frame_locals['migration']
-                to_state = migration.mutate_state(project_state)
-                models = to_state.render().get_models()
-                break
+        frame_locals = frame[0].f_locals
+        if frame[3] in ['apply', 'unapply'] and all([
+            state in frame_locals for state in ('from_state', 'to_state', 'schema_editor', 'self')
+        ]) and isinstance(frame_locals['self'], Migration):
+            if frame[3] == 'apply':
+                models = frame_locals['to_state'].apps.get_models()
+            else:
+                models = frame_locals['from_state'].apps.get_models()
 
     table_map = dict([
         (x._meta.db_table, x) for x in models

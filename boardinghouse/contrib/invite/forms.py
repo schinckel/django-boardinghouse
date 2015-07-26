@@ -66,6 +66,7 @@ class AcceptForm(forms.ModelForm):
     def save(self, *args, **kwargs):
         self.user.schemata.add(self.instance.schema)
         self.instance.accepted_at = datetime.datetime.utcnow()
+        self.instance.accepted_by = self.user
         return super(AcceptForm, self).save(*args, **kwargs)
 
 

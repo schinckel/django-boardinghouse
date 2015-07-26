@@ -1,4 +1,5 @@
 import datetime
+import uuid
 
 from django.conf import settings
 from django.db import models
@@ -9,7 +10,6 @@ from django.utils.timezone import now
 
 from boardinghouse.base import SharedSchemaModel
 
-UserModel = getattr(settings, 'AUTH_USER_MODEL', 'auth.user')
 INVITATION_EXPIRY = getattr(settings, 'INVITATION_EXPIRY', datetime.timedelta(7))
 
 
@@ -43,15 +43,16 @@ class InvitationQuerySet(models.query.QuerySet):
 
 class Invitation(SharedSchemaModel):
     email = models.EmailField(verbose_name=_('Email address'))
-    sender = models.ForeignKey(UserModel, related_name='sent_invitations')
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='sent_invitations')
     message = models.TextField()
-    schema = models.ForeignKey('boardinghouse.schema', related_name='invitations')
-    redemption_code = models.CharField(max_length=36, null=True, blank=True)
+    schema = models.ForeignKey(settings.BOARDINGHOUSE_SCHEMA_MODEL, related_name='invitations')
+    redemption_code = models.UUIDField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     # Can we ensure that at most one of these two is not null?
     accepted_at = models.DateTimeField(null=True, blank=True)
     declined_at = models.DateTimeField(null=True, blank=True)
+    accepted_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='accepted_invitations', null=True, blank=True)
 
     objects = InvitationQuerySet.as_manager()
 
@@ -63,6 +64,11 @@ class Invitation(SharedSchemaModel):
         return '[%s] Invitation to %s from %s to join %s' % (
             unicode(self.status), self.email, self.sender, self.schema.name
         )
+
+    def save(self, *args, **kwargs):
+        if not self.redeemed and not self.redemption_code:
+            self.redemption_code = uuid.uuid4()
+        return super(Invitation, self).save(*args, **kwargs)
 
     @property
     def redeemed(self):
