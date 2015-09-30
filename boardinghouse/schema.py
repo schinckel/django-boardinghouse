@@ -7,7 +7,7 @@ from django.apps import apps
 from django.conf import settings
 from django.core.cache import cache
 from django.db import connection
-from django.db.migrations import Migration
+from django.db.migrations.operations.base import Operation
 
 from boardinghouse import signals
 
@@ -212,6 +212,10 @@ REQUIRED_SHARED_MODELS = [
     getattr(settings, 'AUTH_USER_MODEL', None),
 ]
 
+REQUIRED_SHARED_TABLES = [
+    'django_migrations',
+]
+
 
 def _is_join_model(model):
     """
@@ -269,19 +273,23 @@ def is_shared_table(table):
     We may need to look and see if we can work out which models
     this table joins.
     """
+    if table in REQUIRED_SHARED_TABLES:
+        return True
+
     # Get a mapping of all table names to models.
     models = apps.get_models()
 
-    # If we are in a migration, we need to look in that for models.
+    # If we are in a migration operation, we need to look in that for models.
+    # We really only should be injecting ourselves if we find a frame that contains
+    # a database_(forwards|backwards) function.
     for frame in inspect.stack():
         frame_locals = frame[0].f_locals
-        if frame[3] in ['apply', 'unapply'] and all([
-            state in frame_locals for state in ('from_state', 'to_state', 'schema_editor', 'self')
-        ]) and isinstance(frame_locals['self'], Migration):
-            if frame[3] == 'apply':
-                models = frame_locals['to_state'].apps.get_models()
-            else:
-                models = frame_locals['from_state'].apps.get_models()
+        if frame[3] == 'database_forwards' and all([
+            local in frame_locals for local in ('from_state', 'to_state', 'schema_editor', 'self')
+        ]) and isinstance(frame_locals['self'], Operation):
+            # Should this be from_state, or to_state, or should we look in both?
+            models = set(frame_locals['to_state'].apps.get_models()).union(frame_locals['from_state'].apps.get_models())
+            break
 
     table_map = dict([
         (x._meta.db_table, x) for x in models

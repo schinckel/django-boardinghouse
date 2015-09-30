@@ -34,3 +34,4 @@ PASSWORD_HASHERS = (
 )
 AUTH_USER_MODEL = 'auth.User'
 SECRET_KEY = 'django-boardinghouse-sekret-keye'
+TEST_RUNNER = 'rainbowtests.test.runner.RainbowDiscoverRunner'

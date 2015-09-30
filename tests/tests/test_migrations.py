@@ -26,9 +26,11 @@ AND column_name = '%(column_name)s';
 def all_schemata(test):
     def inner(self, *args, **kwargs):
         activate_template_schema()
+        kwargs['schema'] = '__template__'
         test(self, *args, **kwargs)
         for schema in Schema.objects.all():
             schema.activate()
+            kwargs['schema'] = schema
             test(self, *args, **kwargs)
         deactivate_schema()
     return inner
@@ -59,47 +61,47 @@ class MigrationTestBase(TransactionTestCase):
         return table_list
 
     @all_schemata
-    def assertTableExists(self, table):
+    def assertTableExists(self, table, **kwargs):
         self.assertIn(table, self.get_table_list())
 
     @all_schemata
-    def assertTableNotExists(self, table):
+    def assertTableNotExists(self, table, **kwargs):
         self.assertNotIn(table, self.get_table_list())
 
     @all_schemata
-    def assertColumnExists(self, table, column):
+    def assertColumnExists(self, table, column, **kwargs):
         self.assertIn(column, [c.name for c in self.get_table_description(table)])
 
     @all_schemata
-    def assertColumnNotExists(self, table, column):
+    def assertColumnNotExists(self, table, column, **kwargs):
         self.assertNotIn(column, [c.name for c in self.get_table_description(table)])
 
     @all_schemata
-    def assertColumnNull(self, table, column):
+    def assertColumnNull(self, table, column, **kwargs):
         self.assertEqual([c.null_ok for c in self.get_table_description(table) if c.name == column][0], True)
 
     @all_schemata
-    def assertColumnNotNull(self, table, column):
+    def assertColumnNotNull(self, table, column, **kwargs):
         self.assertEqual([c.null_ok for c in self.get_table_description(table) if c.name == column][0], False)
 
     @all_schemata
-    def assertIndexExists(self, table, columns, value=True):
+    def assertIndexExists(self, table, columns, value=True, **kwargs):
         with connection.cursor() as cursor:
             self.assertEqual(
                 value,
                 any(
                     c["index"]
                     for c in connection.introspection.get_constraints(cursor, table).values()
-                    if c['columns'] == list(columns)
+                    if set(c['columns']) == set(columns)
                 ),
             )
 
     @all_schemata
-    def assertIndexNotExists(self, table, columns):
+    def assertIndexNotExists(self, table, columns, **kwargs):
         return self.assertIndexExists(table, columns, False)
 
     @all_schemata
-    def assertFKExists(self, table, columns, to, value=True):
+    def assertFKExists(self, table, columns, to, value=True, **kwargs):
         with connection.cursor() as cursor:
             self.assertEqual(
                 value,
@@ -111,7 +113,7 @@ class MigrationTestBase(TransactionTestCase):
             )
 
     @all_schemata
-    def assertFKNotExists(self, table, columns, to, value=True):
+    def assertFKNotExists(self, table, columns, to, value=True, **kwargs):
         return self.assertFKExists(table, columns, to, False)
 
     def apply_operations(self, app_label, project_state, operations):
@@ -303,13 +305,13 @@ class TestMigrations(MigrationTestBase):
         operation.state_forwards('tests', new_state)
 
         @all_schemata
-        def insert(cursor):
+        def insert(cursor, **kwargs):
             cursor.execute('INSERT INTO tests_pony (pink, weight) VALUES (1, 1)')
             cursor.execute('INSERT INTO tests_pony (pink, weight) VALUES (1, 1)')
             cursor.execute('DELETE FROM tests_pony')
 
         @all_schemata
-        def insert_fail(cursor):
+        def insert_fail(cursor, **kwargs):
             cursor.execute('INSERT INTO tests_pony (pink, weight) VALUES (1, 1)')
             with self.assertRaises(IntegrityError):
                 with atomic():
@@ -358,6 +360,8 @@ CREATE TABLE i_love_ponies (id int, special_thing int);
 CREATE INDEX i_love_ponies_special_idx ON i_love_ponies (special_thing);
 INSERT INTO i_love_ponies (id, special_thing) VALUES (1, 42);
 INSERT INTO i_love_ponies (id, special_thing) VALUES (2, 51), (3, 60);
+DELETE FROM i_love_ponies WHERE special_thing = 42;
+UPDATE i_love_ponies SET special_thing = 42 WHERE id = 2;
 """,
 " DROP TABLE i_love_ponies")
         new_state = project_state.clone()
@@ -367,6 +371,19 @@ INSERT INTO i_love_ponies (id, special_thing) VALUES (2, 51), (3, 60);
             operation.database_forwards('tests', editor, project_state, new_state)
         self.assertTableExists('i_love_ponies')
         self.assertIndexExists('i_love_ponies', ['special_thing'])
+
+        @all_schemata
+        def objects_exist(cursor, **kwargs):
+            cursor = connection.cursor()
+            cursor.execute('SELECT * FROM i_love_ponies ORDER BY id')
+            result = cursor.fetchmany(4)
+            self.assertTrue(result, 'No objects found in {schema}'.format(**kwargs))
+            expected = [(2, 42), (3, 60)]
+            self.assertItemsEqual(expected, result, 'Mismatch objects found in schema {schema}: expected {0}, saw {1}'.format(expected, result, **kwargs))
+
+        with connection.cursor() as cursor:
+            objects_exist(cursor)
+
         with connection.schema_editor() as editor:
             operation.database_backwards('tests', editor, new_state, project_state)
         self.assertTableNotExists('i_love_ponies')
@@ -387,7 +404,6 @@ INSERT INTO i_love_ponies (id, special_thing) VALUES (2, 51), (3, 60);
         and make their generated SQL do what we need it to do. Although, it looks
         like Pony.objects is a normal models.Manager class.
         """
-
         project_state = self.set_up_test_model()
 
         def forwards(models, schema_editor):
@@ -404,11 +420,25 @@ INSERT INTO i_love_ponies (id, special_thing) VALUES (2, 51), (3, 60);
         new_state = project_state.clone()
         operation.state_forwards('tests', new_state)
 
-        Pony = project_state.render().get_model('tests', 'Pony')
-        all_schemata(lambda x: self.assertFalse(Pony.objects.exists()))
+        Pony = project_state.apps.get_model('tests', 'Pony')
+
+        @all_schemata
+        def pony_count(count, **kwargs):
+            found = Pony.objects.count()
+            self.assertEqual(
+                count,
+                found,
+                'Incorrect number of Ponies found in schema {schema}: expected {0}, found {1}'.format(count, found, **kwargs)
+            )
+
+        pony_count(0)
+
         with connection.schema_editor() as editor:
             operation.database_forwards('tests', editor, project_state, new_state)
-        all_schemata(lambda x: self.assertEqual(2, Pony.objects.count(), 'Incorrect number of Ponies found in schema {}'.format(schema.schema)))
+
+        pony_count(2)
+
         with connection.schema_editor() as editor:
             operation.database_backwards('tests', editor, new_state, project_state)
-        all_schemata(lambda x: self.assertFalse(Pony.objects.exists()))
+
+        pony_count(0)

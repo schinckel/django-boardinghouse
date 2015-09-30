@@ -1,6 +1,13 @@
 boardinghouse.contrib.invite package
 ====================================
 
+Subpackages
+-----------
+
+.. toctree::
+
+    boardinghouse.contrib.invite.migrations
+
 Submodules
 ----------
 
