@@ -288,7 +288,13 @@ def is_shared_table(table):
             local in frame_locals for local in ('from_state', 'to_state', 'schema_editor', 'self')
         ]) and isinstance(frame_locals['self'], Operation):
             # Should this be from_state, or to_state, or should we look in both?
-            models = set(frame_locals['to_state'].apps.get_models()).union(frame_locals['from_state'].apps.get_models())
+            from_state = frame_locals['from_state']
+            to_state = frame_locals['to_state']
+            models = set()
+            if to_state.apps:
+                models = models.union(to_state.apps.get_models())
+            if from_state.apps:
+                models = models.union(from_state.apps.get_models())
             break
 
     table_map = dict([
