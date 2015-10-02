@@ -35,3 +35,9 @@ PASSWORD_HASHERS = (
 AUTH_USER_MODEL = 'auth.User'
 SECRET_KEY = 'django-boardinghouse-sekret-keye'
 TEST_RUNNER = 'rainbowtests.test.runner.RainbowDiscoverRunner'
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'APP_DIRS': True,
+    },
+]

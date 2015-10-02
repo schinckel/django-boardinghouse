@@ -86,7 +86,7 @@ class AbstractSchema(SharedSchemaMixin, models.Model):
         return u'%s (%s)' % (self.name, self.schema)
 
     def save(self, *args, **kwargs):
-        self._meta.get_field_by_name('schema')[0].run_validators(self.schema)
+        self._meta.get_field('schema').run_validators(self.schema)
 
         # We want to prevent someone creating a new schema with
         # the same internal name as an existing one. We assume that

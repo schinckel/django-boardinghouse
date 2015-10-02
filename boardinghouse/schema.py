@@ -314,9 +314,9 @@ def is_shared_table(table):
 
     if len(prefixes) == 1:
         db_table, model = prefixes[0]
-        rel_model = model._meta.get_field_by_name(
+        rel_model = model._meta.get_field(
             table.replace(db_table, '').lstrip('_')
-        )[0].rel.get_related_field().model
+        ).rel.get_related_field().model
     elif len(prefixes) == 0:
         # No matching models found.
         # Assume this is not a shared table...

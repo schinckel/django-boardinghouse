@@ -6,12 +6,8 @@ from django.http import HttpResponse
 from django.shortcuts import render
 
 from django.contrib import admin
+from django.contrib.auth.views import login, logout_then_login
 admin.autodiscover()
-
-from .models import AwareModel, NaiveModel
-
-admin.site.register(AwareModel)
-admin.site.register(NaiveModel)
 
 
 def echo_schema(request):
@@ -26,6 +22,7 @@ def change_schema_view(request):
 
 
 def aware_objects_view(request):
+    from .models import AwareModel
     obj = AwareModel.objects.all()[0]
     return HttpResponse(obj.name)
 
@@ -34,13 +31,12 @@ def sql_error(request):
     connection.cursor().execute('foo')
 
 
-urlpatterns = patterns('',
+urlpatterns = [
     url(r'^$', echo_schema),
     url(r'^sql/error/$', sql_error),
     url(r'^change/$', change_schema_view),
     url(r'^aware/$', aware_objects_view),
     url(r'^admin/', include(admin.site.urls)),
-) + patterns('django.contrib.auth.views',
-    url(r'login/$', 'login', {'template_name': 'admin/login.html'}, name='login'),
-    url(r'logout/$', 'logout_then_login', name='logout'),
-)
+    url(r'login/$', login, {'template_name': 'admin/login.html'}, name='login'),
+    url(r'logout/$', logout_then_login, name='logout'),
+]

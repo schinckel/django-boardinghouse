@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 from .schema import get_schema_model
 
-
 def schemata(request):
     """
     A Django context_processor that provides access to the

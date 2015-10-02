@@ -56,7 +56,6 @@ def check_session_middleware_installed(app_configs=None, **kwargs):
         id='boardinghouse.E002',
     )]
 
-
 def monkey_patch_user():
     """
     Add a property to the defined user model that gives us the visible schemata.
@@ -105,7 +104,13 @@ def inject_required_settings():
     CONTEXT = 'boardinghouse.context_processors.schemata'
 
     if MIDDLEWARE not in settings.MIDDLEWARE_CLASSES:
-        settings.MIDDLEWARE_CLASSES += (MIDDLEWARE,)
+        settings.MIDDLEWARE_CLASSES += type(settings.MIDDLEWARE_CLASSES)([MIDDLEWARE])
 
-    if CONTEXT not in settings.TEMPLATE_CONTEXT_PROCESSORS:
-        settings.TEMPLATE_CONTEXT_PROCESSORS += (CONTEXT,)
+    if hasattr(settings, 'TEMPLATES'):
+        for engine in settings.TEMPLATES:
+            if 'OPTIONS' not in engine:
+                engine['OPTIONS'] = {}
+            engine['OPTIONS']['context_processors'] = [CONTEXT]
+    else:
+        if CONTEXT not in settings.TEMPLATE_CONTEXT_PROCESSORS:
+            settings.TEMPLATE_CONTEXT_PROCESSORS += type(settings.TEMPLATE_CONTEXT_PROCESSORS)([CONTEXT])
