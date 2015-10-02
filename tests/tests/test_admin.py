@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 from django.test import TestCase
 from django.utils import six
+from django.core.urlresolvers import reverse
 
 from boardinghouse.schema import get_schema_model
 
@@ -21,12 +22,12 @@ class TestAdminAdditions(TestCase):
         )
 
         self.client.login(username='su', password='su')
-        response = self.client.get('/admin/boardinghouse/schema/a/')
+        response = self.client.get(reverse('admin:boardinghouse_schema_change', args='a'))
         form = response.context['adminform'].form
         self.assertTrue('name' in form.fields)
         self.assertTrue('schema' not in form.fields, 'Schema.schema should be read-only on edit.')
 
-        response = self.client.get('/admin/boardinghouse/schema/add/')
+        response = self.client.get(reverse('admin:boardinghouse_schema_add'))
         form = response.context['adminform'].form
         self.assertTrue('name' in form.fields)
         self.assertTrue('schema' in form.fields, 'Schema.schema should be editable on create.')
