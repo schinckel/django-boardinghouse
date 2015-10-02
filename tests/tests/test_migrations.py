@@ -379,7 +379,7 @@ UPDATE i_love_ponies SET special_thing = 42 WHERE id = 2;
             result = cursor.fetchmany(4)
             self.assertTrue(result, 'No objects found in {schema}'.format(**kwargs))
             expected = [(2, 42), (3, 60)]
-            self.assertItemsEqual(expected, result, 'Mismatch objects found in schema {schema}: expected {0}, saw {1}'.format(expected, result, **kwargs))
+            self.assertCountEqual(expected, result, 'Mismatch objects found in schema {schema}: expected {0}, saw {1}'.format(expected, result, **kwargs))
 
         with connection.cursor() as cursor:
             objects_exist(cursor)
