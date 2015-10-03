@@ -111,6 +111,6 @@ def inject_required_settings():
             if 'OPTIONS' not in engine:
                 engine['OPTIONS'] = {}
             engine['OPTIONS']['context_processors'] = [CONTEXT]
-    else:
+    if hasattr(settings, 'TEMPLATE_CONTEXT_PROCESSORS'):
         if CONTEXT not in settings.TEMPLATE_CONTEXT_PROCESSORS:
             settings.TEMPLATE_CONTEXT_PROCESSORS += type(settings.TEMPLATE_CONTEXT_PROCESSORS)([CONTEXT])
