@@ -17,7 +17,7 @@ def explode(filename):
     # We want to turn the body element into a div so we can use it
     # in one page with all of the other body elements.
     processed.append(filename)
-    soup = BeautifulSoup(codecs.open(filename, encoding='utf-8'))
+    soup = BeautifulSoup(codecs.open(filename, encoding='utf-8'), 'html.parser')
     body = soup.body
     body.name = 'div'
     body['id'] = filename
@@ -33,7 +33,6 @@ def explode(filename):
             if content not in scripts:
                 scripts.append(content)
         elif ONREADY.match(script.string):
-            print ONREADY.match(script.string).groupdict()['handler']
             body['data-on-show'] = ONREADY.match(script.string).groupdict()['handler']
 
     # Likewise for the link[stylesheet] elements.
