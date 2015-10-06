@@ -109,3 +109,8 @@ class TestAdminAdditions(TestCase):
 
         self.assertEquals(None, entry.object_schema_id)
         self.assertEquals(1, len(entry.get_admin_url().split('?')))
+
+
+class TestAdminTemplate(TestCase):
+    def test_admin_template_renders_switcher(self):
+        pass
