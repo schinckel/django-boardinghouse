@@ -9,7 +9,7 @@
     {% include 'boardinghouse/change_schema.html' with disabled=0 %}
   {% endif %}
 {% endif %}
- 
+
 {% if adminform and add and adminform.form.instance|is_schema_aware and schemata.length > 1 %}
     <span style="font-size: small; color: orange">
       You should select schema first: it clears the data.

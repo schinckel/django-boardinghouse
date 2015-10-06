@@ -32,13 +32,11 @@
 {% endblock %}
 
 {% block branding %}
-<h1 id="site-name">
-  {% trans 'Django administration' %}
-  {% if schemata %}
-    <div>{% include 'admin/change_schema.html' %}</div>
-  {% endif %}
-</h1>
+<h1 id="site-name"><a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}</a></h1>
 {% endblock %}
 
 {% block nav-global %}
+  {% if schemata %}
+    <div>{% include 'admin/change_schema.html' %}</div>
+  {% endif %}
 {% endblock %}

@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from django.test import TestCase
 from django.utils import six
 from django.core.urlresolvers import reverse
+from django.contrib.auth.models import Permission
 
 from boardinghouse.schema import get_schema_model
 
@@ -113,4 +114,19 @@ class TestAdminAdditions(TestCase):
 
 class TestAdminTemplate(TestCase):
     def test_admin_template_renders_switcher(self):
-        pass
+        user = User.objects.create_user(
+            username='admin',
+            password='password'
+        )
+        user.is_staff = True
+        user.save()
+
+        self.client.login(username='admin', password='password')
+
+        Schema.objects.mass_create('a', 'b')
+        user.schemata.add(Schema.objects.get(pk='a'))
+        user.user_permissions.add(Permission.objects.get(codename='change_awaremodel'))
+
+        self.client.get('/?__schema=a')
+        response = self.client.get(reverse('admin:tests_awaremodel_changelist'))
+        self.assertTemplateUsed(response, 'boardinghouse/change_schema.html', count=1)

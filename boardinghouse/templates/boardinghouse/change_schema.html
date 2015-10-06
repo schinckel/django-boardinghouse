@@ -1,7 +1,7 @@
 {% if not selected_schema or schemata.count > 1 %}
-  <form>
+  <form style="display: inline-block;">
 
-    <label style="font-size: small">
+    <label style="font-size: small; color: #ffc">
       Viewing:
 
       {% comment %}
@@ -10,7 +10,7 @@
         url when we have changed schema.
       {% endcomment %}
 
-      <select {% if disabled %}disabled="disabled"{% endif %} name="__schema" id="__schemalist" onchange="window.location.search = '?__schema=' + this.value;">
+      <select {% if disabled %}disabled="disabled"{% endif %} name="__schema" id="__schemalist" onchange="window.location.search = '?__schema=' + this.value;" style="background: none; -webkit-appearance: menulist-button; color: white">
         <option value="">No schema. Please select...</option>
         {% for schema in schemata %}
           <option value="{{ schema.pk }}" {% if schema.pk|lower == selected_schema %}selected="selected"{% endif %}>
@@ -28,9 +28,9 @@
   </form>
 
   {% if disabled %}
-    <span style="font-size: small">
+    <em style="font-size: small">
       Unable to change schema while viewing this object.
-    </span>
+    </em>
   {% endif %}
 
 <script>
