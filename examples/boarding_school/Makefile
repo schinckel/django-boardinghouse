@@ -23,11 +23,7 @@ clean:
 runserver:
 	./manage.py runserver ${PORT}
 
-sync-unattended:
-	./manage.py syncdb --noinput
-
 test:
 	./manage.py test
 
 all: database virtualenv install-packages load-data
-unattended: database sync-unattended load-data
