@@ -14,7 +14,8 @@ DATABASES = {
     "default": {
         'ENGINE': 'boardinghouse.backends.postgres',
         'NAME': 'boardinghouse-{DB_NAME}'.format(**os.environ),
-        'USER': os.environ.get('DB_USER', None),
+        'USER': os.environ.get('DB_USER', ''),
+        'PORT': os.environ.get('DB_PORT', 5432),
         'TEST': {
             'SERIALIZE': False
         }

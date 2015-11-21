@@ -129,4 +129,4 @@ class TestAdminTemplate(TestCase):
 
         self.client.get('/?__schema=a')
         response = self.client.get(reverse('admin:tests_awaremodel_changelist'))
-        self.assertTemplateUsed(response, 'boardinghouse/change_schema.html', count=1)
+        self.assertTemplateUsed(response, 'boardinghouse/change_schema.html')
