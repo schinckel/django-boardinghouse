@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from django.conf.urls import patterns, include, url
+from django.conf.urls import include, url
 from django.db import connection
 from django.http import HttpResponse
 from django.shortcuts import render
