@@ -26,12 +26,10 @@ AND column_name = '%(column_name)s';
 def all_schemata(test):
     def inner(self, *args, **kwargs):
         activate_template_schema()
-        kwargs['schema'] = '__template__'
-        test(self, *args, **kwargs)
+        test(self, *args, schema='__template__', **kwargs)
         for schema in Schema.objects.all():
             schema.activate()
-            kwargs['schema'] = schema
-            test(self, *args, **kwargs)
+            test(self, *args, schema=schema.schema, **kwargs)
         deactivate_schema()
     return inner
 
@@ -249,9 +247,13 @@ class TestMigrations(MigrationTestBase):
         operation = migrations.RemoveField('Rider', 'pony')
         new_state = project_state.clone()
         operation.state_forwards('tests', new_state)
+        self.assertColumnExists('tests_rider', 'pony_id')
         with connection.schema_editor() as editor:
             operation.database_forwards('tests', editor, project_state, new_state)
         self.assertColumnNotExists('tests_rider', 'pony_id')
+        with connection.schema_editor() as editor:
+            operation.database_backwards('tests', editor, new_state, project_state)
+        self.assertColumnExists('tests_rider', 'pony_id')
 
     def test_alter_model_table(self):
         project_state = self.set_up_test_model()
@@ -353,6 +355,15 @@ class TestMigrations(MigrationTestBase):
             operation.database_backwards('tests', editor, new_state, project_state)
         self.assertColumnNotExists('tests_rider', '_order')
 
+    def test_add_check_constraint(self):
+        pass
+
+    def test_add_unique_constraint(self):
+        pass
+
+    def test_alter_primary_key(self):
+        pass
+
     def test_run_sql(self):
         project_state = self.set_up_test_model()
         operation = migrations.RunSQL("""
@@ -379,7 +390,12 @@ UPDATE i_love_ponies SET special_thing = 42 WHERE id = 2;
             result = cursor.fetchmany(4)
             self.assertTrue(result, 'No objects found in {schema}'.format(**kwargs))
             expected = [(2, 42), (3, 60)]
-            self.assertEqual(sorted(expected), sorted(result), 'Mismatch objects found in schema {schema}: expected {0}, saw {1}'.format(expected, result, **kwargs))
+            self.assertEqual(
+                sorted(expected),
+                sorted(result),
+                'Mismatch objects found in schema {schema}: expected {0}, saw {1}'
+                .format(expected, result, **kwargs)
+            )
 
         with connection.cursor() as cursor:
             objects_exist(cursor)
