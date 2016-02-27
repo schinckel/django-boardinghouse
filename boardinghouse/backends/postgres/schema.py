@@ -114,22 +114,33 @@ def get_constraints(cursor, table_name):
 
 def get_index_data(cursor, index_name):
 
-    cursor.execute('''SELECT
-    c.relname AS table_name,
-    n.nspname AS schema_name
-FROM pg_catalog.pg_class c, pg_catalog.pg_class c2,
-    pg_catalog.pg_index idx, pg_catalog.pg_namespace n
-WHERE c.oid = idx.indrelid
-    AND idx.indexrelid = c2.oid
-    AND n.oid = c.relnamespace
-    AND n.nspname IN (%s, %s)
-    AND c2.relname = %s
+    cursor.execute('''SELECT c.relname AS table_name, n.nspname AS schema_name
+                        FROM pg_catalog.pg_class c, pg_catalog.pg_class c2,
+                             pg_catalog.pg_index idx, pg_catalog.pg_namespace n
+                       WHERE c.oid = idx.indrelid
+                         AND idx.indexrelid = c2.oid
+                         AND n.oid = c.relnamespace
+                         AND n.nspname IN (%s, %s)
+                         AND c2.relname = %s
     ''', [_get_public_schema(), '__template__', index_name])
 
     return [table_name for (table_name, schema_name) in cursor.fetchall()]
 
 
-def get_table_and_schema(sql, cursor):
+def is_inherited_from(table_name, cursor):
+    query = '''SELECT count(*) > 0
+                 FROM pg_catalog.pg_inherits i
+           INNER JOIN pg_catalog.pg_class c ON (i.inhrelid = c.oid)
+           INNER JOIN pg_catalog.pg_namespace n ON (c.relnamespace = n.oid)
+                WHERE c.relname = %s'''
+    cursor.execute(query, [table_name])
+    return cursor.fetchone()[0]
+
+
+def query_data(sql, cursor):
+    """
+    Returns: (statement, table_name, schema_name)
+    """
     parsed = sqlparse.parse(sql)[0]
     grouped = defaultdict(list)
     identifiers = []
@@ -145,24 +156,25 @@ def get_table_and_schema(sql, cursor):
         keywords = grouped[Keyword]
         # DROP INDEX does not have a table associated with it.
         # We will have to hit the database to see what schema(ta) have an index with that name.
-        if 'INDEX' in keywords and grouped[DDL][0] == 'DROP':
-            return get_index_data(cursor, identifiers[0].get_name())[0], None
-        if 'VIEW' in keywords or 'TABLE' in keywords:
+        if keywords[0] == 'INDEX' and grouped[DDL][0] == 'DROP':
+            return 'DROP INDEX', get_index_data(cursor, identifiers[0].get_name())[0], None
+        if keywords[0] in ['VIEW', 'TABLE']:
             # We care about identifier 0
             if identifiers:
-                return identifiers[0].get_name(), identifiers[0].get_parent_name()
-        elif 'TRIGGER' in keywords or 'INDEX' in keywords:
+                return '{} {}'.format(grouped[DDL][0], keywords[0]), identifiers[0].get_name(), identifiers[0].get_parent_name()
+        elif keywords[0] in ['TRIGGER', 'INDEX']:
             # We care about identifier 1
             if len(identifiers) > 1:
-                return identifiers[1].get_name(), identifiers[1].get_parent_name()
+                return '{} {}'.format(grouped[DDL][0], keywords[0]), identifiers[1].get_name(), identifiers[1].get_parent_name()
 
-    # We also care about other non-DDL statements, as the implication is that they
-    # should apply to every known schema, if we are updating as part of a migration.
+    # We also care about other non-DDL statements, as the implication is
+    # that they should apply to every known schema, if we are updating as
+    # part of a migration.
     if grouped[DML] and grouped[DML][0] in ['INSERT INTO', 'UPDATE', 'DELETE FROM']:
         if identifiers:
-            return identifiers[0].get_name(), identifiers[0].get_parent_name()
+            return grouped[DML][0], identifiers[0].get_name(), identifiers[0].get_parent_name()
 
-    return None, None
+    return parsed.tokens[0], None, None
 
 
 class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
@@ -176,25 +188,76 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         for sql in self.deferred_sql:
             if sql not in deferred_sql:
                 deferred_sql.append(sql)
-        self.deferred_sql = deferred_sql
+        self.deferred_sql = deferred_sql + getattr(self, '_extra_deferred_sql', [])
+        # self.deferred_sql = deferred_sql
         return super(DatabaseSchemaEditor, self).__exit__(exc_type, exc_value, traceback)
         # If we manage to rewrite the SQL so it injects schema clauses, then we can remove this override.
 
     def execute(self, sql, params=None):
         # We want to execute our SQL multiple times, if it is per-schema.
         execute = super(DatabaseSchemaEditor, self).execute
+        if 'CREATE TABLE i_love_ponies' in sql:
+            import pdb; pdb.set_trace()
 
-        table_name, schema_name = get_table_and_schema(sql, self.connection.cursor())
+        statement, table_name, schema_name = query_data(sql, self.connection.cursor())
 
-        if table_name and not schema_name and not is_shared_table(table_name):
-            if _schema_table_exists():
-                for each in get_schema_model().objects.all():
-                    each.activate()
-                    execute(sql, params)
-
+        def apply_to_template():
             activate_template_schema()
             execute(sql, params)
             deactivate_schema()
+
+        def apply_to_all(operation, *args):
+            if _schema_table_exists():
+                for each in get_schema_model().objects.all():
+                    each.activate()
+                    operation(*args)
+            deactivate_schema()
+
+        # If there was an explicit schema_name, or no table_name, or our
+        # table_name indicates this is a shared table, then we can just
+        # jump down and execute the statement normally.
+        if table_name and not schema_name and not is_shared_table(table_name):
+
+            # Under certain circumstances, we don't ever need to operate on
+            # all of the schemata. This would be if we are performing an
+            # operation on a table, and the table is already inherited,
+            # unless it's a UNIQUE, PK or FK constraint.
+            # Unfortunately, it's not possible to distinguish between:
+            # ALTER TABLE <x> DROP CONSTRAINT <y>
+            # Where Y was a CHECK constraint, or a UNIQUE, or PK or FK.
+            if (statement in ['DROP TABLE', 'ALTER TABLE'] and
+                is_inherited_from(table_name, self.connection.cursor())
+               ):
+                if ('DROP CONSTRAINT' in sql or
+                    'ALTER CONSTRAINT' in sql or
+                    'RENAME CONSTRAINT' in sql
+                   ):
+                    constraints = get_constraints(self.connection.cursor(), table_name)
+                    for name, definition in constraints.items():
+                        if name in sql:
+                            # This is the constraint we are dropping. If it is anything except a CHECK constraint, then we need to remove it from all tables.
+                            if not definition['check']:
+                                apply_to_all(execute, sql, params)
+                            break
+                elif (('ALTER COLUMN' in sql and 'DEFAULT' in sql) or
+                      ('ADD CONSTRAINT' in sql and 'CHECK' not in sql)):
+                    apply_to_all(execute, sql, params)
+                else:
+                    pass
+                apply_to_template()
+            elif _schema_table_exists():
+                apply_to_template()
+                self._extra_deferred_sql = []
+                if statement == 'CREATE TABLE':
+                    for each in get_schema_model().objects.all():
+                        execute('CREATE TABLE "{0}"."{1}" (LIKE "__template__"."{1}" INCLUDING ALL)'.format(each.schema, table_name))
+                        self._extra_deferred_sql.append(
+                            'ALTER TABLE "{0}"."{1}" INHERIT "__template__"."{1}"'.format(each.schema, table_name)
+                        )
+                else:
+                    apply_to_all(execute, sql, params)
+            else:
+                apply_to_template()
         else:
             execute(sql, params)
 

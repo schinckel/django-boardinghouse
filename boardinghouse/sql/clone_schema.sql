@@ -39,7 +39,8 @@ BEGIN
   LOOP
     -- Create a table with the relevant data in the new schema.
     buffer := dest_schema || '.' || object;
-    EXECUTE 'CREATE TABLE ' || buffer || ' (LIKE ' || source_schema || '.' || object || ' INCLUDING CONSTRAINTS INCLUDING INDEXES INCLUDING DEFAULTS)';
+    EXECUTE 'CREATE TABLE ' || buffer || ' (LIKE ' || source_schema || '.' || object || ' INCLUDING ALL)';
+    EXECUTE 'ALTER TABLE ' || buffer || ' INHERIT ' || source_schema || '.' || object;
 
     -- Ensure any default values that refer to the old schema now refer to the new schema.
     FOR column_, default_ IN
@@ -79,6 +80,8 @@ BEGIN
     EXECUTE 'CREATE VIEW ' || dest_schema || '.' || quote_ident(view_.viewname) || ' AS ' ||
       replace(view_.definition, source_schema || '.', dest_schema || '.');
   END LOOP;
+
+  -- TODO: Materialized views?
 
 END;
 
