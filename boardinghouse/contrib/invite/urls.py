@@ -1,16 +1,20 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import include, url
 
-CODE = '(?P<redemption_code>[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})'
+from boardinghouse.contrib.invite import views
 
-urlpatterns = patterns('boardinghouse.contrib.invite.views',
-    url(r'^new/$', 'invite_person', name='new'),
+urlpatterns = [
+    url(r'^new/$', views.invite_person, name='new'),
 
-    url(r'^%s/$' % CODE, 'view_invitation', name='view'),
-    url(r'^%s/accept/$' % CODE, 'accept_invitation', name='accept'),
-    url(r'^%s/confirm/$' % CODE, 'confirm_invitation', name='confirm'),
-    url(r'^%s/decline/$' % CODE, 'decline_invitation', name='decline'),
+    url(r'^(?P<redemption_code>[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/',
+        include([
+            url(r'^$', views.view_invitation, name='view'),
+            url(r'^accept/$', views.accept_invitation, name='accept'),
+            url(r'^confirm/$', views.confirm_invitation, name='confirm'),
+            url(r'^decline/$', views.decline_invitation, name='decline'),
+        ])
+    ),
 
-    url(r'^received/$', 'pending_received_invitations', name='received'),
-    url(r'^sent/$', 'pending_sent_invitations', name='sent'),
-    url(r'^processed/$', 'redeemed_or_expired_invitations', name='processed'),
-)
+    url(r'^received/$', views.pending_received_invitations, name='received'),
+    url(r'^sent/$', views.pending_sent_invitations, name='sent'),
+    url(r'^processed/$', views.redeemed_or_expired_invitations, name='processed'),
+]
