@@ -121,7 +121,7 @@ def inject_required_settings():
 
 def register_signals():
     from django.db import models
-    import signals
+    from boardinghouse import signals
     from .schema import get_schema_model
 
     Schema = get_schema_model()
