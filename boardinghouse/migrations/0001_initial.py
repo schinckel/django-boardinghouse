@@ -10,6 +10,7 @@ import boardinghouse.base
 
 CLONE_SCHEMA = open(os.path.join(os.path.dirname(__file__), '..', 'sql', 'clone_schema.001.sql')).read()
 
+
 class Migration(migrations.Migration):
 
     dependencies = [
