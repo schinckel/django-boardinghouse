@@ -28,3 +28,5 @@ PUBLIC_SCHEMA = 'public'
 The name of the public schema. The default should work for all cases,
 other than where you know you need to change it.
 """
+
+BOARDINGHOUSE_SCHEMA_MODEL = 'boardinghouse.Schema'

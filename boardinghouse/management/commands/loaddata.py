@@ -15,7 +15,7 @@ from django.core.management.base import CommandError
 
 from optparse import make_option
 
-from ...schema import get_schema_model, _create_all_schemata
+from ...schema import get_schema_model
 
 
 class Command(loaddata.Command):
@@ -56,4 +56,4 @@ class Command(loaddata.Command):
 
         # Ensure we create any schemata that are new.
         # But, we only want to do this if the schema table has been installed.
-        _create_all_schemata()
+        # _create_all_schemata()

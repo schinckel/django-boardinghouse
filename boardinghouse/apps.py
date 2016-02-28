@@ -14,6 +14,7 @@ class BoardingHouseConfig(AppConfig):
         load_app_settings()
         inject_required_settings()
         monkey_patch_user()
+        register_signals()
 
 
 DB_ENGINES = ['boardinghouse.backends.postgres']
@@ -116,3 +117,27 @@ def inject_required_settings():
     if hasattr(settings, 'TEMPLATE_CONTEXT_PROCESSORS'):
         if CONTEXT not in settings.TEMPLATE_CONTEXT_PROCESSORS:
             settings.TEMPLATE_CONTEXT_PROCESSORS += type(settings.TEMPLATE_CONTEXT_PROCESSORS)([CONTEXT])
+
+
+def register_signals():
+    from django.db import models
+    import signals
+    from .schema import get_schema_model
+
+    Schema = get_schema_model()
+
+    models.signals.post_save.connect(signals.create_schema,
+                                     sender=Schema,
+                                     weak=True,
+                                     dispatch_uid='create-schema')
+
+    models.signals.post_init.connect(signals.inject_schema_attribute,
+                                     sender=None, weak=True)
+
+    models.signals.m2m_changed.connect(signals.invalidate_cache,
+                                       sender=Schema.users.through, weak=True)
+
+    models.signals.post_save.connect(signals.invalidate_all_user_caches,
+                                     sender=Schema, weak=True)
+
+    models.signals.pre_migrate.connect(signals.invalidate_all_caches, weak=True)

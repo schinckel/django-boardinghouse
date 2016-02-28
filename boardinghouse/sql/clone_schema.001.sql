@@ -1,6 +1,6 @@
 -- http://wiki.postgresql.org/wiki/Clone_schema
 
-CREATE OR REPLACE FUNCTION clone_schema(source_schema text, dest_schema text) RETURNS void AS
+CREATE FUNCTION clone_schema(source_schema text, dest_schema text) RETURNS void AS
 $$
 
 DECLARE

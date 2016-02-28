@@ -1,21 +1,27 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import os
+
 from django.db import models, migrations
 from django.conf import settings
 import django.core.validators
 import boardinghouse.base
 
+CLONE_SCHEMA = open(os.path.join(os.path.dirname(__file__), '..', 'sql', 'clone_schema.001.sql')).read()
 
 class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        migrations.swappable_dependency(getattr(settings, 'BOARDINGHOUSE_SCHEMA_MODEL', 'boardinghouse.Schema')),
+        migrations.swappable_dependency(settings.BOARDINGHOUSE_SCHEMA_MODEL),
         ('admin', '0001_initial'),
     ]
 
     operations = [
+        migrations.RunSQL(sql=CLONE_SCHEMA, reverse_sql='DROP FUNCTION clone_schema(text, text)'),
+        migrations.RunSQL(sql='CREATE SCHEMA __template__', reverse_sql='DROP SCHEMA __template__ CASCADE'),
+
         migrations.CreateModel(
             name='Schema',
             fields=[

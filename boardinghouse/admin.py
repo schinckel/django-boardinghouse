@@ -5,6 +5,9 @@ from __future__ import unicode_literals
 
 from django.conf import settings
 from django.contrib import admin
+from django.contrib.admin.models import LogEntry
+from django.db import models
+from django.dispatch import receiver
 
 from .models import Schema
 from .schema import get_active_schema, is_shared_model, get_schema_model
@@ -58,15 +61,10 @@ def get_inline_instances(self, request, obj=None):
 
 admin.ModelAdmin.get_inline_instances = get_inline_instances
 
-
-from django.contrib.admin.models import LogEntry
-from django.db import models
-from django.dispatch import receiver
-
 if not getattr(LogEntry, 'object_schema', None):
     LogEntry.add_to_class(
         'object_schema',
-        models.ForeignKey(getattr(settings, 'BOARDINGHOUSE_SCHEMA_MODEL', 'boardinghouse.Schema'), blank=True, null=True)
+        models.ForeignKey(settings.BOARDINGHOUSE_SCHEMA_MODEL, blank=True, null=True)
     )
 
     @receiver(models.signals.pre_save, sender=LogEntry)

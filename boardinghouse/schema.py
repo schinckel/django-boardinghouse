@@ -1,6 +1,5 @@
 import logging
 import inspect
-import os
 import threading
 
 from django.apps import apps
@@ -8,8 +7,7 @@ from django.conf import settings
 from django.core.cache import cache
 from django.db import connection
 from django.db.migrations.operations.base import Operation
-
-from boardinghouse import signals
+from django.utils.translation import lazy
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.addHandler(logging.NullHandler())
@@ -36,9 +34,7 @@ class TemplateSchemaActivation(Forbidden):
 
 
 def get_schema_model():
-    return apps.get_model(
-        getattr(settings, 'BOARDINGHOUSE_SCHEMA_MODEL', 'boardinghouse.Schema')
-    )
+    return apps.get_model(settings.BOARDINGHOUSE_SCHEMA_MODEL)
 
 
 def _get_search_path():
@@ -51,12 +47,8 @@ def _get_search_path():
 
 def _set_search_path(search_path):
     cursor = connection.cursor()
-    cursor.execute('SET search_path TO %s,{}'.format(_get_public_schema()), [search_path])
+    cursor.execute('SET search_path TO %s,{}'.format(settings.PUBLIC_SCHEMA), [search_path])
     cursor.close()
-
-
-def _get_public_schema():
-    return getattr(settings, 'PUBLIC_SCHEMA', 'public')
 
 
 def _schema_exists(schema_name, cursor=None):
@@ -145,12 +137,14 @@ def activate_schema(schema_name):
 
     Must be passed a string: the internal name of the schema to activate.
     """
+    from .signals import schema_pre_activate, schema_post_activate
+
     if schema_name == '__template__':
         raise TemplateSchemaActivation()
 
-    signals.schema_pre_activate.send(sender=None, schema_name=schema_name)
+    schema_pre_activate.send(sender=None, schema_name=schema_name)
     _set_search_path(schema_name)
-    signals.schema_post_activate.send(sender=None, schema_name=schema_name)
+    schema_post_activate.send(sender=None, schema_name=schema_name)
     _thread_locals.schema = schema_name
 
 
@@ -158,11 +152,13 @@ def activate_template_schema():
     """
     Activate the template schema. You probably don't want to do this.
     """
+    from .signals import schema_pre_activate, schema_post_activate
+
     _thread_locals.schema = None
     schema_name = '__template__'
-    signals.schema_pre_activate.send(sender=None, schema_name=schema_name)
+    schema_pre_activate.send(sender=None, schema_name=schema_name)
     _set_search_path(schema_name)
-    signals.schema_post_activate.send(sender=None, schema_name=schema_name)
+    schema_post_activate.send(sender=None, schema_name=schema_name)
 
 
 def get_template_schema():
@@ -173,28 +169,14 @@ def deactivate_schema(schema=None):
     """
     Deactivate the provided (or current) schema.
     """
+    from .signals import schema_pre_activate, schema_post_activate
+
     cursor = connection.cursor()
-    signals.schema_pre_activate.send(sender=None, schema_name=None)
-    cursor.execute('SET search_path TO "$user",{}'.format(_get_public_schema()))
-    signals.schema_post_activate.send(sender=None, schema_name=None)
+    schema_pre_activate.send(sender=None, schema_name=None)
+    cursor.execute('SET search_path TO "$user",{}'.format(settings.PUBLIC_SCHEMA))
+    schema_post_activate.send(sender=None, schema_name=None)
     _thread_locals.schema = None
     cursor.close()
-
-
-def create_schema(schema_name):
-    cursor = connection.cursor()
-
-    if _schema_exists(schema_name):
-        LOGGER.warn('Attempt to create an existing schema: %s' % schema_name)
-        return
-
-    cursor.execute("SELECT clone_schema('__template__', %s)", [schema_name])
-    cursor.close()
-
-    if schema_name != '__template__':
-        signals.schema_created.send(sender=get_schema_model(), schema=schema_name)
-
-    LOGGER.info('New schema created: %s' % schema_name)
 
 
 #: These models are required to be shared by the system.
@@ -208,8 +190,9 @@ REQUIRED_SHARED_MODELS = [
     'contenttypes.contenttype',
     'admin.logentry',
     'migrations.migration',
-    getattr(settings, 'BOARDINGHOUSE_SCHEMA_MODEL', None),
-    getattr(settings, 'AUTH_USER_MODEL', None),
+    # Maybe lazy() these?
+    lazy(lambda: settings.BOARDINGHOUSE_SCHEMA_MODEL),
+    lazy(lambda: settings.AUTH_USER_MODEL),
 ]
 
 REQUIRED_SHARED_TABLES = [
@@ -266,7 +249,7 @@ def is_shared_model(model):
     return False
 
 
-def is_shared_table(table):
+def is_shared_table(table, apps=apps):
     """
     Is the model from the provided database table name shared?
 
@@ -336,49 +319,13 @@ def _schema_table_exists():
     return bool(cursor.fetchone())
 
 
-def _sql_from_file(filename):
-    """
-    A large part of this project is based around how simple it is to
-    clone a schema's structure into a new schema. This is encapsulated in
-    an SQL script: this function will install a function from an arbitrary
-    file.
-    """
-    cursor = connection.cursor()
-    sql_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'sql', '%s.sql' % filename)
-    function = " ".join([x.strip() for x in open(sql_file).readlines() if not x.strip().startswith('--')])
-    function = function.replace("%", "%%")
-    cursor.execute(function)
-    cursor.close()
-
-
 def _wrap_command(command):
     def inner(self, *args, **kwargs):
-        _sql_from_file('clone_schema')
-        get_template_schema().create_schema()
-
         cursor = connection.cursor()
         # In the case of create table statements, we want to make sure
         # they go to the public schema, but want reads to come from
         # __template__.
-        cursor.execute('SET search_path TO {},__template__'.format(_get_public_schema()))
-        # cursor.close()
-
+        cursor.execute('SET search_path TO {},__template__'.format(settings.PUBLIC_SCHEMA))
         command(self, *args, **kwargs)
-
         deactivate_schema()
-
-        # We don't want just active schemata...
-        _create_all_schemata()
-
     return inner
-
-
-def _create_all_schemata():
-    """
-    Create all of the schemata, just in case they haven't yet been created.
-    """
-    cursor = connection.cursor()
-    cursor.execute("SELECT count(*)>0 FROM information_schema.tables WHERE table_name = 'boardinghouse_schema'")
-    if cursor.fetchone() == (True,):
-        for schema in get_schema_model().objects.all():
-            schema.create_schema()

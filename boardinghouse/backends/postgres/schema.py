@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from collections import defaultdict
 
 from django.db.backends.postgresql_psycopg2 import schema
+from django.conf import settings
 
 import sqlparse
 from sqlparse.tokens import DDL, DML, Keyword
@@ -10,7 +11,6 @@ from sqlparse.tokens import DDL, DML, Keyword
 from ...schema import is_shared_table
 from ...schema import get_schema_model, _schema_table_exists
 from ...schema import deactivate_schema, activate_template_schema
-from ...schema import _get_public_schema
 
 
 def get_constraints(cursor, table_name):
@@ -41,7 +41,7 @@ def get_constraints(cursor, table_name):
             kc.table_schema IN (%s, %s) AND
             kc.table_name = %s
         ORDER BY kc.ordinal_position ASC
-    """, [_get_public_schema(), "__template__", table_name])
+    """, [settings.PUBLIC_SCHEMA, "__template__", table_name])
     for constraint, column, kind, used_cols in cursor.fetchall():
         # If we're the first column, make the record
         if constraint not in constraints:
@@ -67,7 +67,7 @@ def get_constraints(cursor, table_name):
             c.constraint_type = 'CHECK' AND
             kc.table_schema IN (%s, %s) AND
             kc.table_name = %s
-    """, [_get_public_schema(), "__template__", table_name])
+    """, [settings.PUBLIC_SCHEMA, "__template__", table_name])
     for constraint, column in cursor.fetchall():
         # If we're the first column, make the record
         if constraint not in constraints:
@@ -98,7 +98,7 @@ def get_constraints(cursor, table_name):
             AND n.oid = c.relnamespace
             AND n.nspname IN (%s, %s)
             AND c.relname = %s
-    """, [_get_public_schema(), '__template__', table_name])
+    """, [settings.PUBLIC_SCHEMA, '__template__', table_name])
     for index, columns, unique, primary in cursor.fetchall():
         if index not in constraints:
             constraints[index] = {
@@ -124,7 +124,7 @@ WHERE c.oid = idx.indrelid
     AND n.oid = c.relnamespace
     AND n.nspname IN (%s, %s)
     AND c2.relname = %s
-    ''', [_get_public_schema(), '__template__', index_name])
+    ''', [settings.PUBLIC_SCHEMA, '__template__', index_name])
 
     return [table_name for (table_name, schema_name) in cursor.fetchall()]
 
@@ -186,6 +186,7 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
 
         table_name, schema_name = get_table_and_schema(sql, self.connection.cursor())
 
+        # TODO: try to get the apps from current project_state, not global apps.
         if table_name and not schema_name and not is_shared_table(table_name):
             if _schema_table_exists():
                 for each in get_schema_model().objects.all():

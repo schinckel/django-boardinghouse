@@ -6,17 +6,17 @@ from django.conf import settings
 from django.core.cache import cache
 from django.core.validators import RegexValidator
 from django.db import models
-from django.dispatch import receiver
 from django.forms import ValidationError
 from django.utils.translation import ugettext_lazy as _
 
 from .base import SharedSchemaMixin
-from .schema import create_schema, activate_schema, deactivate_schema, _schema_exists
+from .schema import activate_schema, deactivate_schema, _schema_exists
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.addHandler(logging.NullHandler())
 
-SCHEMA_NAME_VALIDATOR_MESSAGE = u'May only contain lowercase letters, digits and underscores. Must start with a letter.'
+SCHEMA_NAME_VALIDATOR_MESSAGE = u'May only contain lowercase letters, digits and underscores. '\
+                                u'Must start with a letter.'
 
 schema_name_validator = RegexValidator(
     regex=r'^[a-z][a-z0-9_]*$',
@@ -26,13 +26,20 @@ schema_name_validator = RegexValidator(
 
 class SchemaQuerySet(models.query.QuerySet):
     def bulk_create(self, *args, **kwargs):
+        # Normally a bulk_create would not trigger the post_save signal for
+        # each instance. We need to rely on that firing to create the actual
+        # database schema, so we manually trigger that signal.
         created = super(SchemaQuerySet, self).bulk_create(*args, **kwargs)
         for schema in created:
-            schema.create_schema()
+            models.signals.post_save.send(sender=self.model,
+                                          instance=schema,
+                                          created=True)
         cache.delete('active-schemata')
         return created
 
     def mass_create(self, *args):
+        # A helper method that creates schemata with name/schema the same.
+        # Perhaps it could slugify the schema value?
         self.bulk_create([self.model(name=x, schema=x) for x in args])
         cache.delete('active-schemata')
 
@@ -98,24 +105,11 @@ class AbstractSchema(SharedSchemaMixin, models.Model):
         elif self.schema != self._initial_schema:
             raise ValidationError(_('may not change schema after creation.'))
 
-        self.create_schema()
-
         return super(AbstractSchema, self).save(*args, **kwargs)
 
     def delete(self):
         self.is_active = False
         self.save()
-
-    def create_schema(self, cursor=None):
-        """
-        This method will create a new postgres schema with the name
-        stored in 'self.schema', if it doesn't already exist in the
-        database.
-
-        At this stage, we just exit without failure (although log a warning)
-        if the schema was already found in the database.
-        """
-        create_schema(self.schema)
 
     def activate(self, cursor=None):
         activate_schema(self.schema)
@@ -164,22 +158,6 @@ def __eq__(self, other):
 models.Model.__eq__ = __eq__
 
 
-@receiver(models.signals.post_init, sender=None)
-def inject_schema_attribute(sender, instance, **kwargs):
-    """
-    A signal listener that injects the current schema on the object
-    just after it is instantiated.
-
-    You may use this in conjunction with :class:`MultiSchemaMixin`, it will
-    respect any value that has already been set on the instance.
-    """
-    from .schema import is_shared_model, get_active_schema_name
-    if is_shared_model(sender):
-        return
-    if not getattr(instance, '_schema', None):
-        instance._schema = get_active_schema_name()
-
-
 # Add a cached method that prevents user.schemata.all() queries from
 # being needlessly duplicated.
 def visible_schemata(user):
@@ -189,40 +167,3 @@ def visible_schemata(user):
         cache.set('visible-schemata-%s' % user.pk, schemata)
 
     return schemata
-
-
-# We also need to watch for changes to the user_schemata table, to invalidate
-# this cache.
-@receiver(models.signals.m2m_changed, sender=Schema.users.through)
-def invalidate_cache(sender, **kwargs):
-    if kwargs['reverse']:
-        cache.delete('visible-schemata-%s' % kwargs['instance'].pk)
-    else:
-        if kwargs['pk_set']:
-            for pk in kwargs['pk_set']:
-                cache.delete('visible-schemata-%s' % pk)
-
-
-# In addition, we need to clear out the schemata cache for all users
-# related to a schema if that schema is changed - specifically, if it's
-# active status is changed. However, we can't track this with
-# django-model-utils, due to a bug in django.
-# We will also clear out the global active schemata cache.
-@receiver(models.signals.post_save, sender=Schema)
-# @receiver(signals.schema_created, sender=Schema)
-def invalidate_all_user_caches(sender, **kwargs):
-    cache.delete('active-schemata')
-    cache.delete('all-schemata')
-    for user in kwargs['instance'].users.values('pk'):
-        cache.delete('visible-schemata-%s' % user['pk'])
-
-
-# We also want to clear out all caches when we get a syncdb or migrate
-# signal on our own app.
-# How can we clear out all user caches? It depends upon
-# the cache backend, right?
-@receiver(models.signals.pre_migrate)
-def invalidate_all_caches(sender, **kwargs):
-    if sender.name == 'boardinghouse':
-        cache.delete('active-schemata')
-        cache.delete('all-schemata')

@@ -52,7 +52,9 @@ class Invitation(SharedSchemaModel):
     # Can we ensure that at most one of these two is not null?
     accepted_at = models.DateTimeField(null=True, blank=True)
     declined_at = models.DateTimeField(null=True, blank=True)
-    accepted_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='accepted_invitations', null=True, blank=True)
+    accepted_by = models.ForeignKey(settings.AUTH_USER_MODEL,
+                                    related_name='accepted_invitations',
+                                    null=True, blank=True)
 
     objects = InvitationQuerySet.as_manager()
 
