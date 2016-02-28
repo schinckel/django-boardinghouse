@@ -11,8 +11,7 @@ urlpatterns = [
             url(r'^accept/$', views.accept_invitation, name='accept'),
             url(r'^confirm/$', views.confirm_invitation, name='confirm'),
             url(r'^decline/$', views.decline_invitation, name='decline'),
-        ])
-    ),
+        ])),
 
     url(r'^received/$', views.pending_received_invitations, name='received'),
     url(r'^sent/$', views.pending_sent_invitations, name='sent'),
