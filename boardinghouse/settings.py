@@ -30,3 +30,8 @@ other than where you know you need to change it.
 """
 
 BOARDINGHOUSE_SCHEMA_MODEL = 'boardinghouse.Schema'
+"""
+The model that will store the actual schema objects. This should be a
+subclass of :class:`boardinghouse.models.AbstractSchema`, or expose the
+same methods.
+"""

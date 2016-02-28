@@ -8,7 +8,7 @@ django-boardinghouse
 
 Multi-tenancy for Django applications, using Postgres Schemas.
 
-|status| |coverage| |deps| |docs| |pypi| |versions| |downloads| |wheel|
+|status| |deps| |docs| |pypi| |versions| |downloads| |wheel|
 
 Contents:
 

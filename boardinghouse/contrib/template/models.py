@@ -2,7 +2,6 @@ from django.db import models
 from django.dispatch import receiver
 
 from boardinghouse.base import SharedSchemaMixin
-from boardinghouse.schema import create_schema
 
 
 class TemplateSchema(SharedSchemaMixin, models.Model):
@@ -35,4 +34,4 @@ class TemplateSchema(SharedSchemaMixin, models.Model):
 
 @receiver(models.signals.post_save, sender=TemplateSchema)
 def create_template_schema(sender, instance, **kwargs):
-    create_schema(instance.schema)
+    assert None, "Create schema missing."

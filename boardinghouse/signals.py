@@ -3,9 +3,27 @@ Signals that are fired as part of the django-boardinghouse project.
 
 .. data:: schema_created
 
+    Sent when a new schema object has been created in the database. Accepts a
+    single argument, the (internal) name of the schema.
+
 .. data:: schema_pre_activate
 
+    Sent just before a schema will be activated. May be used to abort this by
+    throwing an exception.
+
 .. data:: schema_post_activate
+
+    Sent immediately after a schema has been activated.
+
+.. data:: session_requesting_schema_change
+
+    Sent when a user-session has requested (and is, according to default rules,
+    allowed to change to this schema). May be used to prevent the change, by
+    throwing an exception.
+
+.. data:: session_schema_changed
+
+    Sent when a user-session has changed it's schema.
 
 """
 
@@ -76,7 +94,10 @@ def inject_schema_attribute(sender, instance, **kwargs):
 
 
 def invalidate_cache(sender, **kwargs):
-    "Clear out the caches on changes to the user_schemata table."
+    """
+    A signal listener designed to invalidate the cache of a single
+    user's visible schemata items.
+    """
     if kwargs['reverse']:
         cache.delete('visible-schemata-%s' % kwargs['instance'].pk)
     else:
@@ -86,6 +107,10 @@ def invalidate_cache(sender, **kwargs):
 
 
 def invalidate_all_user_caches(sender, **kwargs):
+    """
+    A signal listener that invalidates all schemata caches for all users
+    who have access to the sender instance (schema).
+    """
     cache.delete('active-schemata')
     cache.delete('all-schemata')
     for user in kwargs['instance'].users.values('pk'):
@@ -93,6 +118,9 @@ def invalidate_all_user_caches(sender, **kwargs):
 
 
 def invalidate_all_caches(sender, **kwargs):
+    """
+    Invalidate all schemata caches. Not entirely sure this one works.
+    """
     if sender.name == 'boardinghouse':
         cache.delete('active-schemata')
         cache.delete('all-schemata')

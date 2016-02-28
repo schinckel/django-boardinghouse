@@ -61,3 +61,20 @@ Models will, by default, only live in a non-shared schema, unless they:
 * are listed in ``settings.BOARDINGHOUSE.SHARED_MODELS``.
 
 There is an :doc:`example project <example>`.
+
+Postgres Table Inheritance
+--------------------------
+
+Using `Postgres Table Inheritance`_, it's possible to obtain a couple of extra features that could be useful in this context. These are worth outlining: however at this point in time, handling edge cases related to the inheritance of constraints means that the migration code itself became far more complex.
+
+Basically, table inheritance means that it could be possible to only have to apply migrations to the base table, and all tables that inherit from this would automatically be altered in the same way. This works great, as long as your alterations are of the structure of the table, but not including ``UNIQUE``, ``FOREIGN KEY`` or ``PRIMARY KEY`` constraints. ``CHECK`` constraints, and ``NOT NULL`` constraints are fine.
+
+Handling the various combinations of this from within the migration execution stack turned out to be quite complicated: I was able to get almost all tests to pass, but the code became far more difficult to reason about.
+
+The basic technique is to create the tables in the same way as when doing the database-level ``clone_schema`` operation (``CREATE TABLE ... (LIKE ... INCLUDING ALL)``), but after this ``ALTER TABLE ... INHERIT ...``. This worked really well, and retained all of the orignal constraints. Migrations like adding or removing a column worked as well, but keeping track of when items needed to be applied to all schemata, or just the template became challenging.
+
+The other side-effect of table inheritance could be a positive or negative. When querying on the base table, all inherited tables data are also returned. In theory this could allow for an inheritance tree of schemata related to business requirements (think a master franchisor as the base table, and all franchisees as inheriting from this). It would also mean that `UPDATE` statements could also be applied once (to the template/base), further improving migration performance.
+
+This is the real reason this line of thought was even considered: I still feel that migrations are far too slow when dealing with large numbers of schemata.
+
+.. _Postgres Table Inheritance: http://www.postgresql.org/docs/current/static/tutorial-inheritance.html

@@ -34,6 +34,9 @@ class TemplateSchemaActivation(Forbidden):
 
 
 def get_schema_model():
+    """
+    Return the class that is currently set as the schema model.
+    """
     return apps.get_model(settings.BOARDINGHOUSE_SCHEMA_MODEL)
 
 
@@ -47,13 +50,17 @@ def _get_search_path():
 
 def _set_search_path(search_path):
     cursor = connection.cursor()
-    cursor.execute('SET search_path TO %s,{}'.format(settings.PUBLIC_SCHEMA), [search_path])
+    cursor.execute('SET search_path TO %s,{}'.format(settings.PUBLIC_SCHEMA),
+                   [search_path])
     cursor.close()
 
 
 def _schema_exists(schema_name, cursor=None):
     if cursor:
-        cursor.execute("SELECT schema_name FROM information_schema.schemata WHERE schema_name = %s", [schema_name])
+        cursor.execute('''SELECT schema_name
+                            FROM information_schema.schemata
+                           WHERE schema_name = %s''',
+                       [schema_name])
         return bool(cursor.fetchone())
 
     cursor = connection.cursor()
@@ -130,6 +137,8 @@ def activate_schema(schema_name):
     Activate the current schema: this will execute, in the database
     connection, something like:
 
+    .. code:: sql
+
         SET search_path TO "foo",public;
 
     It sends signals before and after that the schema will be, and was
@@ -150,7 +159,10 @@ def activate_schema(schema_name):
 
 def activate_template_schema():
     """
-    Activate the template schema. You probably don't want to do this.
+    Activate the template schema.
+
+    You probably don't want to do this. Sometimes you do (like for instance
+    to apply migrations).
     """
     from .signals import schema_pre_activate, schema_post_activate
 
@@ -190,7 +202,8 @@ REQUIRED_SHARED_MODELS = [
     'contenttypes.contenttype',
     'admin.logentry',
     'migrations.migration',
-    # Maybe lazy() these?
+    # Maybe lazy() these? They only apply if the values for the settings.*
+    # are not the defaults.
     lazy(lambda: settings.BOARDINGHOUSE_SCHEMA_MODEL),
     lazy(lambda: settings.AUTH_USER_MODEL),
 ]

@@ -1,7 +1,7 @@
 Development
 ===========
 
-|status| |coverage| |deps| |docs| |pypi| |versions| |downloads| |wheel|
+|status| |deps| |docs| |pypi| |versions| |downloads| |wheel|
 
 You can run tests across all supported versions using tox_. Make sure you have a checked-out version of the project from:
 

@@ -120,6 +120,12 @@ class AbstractSchema(SharedSchemaMixin, models.Model):
 
 
 class Schema(AbstractSchema):
+    """
+    The default schema model.
+
+    Unless you set `settings.BOARDINGHOUSE_SCHEMA_MODEL`, this model will
+    be used for storing the schema objects.
+    """
     users = models.ManyToManyField(settings.AUTH_USER_MODEL,
         blank=True, related_name='schemata',
         help_text=_(u'Which users may access data from this schema.')
@@ -161,6 +167,12 @@ models.Model.__eq__ = __eq__
 # Add a cached method that prevents user.schemata.all() queries from
 # being needlessly duplicated.
 def visible_schemata(user):
+    """The list of visible schemata for the given user.
+
+    This is fetched from the cache, if the value is available. There are
+    signal listeners that automatically invalidate the cache when conditions
+    that are detected that would indicate this value has changed.
+    """
     schemata = cache.get('visible-schemata-%s' % user.pk)
     if schemata is None:
         schemata = user.schemata.active()

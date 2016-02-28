@@ -1,7 +1,7 @@
 Included Extensions
 ===================
 
-.. _invite::
+.. _invite:
 
 boardinghouse.contrib.invite
 ----------------------------
