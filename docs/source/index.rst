@@ -8,7 +8,7 @@ django-boardinghouse
 
 Multi-tenancy for Django applications, using Postgres Schemas.
 
-|status| |deps| |docs| |pypi| |versions| |downloads| |wheel|
+|status| |coverage| |deps| |docs| |pypi| |versions| |downloads| |wheel|
 
 Contents:
 
@@ -34,8 +34,8 @@ Indices and tables
 .. |status| image:: https://img.shields.io/codeship/1bb05180-f1e5-0131-7f50-2a3c58ccd78c/default.svg
    :target: https://codeship.com/projects/27653
    :alt: Build status
-.. |coverage| image:: https://drone.io/bitbucket.org/schinckel/django-boardinghouse/files/coverage-status.svg
-   :target: https://drone.io/bitbucket.org/schinckel/django-boardinghouse/files/htmlcov/coverage.html
+.. |coverage| image:: https://coveralls.io/repos/bitbucket/schinckel/django-boardinghouse/badge.svg?branch=default
+   :target: https://coveralls.io/bitbucket/schinckel/django-boardinghouse?branch=default
    :alt: Coverage status
 .. |deps| image:: https://requires.io/bitbucket/schinckel/django-boardinghouse/requirements.svg?branch=default
    :target: https://requires.io/bitbucket/schinckel/django-boardinghouse/requirements.svg/?branch=default
