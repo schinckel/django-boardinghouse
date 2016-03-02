@@ -10,12 +10,27 @@
 .. image:: https://readthedocs.org/projects/django-boardinghouse/badge/
    :target: https://readthedocs.org/projects/django-boardinghouse/
    :alt: Documentation Status
+
+PyPI
+
 .. image:: https://img.shields.io/pypi/v/django-boardinghouse.svg
    :target: https://pypi.python.org/pypi/django-boardinghouse
    :alt: PyPI release version
 .. image:: https://img.shields.io/pypi/pyversions/django-boardinghouse.svg
    :alt: Supported python versions
+   :target: https://pypi.python.org/pypi/django-boardinghouse
 .. image:: https://img.shields.io/pypi/dw/django-boardinghouse.svg
    :alt: Download count
+   :target: https://pypi.python.org/pypi/django-boardinghouse
+.. image:: https://img.shields.io/pypi/format/django-boardinghouse.svg
+   :alt: Download format
+   :target: https://pypi.python.org/pypi/django-boardinghouse
 .. image:: https://img.shields.io/pypi/wheel/django-boardinghouse.svg
    :alt: Wheel available?
+   :target: https://pypi.python.org/pypi/django-boardinghouse
+.. image:: https://img.shields.io/pypi/status/django-boardinghouse.svg
+   :alt: Status
+   :target: https://pypi.python.org/pypi/django-boardinghouse
+.. image:: https://img.shields.io/pypi/implementation/django-boardinghouse.svg
+   :alt: Implementation
+   :target: https://pypi.python.org/pypi/django-boardinghouse
