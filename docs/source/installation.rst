@@ -7,9 +7,9 @@ Requirements
 
 * Django_
 * Postgres_
-* psycopg2_ or psycopg2cffi_ if using PyPy
+* psycopg2_ or psycopg2cffi_ if using PyPy_
 
-This application requires, and depends upon Django_ being installed. Only Django 1.7 and above is supported.
+This application requires, and depends upon Django_ being installed. Only Django 1.7 and above is supported, but if you are still using 1.7 then you really should upgrade!
 
 Postgres is required to allow schema to be used. psycopg2_ or psycopg2cffi_ is required as per normal Django/Postgres integration.
 
@@ -107,3 +107,4 @@ These all work without any required additions to your ``urls.py``.
 .. _PostgresApp: http://postgresapp.com/
 .. _psycopg2: https://pypi.python.org/pypi/psycopg2/
 .. _psycopg2cffi: https://pypi.python.org/pypi/psycopg2cffi
+.. _PyPy: https://pypy.org/

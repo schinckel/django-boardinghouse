@@ -62,8 +62,8 @@ Models will, by default, only live in a non-shared schema, unless they:
 
 There is an :doc:`example project <example>`.
 
-Postgres Table Inheritance
---------------------------
+Postgres Table Inheritance, and why it is not (yet?) used
+---------------------------------------------------------
 
 Using `Postgres Table Inheritance`_, it's possible to obtain a couple of extra features that could be useful in this context. These are worth outlining: however at this point in time, handling edge cases related to the inheritance of constraints means that the migration code itself became far more complex.
 

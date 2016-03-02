@@ -5,9 +5,6 @@ This replaces the ``loaddata`` command with one that takes a new
 option: ``--schema``. This is required when non-shared-models are
 included in the file(s) to be loaded, and the schema with this name
 will be used as a target.
-
-After completing the load, we ensure that any schemata that were
-loaded as part of this process exist as schemata in the database.
 """
 import django
 from django.core.management.commands import loaddata
@@ -53,7 +50,3 @@ class Command(loaddata.Command):
         super(Command, self).handle(*app_labels, **options)
 
         Schema().deactivate()
-
-        # Ensure we create any schemata that are new.
-        # But, we only want to do this if the schema table has been installed.
-        # _create_all_schemata()
