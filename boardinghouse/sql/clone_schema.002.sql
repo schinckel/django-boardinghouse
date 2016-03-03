@@ -12,7 +12,7 @@ DECLARE
 BEGIN
   SET search_path TO public;
 
-  RAISE NOTICE 'CREATE SCHEMA %', dest_schema;
+  RAISE INFO 'CREATE SCHEMA %', dest_schema;
   EXECUTE 'CREATE SCHEMA ' || dest_schema ;
 
   -- TODO: Find a way to make this sequence's owner is the correct column.
@@ -22,7 +22,7 @@ BEGIN
       FROM information_schema.SEQUENCES
      WHERE sequence_schema = source_schema
   LOOP
-    RAISE NOTICE 'CREATE SEQUENCE %.%', dest_schema, object;
+    RAISE DEBUG 'CREATE SEQUENCE %.%', dest_schema, object;
     EXECUTE 'CREATE SEQUENCE ' || dest_schema || '.' || object;
   END LOOP;
 
@@ -36,7 +36,7 @@ BEGIN
 
     -- Create a table with the relevant data in the new schema.
     buffer := dest_schema || '.' || object;
-    RAISE NOTICE 'CREATE TABLE % (LIKE %.% INCLUDING ALL)', buffer, source_schema, object;
+    RAISE DEBUG 'CREATE TABLE % (LIKE %.% INCLUDING ALL)', buffer, source_schema, object;
     EXECUTE 'CREATE TABLE ' || buffer || ' (LIKE ' || source_schema || '.' || object || ' INCLUDING ALL)';
 
     -- Ensure any default values that refer to the old schema now refer to the new schema.
@@ -48,7 +48,7 @@ BEGIN
          AND table_name = object
          AND column_default LIKE 'nextval(%' || source_schema || '%::regclass)'
     LOOP
-      RAISE NOTICE 'ALTER TABLE % ALTER COLUMN % SET DEFAULT %', buffer, column_, default_;
+      RAISE DEBUG 'ALTER TABLE % ALTER COLUMN % SET DEFAULT %', buffer, column_, default_;
       EXECUTE 'ALTER TABLE ' || buffer || ' ALTER COLUMN ' || column_ || ' SET DEFAULT ' || default_;
     END LOOP;
 
@@ -61,7 +61,7 @@ BEGIN
        WHERE tgrelid = (source_schema || '.' || object)::regclass::pg_catalog.oid
      AND NOT tgisinternal
     LOOP
-      RAISE NOTICE '%', trigger_;
+      RAISE DEBUG '%', trigger_;
       EXECUTE trigger_;
     END LOOP;
 
@@ -85,7 +85,7 @@ INNER JOIN pg_catalog.pg_constraint r
         ON (r.conrelid = t.oid)
        AND r.contype = 'f'
   LOOP
-    RAISE NOTICE 'ALTER TABLE %.% ADD CONSTRAINT % %', dest_schema, constraint_.table_name, constraint_.name, constraint_.definition;
+    RAISE DEBUG 'ALTER TABLE %.% ADD CONSTRAINT % %', dest_schema, constraint_.table_name, constraint_.name, constraint_.definition;
     EXECUTE 'ALTER TABLE ' || dest_schema || '.' || constraint_.table_name || ' ADD CONSTRAINT ' || constraint_.name || ' ' || constraint_.definition;
   END LOOP;
 
@@ -96,7 +96,7 @@ INNER JOIN pg_catalog.pg_constraint r
       FROM pg_views
      WHERE schemaname = source_schema
   LOOP
-    RAISE NOTICE 'CREATE VIEW %.% AS %', dest_schema, quote_ident(view_.viewname), replace(view_.definition, source_schema || '.', dest_schema || '.');
+    RAISE DEBUG 'CREATE VIEW %.% AS %', dest_schema, quote_ident(view_.viewname), replace(view_.definition, source_schema || '.', dest_schema || '.');
     EXECUTE 'CREATE VIEW ' || dest_schema || '.' || quote_ident(view_.viewname) || ' AS ' ||
       replace(view_.definition, source_schema || '.', dest_schema || '.');
   END LOOP;
