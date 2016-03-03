@@ -330,15 +330,3 @@ def _schema_table_exists():
     cursor = connection.cursor()
     cursor.execute("SELECT * FROM information_schema.tables WHERE table_name = %s", [table_name])
     return bool(cursor.fetchone())
-
-
-def _wrap_command(command):
-    def inner(self, *args, **kwargs):
-        cursor = connection.cursor()
-        # In the case of create table statements, we want to make sure
-        # they go to the public schema, but want reads to come from
-        # __template__.
-        cursor.execute('SET search_path TO {},__template__'.format(settings.PUBLIC_SCHEMA))
-        command(self, *args, **kwargs)
-        deactivate_schema()
-    return inner

@@ -130,7 +130,20 @@ WHERE c.oid = idx.indrelid
 
 
 def get_table_and_schema(sql, cursor):
-    parsed = sqlparse.parse(sql)[0]
+    try:
+        parsed = sqlparse.parse(sql)[0]
+    except IndexError:
+        # In the case of a CREATE * FUNCTION that is a plpgsql function, we
+        # know we won't be able to parse it. Functions should probably be in
+        # the public schema anyway.
+        sql_upper = sql.upper()
+        if (
+            'CREATE FUNCTION' in sql_upper or
+            'CREATE OR REPLACE FUNCTION' in sql_upper
+        ) and 'LANGUAGE PLPGSQL' in sql_upper:
+            return None, None
+        raise
+
     grouped = defaultdict(list)
     identifiers = []
 
