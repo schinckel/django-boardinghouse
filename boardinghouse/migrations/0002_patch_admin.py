@@ -13,7 +13,7 @@ PROTECT_SCHEMA_COLUMN = open(os.path.join(os.path.dirname(__file__), '..', 'sql'
 class ProtectSchemaColumn(migrations.RunSQL):
     def __init__(self, *args, **kwargs):
         self.sql = ''
-        self.reverse_sql = 'DROP FUNCTION protect_schema_column()'
+        self.reverse_sql = 'DROP FUNCTION reject_schema_column_change() CASCADE'
         self.state_operations = []
         self.hints = {}
 

@@ -2,7 +2,7 @@
 -- anyone changing the boardinghouse_schema.schema value for
 -- a saved schema.
 
-CREATE FUNCTION reject_schema_column_change() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION reject_schema_column_change() RETURNS TRIGGER AS $$
   BEGIN
     RAISE EXCEPTION 'Schema cannot be renamed' USING HINT = OLD.schema;
   END;

@@ -444,7 +444,8 @@ UPDATE i_love_ponies SET special_thing = 42 WHERE id = 2;
             self.assertEqual(
                 count,
                 found,
-                'Incorrect number of Ponies found in schema {schema}: expected {0}, found {1}'.format(count, found, **kwargs)
+                'Incorrect number of Ponies found in schema '
+                '{schema}: expected {0}, found {1}'.format(count, found, **kwargs)
             )
 
         pony_count(0)

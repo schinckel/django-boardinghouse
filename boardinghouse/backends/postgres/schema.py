@@ -145,6 +145,8 @@ def get_table_and_schema(sql, cursor):
         keywords = grouped[Keyword]
         # DROP INDEX does not have a table associated with it.
         # We will have to hit the database to see what schema(ta) have an index with that name.
+        if 'FUNCTION' in keywords:
+            return None, None
         if 'INDEX' in keywords and grouped[DDL][0] == 'DROP':
             return get_index_data(cursor, identifiers[0].get_name())[0], None
         if 'VIEW' in keywords or 'TABLE' in keywords:

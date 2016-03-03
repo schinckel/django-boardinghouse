@@ -27,3 +27,9 @@ test:
 	./manage.py test
 
 all: database virtualenv install-packages load-data
+
+remigrate:
+	./manage.py migrate boardinghouse 0001
+	./manage.py migrate
+
+test-for-coverage: all remigrate
