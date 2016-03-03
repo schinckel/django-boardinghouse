@@ -1,12 +1,17 @@
 from __future__ import unicode_literals
+from importlib import import_module
 
 from django.db import ProgrammingError
 from django.test import TestCase
+from django.conf import settings
 
-from boardinghouse.schema import get_schema_model
+from boardinghouse.schema import get_schema_model, Forbidden
+from boardinghouse.middleware import change_schema
+
 from ..models import AwareModel, User
 
 Schema = get_schema_model()
+SessionStore = import_module(settings.SESSION_ENGINE).SessionStore
 
 CREDENTIALS = {
     'username': 'test',
@@ -198,6 +203,22 @@ class TestMiddleware(TestCase):
 
     def test_missing_table_when_schema_set(self):
         self.assertRaises(ProgrammingError, self.client.get, '/sql/error/?sql=SELECT+1+FROM+foo')
+
+    def test_explicit_change_to_inactive_schema(self):
+        Schema.objects.mass_create('a', 'b', 'c')
+        user = User.objects.create_user(**CREDENTIALS)
+        user.schemata.add(*Schema.objects.all())
+        Schema.objects.get(schema='b').delete()
+
+        class Request(object):
+            pass
+
+        request = Request()
+        request.user = user
+        request.session = SessionStore()
+
+        with self.assertRaises(Forbidden):
+            change_schema(request, Schema.objects.get(schema='b'))
 
 
 class TestContextProcessor(TestCase):
