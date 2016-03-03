@@ -204,8 +204,8 @@ REQUIRED_SHARED_MODELS = [
     'migrations.migration',
     # Maybe lazy() these? They only apply if the values for the settings.*
     # are not the defaults.
-    lazy(lambda: settings.BOARDINGHOUSE_SCHEMA_MODEL),
-    lazy(lambda: settings.AUTH_USER_MODEL),
+    lazy(lambda: settings.BOARDINGHOUSE_SCHEMA_MODEL.lower()),
+    lazy(lambda: settings.AUTH_USER_MODEL.lower()),
 ]
 
 REQUIRED_SHARED_TABLES = [
@@ -238,15 +238,14 @@ def is_shared_model(model):
     app_model = '{m.app_label}.{m.model_name}'.format(m=model._meta).lower()
 
     # These should be case insensitive!
-
     if app_model in REQUIRED_SHARED_MODELS:
         return True
 
-    if app_model in settings.SHARED_MODELS:
+    if app_model in map(str.lower, settings.SHARED_MODELS):
         return True
 
     # Sometimes, we want a join table to be private.
-    if app_model in settings.PRIVATE_MODELS:
+    if app_model in map(str.lower, settings.PRIVATE_MODELS):
         return False
 
     # if all fields are auto or fk, then we are a join model,

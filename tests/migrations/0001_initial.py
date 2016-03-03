@@ -82,5 +82,18 @@ class Migration(migrations.Migration):
             name='a',
             field=models.ForeignKey(related_name='model_b', blank=True, to='tests.ModelA', null=True),
         ),
-
+        migrations.CreateModel(
+            name='SettingsSharedModel',
+            fields=[
+                ('id', models.AutoField())
+            ],
+            bases=(models.Model,)
+        ),
+        migrations.CreateModel(
+            name='SettingsPrivateModel',
+            fields=[
+                ('id', models.AutoField())
+            ],
+            bases=(models.Model,)
+        )
     ]

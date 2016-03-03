@@ -42,3 +42,6 @@ TEMPLATES = [
         'APP_DIRS': True,
     },
 ]
+
+SHARED_MODELS = ['tests.SettingsSharedModel']
+PRIVATE_MODELS = ['tests.SettingsPrivateModel']

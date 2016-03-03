@@ -10,16 +10,10 @@ class AwareModel(models.Model):
 
     objects = MultiSchemaManager()
 
-    class Meta:
-        app_label = 'tests'
-
 
 class NaiveModel(SharedSchemaModel):
     name = models.CharField(max_length=10, unique=True)
     status = models.BooleanField(default=False)
-
-    class Meta:
-        app_label = 'tests'
 
 
 # The existence of this model, although it may not have tests
@@ -29,9 +23,6 @@ class SelfReferentialModel(models.Model):
     name = models.CharField(max_length=10, unique=True)
     parent = models.ForeignKey('tests.SelfReferentialModel', related_name='children', null=True, blank=True)
 
-    class Meta:
-        app_label = 'tests'
-
 
 # If you have two models that _only_ have foreign keys, and they happen
 # to include references to one another, then you could get an infinite
@@ -40,16 +31,10 @@ class CoReferentialModelA(models.Model):
     name = models.CharField(max_length=10, unique=True)
     other = models.ForeignKey('tests.CoReferentialModelB', related_name='model_a', null=True, blank=True)
 
-    class Meta:
-        app_label = 'tests'
-
 
 class CoReferentialModelB(models.Model):
     name = models.CharField(max_length=10, unique=True)
     other = models.ForeignKey('tests.CoReferentialModelA', related_name='model_b', null=True, blank=True)
-
-    class Meta:
-        app_label = 'tests'
 
 
 # We do prefix testing to determine if a model is shared.
@@ -63,3 +48,11 @@ class ModelB(models.Model):
 
 class ModelBPrefix(models.Model):
     a = models.ManyToManyField(ModelA)
+
+
+class SettingsSharedModel(models.Model):
+    pass
+
+
+class SettingsPrivateModel(models.Model):
+    pass
