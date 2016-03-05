@@ -7,7 +7,8 @@ from django.conf import settings
 
 from boardinghouse.operations import AddField
 
-PROTECT_SCHEMA_COLUMN = open(os.path.join(os.path.dirname(__file__), '..', 'sql', 'protect_schema_column.001.sql')).read()
+PROTECT_SCHEMA_COLUMN = open(os.path.join(os.path.dirname(__file__),
+    '..', 'sql', 'protect_schema_column.001.sql')).read()
 
 
 class ProtectSchemaColumn(migrations.RunSQL):

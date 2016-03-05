@@ -1,15 +1,5 @@
 [
 {
-  "pk": "hamilton",
-  "model": "school.school",
-  "fields": {}
-},
-{
-  "pk": "naracoorte_hs",
-  "model": "school.school",
-  "fields": {}
-},
-{
   "pk": 1,
   "model": "school.staffmember",
   "fields": {

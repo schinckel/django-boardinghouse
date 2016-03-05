@@ -11,6 +11,16 @@ import boardinghouse.base
 CLONE_SCHEMA = open(os.path.join(os.path.dirname(__file__), '..', 'sql', 'clone_schema.001.sql')).read()
 
 
+def remove_all_schemata(apps, schema_editor):
+    Schema = apps.get_model(*settings.BOARDINGHOUSE_SCHEMA_MODEL.split('.'))
+    db_alias = schema_editor.connection.alias
+    sql = ';'.join([
+        'DROP SCHEMA {} CASCADE'.format(schema.schema)
+        for schema in Schema.objects.using(db_alias).all()
+    ])
+    schema_editor.connection.cursor().execute(sql)
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -20,6 +30,9 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunSQL(sql=CLONE_SCHEMA, reverse_sql='DROP FUNCTION clone_schema(text, text)'),
+        migrations.RunSQL(sql='CREATE SCHEMA __template__', reverse_sql='DROP SCHEMA __template__ CASCADE'),
+
         migrations.CreateModel(
             name='Schema',
             fields=[
@@ -34,8 +47,7 @@ class Migration(migrations.Migration):
             },
             bases=(boardinghouse.base.SharedSchemaMixin, models.Model),
         ),
-        # No reverse on these, as we want this migration to fail when going
-        # backwards: otherwise there are all sorts of really bad implications.
-        migrations.RunSQL(sql=CLONE_SCHEMA),
-        migrations.RunSQL(sql='CREATE SCHEMA __template__'),
+
+        migrations.RunPython(code=lambda apps, schema_editor: None, reverse_code=remove_all_schemata),
+
     ]
