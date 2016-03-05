@@ -22,8 +22,6 @@ SECRET_KEY = '*i4p1bb#tq%bqspzd4s^1^^^-xywkltwscmuhh9e7ny&lo^dus'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-TEMPLATE_DEBUG = True
-
 ALLOWED_HOSTS = []
 
 
@@ -47,6 +45,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'boardinghouse.middleware.SchemaMiddleware',
 )
 
 ROOT_URLCONF = 'project.urls'
@@ -63,6 +62,27 @@ DATABASES = {
         'NAME': 'school-demo',
     }
 }
+
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.templates.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'OPTIONS': {
+            'context_processors': [
+                'django.contrib.auth.context_processors.auth',
+                'django.template.context_processors.debug',
+                'django.template.context_processors.i18n',
+                'django.template.context_processors.media',
+                'django.template.context_processors.static',
+                'django.template.context_processors.tz',
+                'django.contrib.messages.context_processors.messages',
+                'boardinghouse.context_processors.schemata',
+            ],
+            'loaders': []
+        }
+    }
+]
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.6/topics/i18n/
