@@ -17,11 +17,16 @@ class TestSettings(TestCase):
 
     @modify_settings()
     def test_database_engine_not_valid(self):
+        original = settings.DATABASES['default']['ENGINE']
         settings.DATABASES['default']['ENGINE'] = 'foo.bar.baz'
-        errors = apps.check_db_backend()
-        self.assertEqual(1, len(errors))
-        self.assertTrue(isinstance(errors[0], checks.Error))
-        self.assertEqual('boardinghouse.E001', errors[0].id)
+        # Django 1.7 testing on codeship breaks without this?
+        try:
+            errors = apps.check_db_backend()
+            self.assertEqual(1, len(errors))
+            self.assertTrue(isinstance(errors[0], checks.Error))
+            self.assertEqual('boardinghouse.E001', errors[0].id)
+        finally:
+            settings.DATABASES['default']['ENGINE'] = original
 
     @modify_settings(MIDDLEWARE_CLASSES={'remove': [apps.MIDDLEWARE]})
     def test_middleware_missing(self):
