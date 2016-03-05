@@ -1,7 +1,11 @@
 from __future__ import unicode_literals
 
 from django.apps import AppConfig
-from django.core.checks import register, Error
+from django.core.checks import register, Error, Warning
+
+CONTEXT = 'boardinghouse.context_processors.schemata'
+MIDDLEWARE = 'boardinghouse.middleware.SchemaMiddleware'
+DB_ENGINES = ['boardinghouse.backends.postgres']
 
 
 class BoardingHouseConfig(AppConfig):
@@ -12,12 +16,8 @@ class BoardingHouseConfig(AppConfig):
 
     def ready(self):
         load_app_settings()
-        inject_required_settings()
         monkey_patch_user()
         register_signals()
-
-
-DB_ENGINES = ['boardinghouse.backends.postgres']
 
 
 @register('settings')
@@ -47,6 +47,7 @@ def check_session_middleware_installed(app_configs=None, **kwargs):
     be active for a given request.
     """
     from django.conf import settings
+
     for middleware in settings.MIDDLEWARE_CLASSES:
         if middleware.endswith('.SessionMiddleware'):
             return []
@@ -56,25 +57,6 @@ def check_session_middleware_installed(app_configs=None, **kwargs):
         hint="Add 'django.contrib.sessions.middleware.SessionMiddleware' to your MIDDLEWARE_CLASSES",
         id='boardinghouse.E002',
     )]
-
-
-def monkey_patch_user():
-    """
-    Add a property to the defined user model that gives us the visible schemata.
-
-    Add properties to :class:`django.contrib.auth.models.AnonymousUser` that
-    return empty querysets for visible and all schemata.
-    """
-    from django.contrib.auth import get_user_model, models
-    from .schema import get_schema_model
-    from .models import visible_schemata
-    Schema = get_schema_model()
-    User = get_user_model()
-    if not getattr(User, 'visible_schemata', None):
-        User.visible_schemata = property(visible_schemata)
-
-    models.AnonymousUser.schemata = Schema.objects.none()
-    models.AnonymousUser.visible_schemata = Schema.objects.none()
 
 
 def load_app_settings():
@@ -94,29 +76,90 @@ def load_app_settings():
                 setattr(settings, key, value)
 
 
-def inject_required_settings():
-    """Inject our middleware and context processor.
-
-    :class:`boardinghouse.middleware.SchemaMiddleware`
-    :class:`boardinghouse.context_processors.schemata`
-    """
+@register('settings')
+def check_middleware_installed(app_configs=None, **kwargs):
     from django.conf import settings
 
     MIDDLEWARE = 'boardinghouse.middleware.SchemaMiddleware'
-    CONTEXT = 'boardinghouse.context_processors.schemata'
+    errors = []
 
     if MIDDLEWARE not in settings.MIDDLEWARE_CLASSES:
-        settings.MIDDLEWARE_CLASSES += type(settings.MIDDLEWARE_CLASSES)([MIDDLEWARE])
+        errors.append(Error(
+            'Missing required middleware',
+            hint="Add '{}' to settings.MIDDLEWARE_CLASSES".format(MIDDLEWARE),
+            id='boardinghouse.E003'
+        ))
+
+    return errors
+
+
+@register('settings')
+def check_context_processor_installed(app_configs=None, **kwargs):
+    from django.conf import settings
+
+    errors = []
 
     if hasattr(settings, 'TEMPLATES'):
-        for engine in settings.TEMPLATES:
-            if 'OPTIONS' not in engine:
-                engine['OPTIONS'] = {}
-            engine['OPTIONS']['context_processors'] = [CONTEXT]
-
-    if hasattr(settings, 'TEMPLATE_CONTEXT_PROCESSORS'):
+        for i, engine in enumerate(settings.TEMPLATES):
+            if CONTEXT not in engine.get('OPTIONS', {}).get('context_processors', []):
+                errors.append(Warning(
+                    'Missing boardinghouse context processor',
+                    hint="Add '{1}' to settings.TEMPLATES[{0}]"
+                         "['OPTIONS']['context_processors']".format(i, CONTEXT),
+                    id='boardinghouse.W001'
+                ))
+    elif hasattr(settings, 'TEMPLATE_CONTEXT_PROCESSORS'):
         if CONTEXT not in settings.TEMPLATE_CONTEXT_PROCESSORS:
-            settings.TEMPLATE_CONTEXT_PROCESSORS += type(settings.TEMPLATE_CONTEXT_PROCESSORS)([CONTEXT])
+            errors.append(Warning(
+                'Missing boardinghouse context processor',
+                hint="Add '{}' to settings.TEMPLATE_CONTEXT_PROCESSORS".format(CONTEXT),
+                id='boardinghouse.W001'
+            ))
+    else:
+        errors.append(Warning(
+            'Missing boardinghouse context processor (no TEMPLATES defined)',
+            hint="Configure settings.TEMPLATES and add '{}'".format(CONTEXT),
+            id='boardinghouse.W001',
+        ))
+
+    return errors
+
+
+@register('settings')
+def check_installed_before_admin(app_configs=None, **kwargs):
+    from django.conf import settings
+
+    errors = []
+
+    if 'django.contrib.admin' in settings.INSTALLED_APPS:
+        admin = settings.INSTALLED_APPS.index('django.contrib.admin')
+        local = settings.INSTALLED_APPS.index('boardinghouse')
+        if admin < local:
+            errors.append(Error(
+                "boardinghouse must be installed prior to 'django.contrib.admin'",
+                id='boardinghouse.E004',
+            ))
+
+    return errors
+
+
+def monkey_patch_user():
+    """
+    Add a property to the defined user model that gives us the visible schemata.
+
+    Add properties to :class:`django.contrib.auth.models.AnonymousUser` that
+    return empty querysets for visible and all schemata.
+    """
+    from django.contrib.auth import get_user_model, models
+    from .schema import get_schema_model
+    from .models import visible_schemata
+    Schema = get_schema_model()
+    User = get_user_model()
+    if not getattr(User, 'visible_schemata', None):
+        User.visible_schemata = property(visible_schemata)
+
+    models.AnonymousUser.schemata = Schema.objects.none()
+    models.AnonymousUser.visible_schemata = Schema.objects.none()
 
 
 def register_signals():

@@ -27,7 +27,17 @@ You will need to use the provided database engine in your ``settings.DATABASES``
 
     'boardinghouse.backends.postgres'
 
-``django-boardinghouse`` automatically installs a class to your middleware (see :ref:`middleware`), and a context processor (see :ref:`template_variables`). If you have the admin installed, it adds a column to the admin :class:`django.contrib.admin.models.LogEntry` class, to store the object schema when applicable.
+You will need to add the provided middleware to your ``settings.MIDDLEWARE_CLASSES``::
+
+    'boardinghouse.middleware.SchemaMiddleware'
+
+You will probably also want to install the context processor::
+
+   'boardinghouse.context_processors.schemata'
+
+Where this needs to go depends on your version of django: in 1.8 and newer it goes in ``settings.TEMPLATES...['context_processors']``. In older versions, it goes in ``settings.TEMPLATE_CONTEXT_PROCESSORS``.
+
+If you have the admin installed, it adds a column to the admin :class:`django.contrib.admin.models.LogEntry` class, to store the object schema when applicable.
 
 It's probably much easier to start using ``django-boardinghouse`` right from the beginning of a project: trying to split an existing database may be possible, but is not supported at this stage.
 
@@ -56,12 +66,6 @@ Management commands
 
 When ``django-boardinghouse`` has been installed, it will override the following commands:
 
-.. automodule:: boardinghouse.management.commands.migrate
-  :noindex:
-
-.. automodule:: boardinghouse.management.commands.flush
-  :noindex:
-
 .. automodule:: boardinghouse.management.commands.loaddata
   :noindex:
 
@@ -74,7 +78,7 @@ When ``django-boardinghouse`` has been installed, it will override the following
 Middleware
 ----------
 
-The included middleware is always installed:
+The included middleware must be installed:
 
 .. autoclass:: boardinghouse.middleware.SchemaMiddleware
   :noindex:
@@ -84,8 +88,7 @@ The included middleware is always installed:
 Template Variables
 ------------------
 
-There is an included ``CONTEXT_PROCESSOR`` that is always added to the
-settings for a project using django-boardinghouse.
+You will probably want to install the context processor: this will ensure that there is always a context variable ``schemata``.
 
 .. autofunction:: boardinghouse.context_processors.schemata
   :noindex:
