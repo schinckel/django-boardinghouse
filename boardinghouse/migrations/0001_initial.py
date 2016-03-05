@@ -20,9 +20,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunSQL(sql=CLONE_SCHEMA, reverse_sql='DROP FUNCTION clone_schema(text, text)'),
-        migrations.RunSQL(sql='CREATE SCHEMA __template__', reverse_sql='DROP SCHEMA __template__ CASCADE'),
-
         migrations.CreateModel(
             name='Schema',
             fields=[
@@ -37,4 +34,8 @@ class Migration(migrations.Migration):
             },
             bases=(boardinghouse.base.SharedSchemaMixin, models.Model),
         ),
+        # No reverse on these, as we want this migration to fail when going
+        # backwards: otherwise there are all sorts of really bad implications.
+        migrations.RunSQL(sql=CLONE_SCHEMA),
+        migrations.RunSQL(sql='CREATE SCHEMA __template__'),
     ]

@@ -66,8 +66,9 @@ DATABASES = {
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.templates.backends.django.DjangoTemplates',
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [],
+        'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.contrib.auth.context_processors.auth',
@@ -79,7 +80,6 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'boardinghouse.context_processors.schemata',
             ],
-            'loaders': []
         }
     }
 ]
