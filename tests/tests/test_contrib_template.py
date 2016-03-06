@@ -18,6 +18,9 @@ class TestContribTemplate(TestCase):
     def test_templates_cannot_be_activated_normally(self):
         pass
 
+    def test_templates_can_be_activated_with_permission(self):
+        pass
+
     def test_cloning_templates_clones_data(self):
         pass
 

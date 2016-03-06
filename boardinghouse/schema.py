@@ -215,11 +215,13 @@ REQUIRED_SHARED_TABLES = [
 
 def _is_join_model(model):
     """
-    We define a model as a join model if all of it's
-    fields are related fields (or it's primary key),
-    and there is more than just one field.
+    We define a join model to be one that has no fields that are
+    not related fields (excluding the primary key), and that has
+    more than one field.
 
-    I am not 100% happy with this definition.
+    This may be a satisfactory definition, as a through model,
+    which has non-related fields, must have been explicitly declared,
+    and all automatic join models will have just (pk, from, to).
     """
     return all([
         (field.primary_key or field.rel)
