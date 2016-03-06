@@ -54,9 +54,11 @@ def change_schema(request, schema):
         # We have some special-casing here for template schemata, I'd like to
         # resolve that, and allow hooks for any type of extra schemata model to
         # go here.
-        if ('boardinghouse.contrib.template' in settings.INSTALLED_APPS and
+        if (
+            'boardinghouse.contrib.template' in settings.INSTALLED_APPS and
             user.has_perm('template.activate_schematemplate')
         ):
+
             from boardinghouse.contrib.template.models import SchemaTemplate
             try:
                 SchemaTemplate.objects.get(pk=schema.split('__template_')[1])
