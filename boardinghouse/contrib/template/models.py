@@ -3,9 +3,9 @@ from django.db import models
 from boardinghouse.base import SharedSchemaMixin
 
 
-class TemplateSchema(SharedSchemaMixin, models.Model):
+class SchemaTemplate(SharedSchemaMixin, models.Model):
     """
-    A ``boardinghouse.contrib.template.models.TemplateSchema`` can be used
+    A ``boardinghouse.contrib.template.models.SchemaTemplate`` can be used
     for creating a new schema complete with some initial data.
     """
     template_schema_id = models.AutoField(primary_key=True)

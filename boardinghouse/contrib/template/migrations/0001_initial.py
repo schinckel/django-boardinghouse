@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='TemplateSchema',
+            name='SchemaTemplate',
             fields=[
                 ('template_schema_id', models.AutoField(primary_key=True, serialize=False)),
                 ('name', models.CharField(max_length=128, unique=True)),
