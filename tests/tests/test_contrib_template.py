@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.contrib.auth.models import User, Permission
 
 from boardinghouse.contrib.template.models import SchemaTemplate
 from boardinghouse.schema import (
@@ -6,6 +7,11 @@ from boardinghouse.schema import (
     _schema_exists,
     get_active_schema_name,
 )
+
+CREDENTIALS = {
+    'username': 'username',
+    'password': 'password'
+}
 
 
 class TestContribTemplate(TestCase):
@@ -16,10 +22,19 @@ class TestContribTemplate(TestCase):
         self.assertEqual(get_active_schema_name(), template.schema)
 
     def test_templates_cannot_be_activated_normally(self):
-        pass
+        template = SchemaTemplate.objects.create(name='Foo')
+        User.objects.create_user(**CREDENTIALS)
+        self.client.login(**CREDENTIALS)
+        response = self.client.get('/__change_schema__/{}/'.format(template.schema))
+        self.assertEquals(403, response.status_code)
 
     def test_templates_can_be_activated_with_permission(self):
-        pass
+        template = SchemaTemplate.objects.create(name='Foo')
+        user = User.objects.create_user(**CREDENTIALS)
+        user.user_permissions.add(Permission.objects.get(codename='activate_schematemplate'))
+        self.client.login(**CREDENTIALS)
+        response = self.client.get('/__change_schema__/{}/'.format(template.schema))
+        self.assertEquals(200, response.status_code)
 
     def test_cloning_templates_clones_data(self):
         pass

@@ -218,7 +218,7 @@ class TestMiddleware(TestCase):
         request.session = SessionStore()
 
         with self.assertRaises(Forbidden):
-            change_schema(request, Schema.objects.get(schema='b'))
+            change_schema(request, 'b')
 
 
 class TestContextProcessor(TestCase):
