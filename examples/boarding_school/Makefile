@@ -6,7 +6,7 @@ database:
 	createdb school-demo
 
 virtualenv:
-	python3 -mvenv .boarding-school
+	virtualenv --python `which python3` .boarding-school
 
 install-packages:
 	${PIP} install pip --upgrade
