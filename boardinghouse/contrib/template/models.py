@@ -1,5 +1,4 @@
 from django.db import models
-from django.dispatch import receiver
 
 from boardinghouse.base import SharedSchemaMixin
 
@@ -19,6 +18,9 @@ class TemplateSchema(SharedSchemaMixin, models.Model):
         verbose_name_plural = u'template schemata'
 
     def __unicode__(self):
+        return self.name
+
+    def __str__(self):
         return self.name
 
     @property

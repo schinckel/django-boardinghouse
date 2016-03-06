@@ -169,18 +169,17 @@ def register_signals():
 
     Schema = get_schema_model()
 
+    # How do we identify that this schema should be created from a different
+    # template? Where can we get that information?
     models.signals.post_save.connect(signals.create_schema,
                                      sender=Schema,
-                                     weak=True,
                                      dispatch_uid='create-schema')
 
-    models.signals.post_init.connect(signals.inject_schema_attribute,
-                                     sender=None, weak=True)
+    models.signals.post_init.connect(signals.inject_schema_attribute, sender=None)
 
     models.signals.m2m_changed.connect(signals.invalidate_cache,
-                                       sender=Schema.users.through, weak=True)
+                                       sender=Schema.users.through)
 
-    models.signals.post_save.connect(signals.invalidate_all_user_caches,
-                                     sender=Schema, weak=True)
+    models.signals.post_save.connect(signals.invalidate_all_user_caches, sender=Schema)
 
-    models.signals.pre_migrate.connect(signals.invalidate_all_caches, weak=True)
+    models.signals.pre_migrate.connect(signals.invalidate_all_caches)

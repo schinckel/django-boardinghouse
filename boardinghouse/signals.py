@@ -64,17 +64,26 @@ def create_schema(sender, instance, created, **kwargs):
     if created:
         schema_name = instance.schema
 
+        # How can we work out what values need to go here?
+        template_name = '__template__'
+        include_records = False
+
         cursor = connection.cursor()
 
         if _schema_exists(schema_name):
             LOGGER.warn('Attempt to create an existing schema: %s' % schema_name)
             return
 
-        cursor.execute("SELECT clone_schema('__template__', %s)", [schema_name])
+        cursor.execute("SELECT clone_schema(%s, %s, %s)", [
+            template_name,
+            schema_name,
+            include_records
+        ])
         cursor.close()
 
         if schema_name != '__template__':
-            schema_created.send(sender=get_schema_model(), schema=schema_name)
+            schema_created.send(sender=get_schema_model(),
+                                schema=schema_name)
 
         LOGGER.info('New schema created: %s' % schema_name)
 
