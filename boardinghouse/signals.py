@@ -71,7 +71,7 @@ def create_schema(sender, instance, created, **kwargs):
         cursor = connection.cursor()
 
         if _schema_exists(schema_name):
-            LOGGER.warn('Attempt to create an existing schema: %s' % schema_name)
+            LOGGER.warn('Attempt to create an existing schema: %s', schema_name)
             return
 
         cursor.execute("SELECT clone_schema(%s, %s, %s)", [
@@ -85,7 +85,20 @@ def create_schema(sender, instance, created, **kwargs):
             schema_created.send(sender=get_schema_model(),
                                 schema=schema_name)
 
-        LOGGER.info('New schema created: %s' % schema_name)
+        LOGGER.info('New schema created: %s', schema_name)
+
+
+def drop_schema(sender, instance, **kwargs):
+    schema_name = instance.schema
+
+    cursor = connection.cursor()
+
+    if not _schema_exists(schema_name):
+        LOGGER.warn('Attempt to drop a non-existent schema: %s', schema_name)
+        return
+
+    cursor.execute("DROP SCHEMA %s CASCADE", [schema_name])
+    LOGGER.info('Schema dropped: %s', schema_name)
 
 
 def inject_schema_attribute(sender, instance, **kwargs):

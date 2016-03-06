@@ -1,5 +1,5 @@
 from django.apps import AppConfig
-from django.db import models, connection
+from django.db import models
 
 
 class BoardingHouseTemplateConfig(AppConfig):
@@ -7,14 +7,10 @@ class BoardingHouseTemplateConfig(AppConfig):
 
     def ready(self):
         from boardinghouse import signals
-        from .models import TemplateSchema
+        from .models import SchemaTemplate
 
         models.signals.post_save.connect(signals.create_schema,
-                                         sender=TemplateSchema,
-                                         dispatch_uid='create-template-schema')
+                                         sender=SchemaTemplate,
+                                         dispatch_uid='create-schema-template')
 
-        def delete_template_schema(sender, instance, **kwargs):
-            if isinstance(instance, TemplateSchema):
-                connection.cursor().execute('DROP SCHEMA {} CASCADE'.format(instance.schema))
-
-        models.signals.post_delete.connect(delete_template_schema, sender=TemplateSchema, weak=False)
+        models.signals.post_delete.connect(signals.drop_schema, sender=SchemaTemplate)

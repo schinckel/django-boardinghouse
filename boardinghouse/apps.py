@@ -175,6 +175,8 @@ def register_signals():
                                      sender=Schema,
                                      dispatch_uid='create-schema')
 
+    models.signals.post_delete.connect(signals.drop_schema, sender=Schema)
+
     models.signals.post_init.connect(signals.inject_schema_attribute, sender=None)
 
     models.signals.m2m_changed.connect(signals.invalidate_cache,
