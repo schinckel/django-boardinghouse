@@ -5,6 +5,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'boardinghouse',
+    'boardinghouse.contrib.template',
     'django.contrib.admin',
     # 'boardinghouse.contrib.invite',
     'tests',

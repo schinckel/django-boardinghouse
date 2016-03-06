@@ -19,13 +19,10 @@ class TemplateSchema(SharedSchemaMixin, models.Model):
 
     @property
     def schema(self):
-        return '__template_%i' % self.pk
+        return '__template_{}'.format(self.pk)
 
     @classmethod
     def create_from_schema(cls, schema='__template__'):
-        pass
-
-    def update_from_schema(self, schema):
         pass
 
     def clone_to_schema(self, schema):
