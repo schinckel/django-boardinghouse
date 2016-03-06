@@ -108,11 +108,11 @@ def invalidate_cache(sender, **kwargs):
     user's visible schemata items.
     """
     if kwargs['reverse']:
-        cache.delete('visible-schemata-%s' % kwargs['instance'].pk)
+        cache.delete('visible-schemata-{instance.pk}'.format(**kwargs))
     else:
         if kwargs['pk_set']:
             for pk in kwargs['pk_set']:
-                cache.delete('visible-schemata-%s' % pk)
+                cache.delete('visible-schemata-{}'.format(pk))
 
 
 def invalidate_all_user_caches(sender, **kwargs):
@@ -123,7 +123,7 @@ def invalidate_all_user_caches(sender, **kwargs):
     cache.delete('active-schemata')
     cache.delete('all-schemata')
     for user in kwargs['instance'].users.values('pk'):
-        cache.delete('visible-schemata-%s' % user['pk'])
+        cache.delete('visible-schemata-{pk}'.format(**user))
 
 
 def invalidate_all_caches(sender, **kwargs):
