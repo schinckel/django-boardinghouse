@@ -173,9 +173,10 @@ def register_signals():
     # template? Where can we get that information?
     models.signals.post_save.connect(signals.create_schema,
                                      sender=Schema,
+                                     weak=False,
                                      dispatch_uid='create-schema')
 
-    models.signals.post_delete.connect(signals.drop_schema, sender=Schema)
+    models.signals.post_delete.connect(signals.drop_schema, sender=Schema, weak=False)
 
     models.signals.post_init.connect(signals.inject_schema_attribute, sender=None)
 

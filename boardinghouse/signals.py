@@ -71,8 +71,7 @@ def create_schema(sender, instance, created, **kwargs):
         cursor = connection.cursor()
 
         if _schema_exists(schema_name):
-            LOGGER.warn('Attempt to create an existing schema: %s', schema_name)
-            return
+            raise ValueError('Attempt to create an existing schema: {}'.format(schema_name))
 
         cursor.execute("SELECT clone_schema(%s, %s, %s)", [
             template_name,
@@ -89,16 +88,16 @@ def create_schema(sender, instance, created, **kwargs):
 
 
 def drop_schema(sender, instance, **kwargs):
-    schema_name = instance.schema
-
     cursor = connection.cursor()
+    # Is there a way to do this without opening up an SQL injection hole?
+    cursor.execute("DROP SCHEMA IF EXISTS {} CASCADE".format(instance.schema))
+    LOGGER.info('Schema dropped: %s', instance.schema)
 
-    if not _schema_exists(schema_name):
-        LOGGER.warn('Attempt to drop a non-existent schema: %s', schema_name)
-        return
 
-    cursor.execute("DROP SCHEMA %s CASCADE", [schema_name])
-    LOGGER.info('Schema dropped: %s', schema_name)
+def drop_multiple_schemata(sender, schemata, **kwargs):
+    cursor = connection.cursor()
+    schemata = ', '.join(schema.schema for schema in schemata)
+    cursor.execute("DROP SCHEMA IF EXISTS {} CASCADE".format(schemata))
 
 
 def inject_schema_attribute(sender, instance, **kwargs):

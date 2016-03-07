@@ -1,6 +1,7 @@
 from django.test import TestCase
 from django.db import connection
 from django import forms
+from django.utils import six
 
 from boardinghouse.schema import (
     activate_schema, deactivate_schema,
@@ -75,10 +76,55 @@ class TestPostgresSchemaCreation(TestCase):
 
     def test_mass_create(self):
         Schema.objects.mass_create('a', 'b', 'c')
-        self.assertEquals(
-            ['a', 'b', 'c'],
-            list(Schema.objects.values_list('schema', flat=True))
-        )
+        six.assertCountEqual(self, ['a', 'b', 'c'],
+            Schema.objects.values_list('pk', flat=True))
+
+    def test_schema_already_exists(self):
+        cursor = connection.cursor()
+        cursor.execute('CREATE SCHEMA already_here')
+        with self.assertRaises(ValueError):
+            Schema.objects.mass_create('already_here')
+
+
+class TestSchemaDrop(TestCase):
+    def test_dropping_schema_model(self):
+        Schema.objects.mass_create('a', 'b')
+        Schema.objects.get(schema='a').delete(drop=True)
+        self.assertEquals(['b'],
+            list(Schema.objects.values_list('pk', flat=True)))
+        cursor = connection.cursor()
+        cursor.execute(SCHEMA_QUERY, ['a'])
+        self.assertFalse(cursor.fetchone())
+
+    def test_dropping_schema_queryset(self):
+        Schema.objects.mass_create('a', 'b', 'c')
+        Schema.objects.filter(schema__in=['b', 'c']).delete(drop=True)
+        six.assertCountEqual(self, ['a'],
+            Schema.objects.values_list('pk', flat=True))
+
+    def test_delete_is_soft_by_default_model(self):
+        Schema.objects.mass_create('a', 'b', 'c')
+        Schema.objects.get(schema='b').delete()
+        six.assertCountEqual(self, ['a', 'b', 'c'],
+            Schema.objects.values_list('pk', flat=True))
+
+        six.assertCountEqual(self, ['a', 'c'],
+            Schema.objects.active().values_list('schema', flat=True))
+
+    def test_delete_is_soft_by_default_queryset(self):
+        Schema.objects.mass_create('a', 'b', 'c', 'd')
+        Schema.objects.filter(schema__in=['b', 'd']).delete()
+        self.assertSequenceEqual(['a', 'b', 'c', 'd'],
+            list(Schema.objects.order_by('schema').values_list('pk', flat=True)))
+
+        self.assertSequenceEqual(['a', 'c'],
+            list(Schema.objects.active().values_list('schema', flat=True)))
+
+    def test_delete_of_non_existent_schema_is_fine_thankyou(self):
+        Schema.objects.mass_create('a', 'b', 'c')
+        cursor = connection.cursor()
+        cursor.execute('DROP SCHEMA a CASCADE')
+        Schema.objects.get(schema='a').delete()
 
 
 class TestSchemaClassValidationLogic(TestCase):
