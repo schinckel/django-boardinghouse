@@ -94,12 +94,6 @@ def drop_schema(sender, instance, **kwargs):
     LOGGER.info('Schema dropped: %s', instance.schema)
 
 
-def drop_multiple_schemata(sender, schemata, **kwargs):
-    cursor = connection.cursor()
-    schemata = ', '.join(schema.schema for schema in schemata)
-    cursor.execute("DROP SCHEMA IF EXISTS {} CASCADE".format(schemata))
-
-
 def inject_schema_attribute(sender, instance, **kwargs):
     """
     A signal listener that injects the current schema on the object
