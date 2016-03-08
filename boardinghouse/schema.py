@@ -109,17 +109,6 @@ def get_active_schemata():
     return schemata
 
 
-def get_all_schemata():
-    """
-    Get a (cached) list of all schemata.
-    """
-    schemata = cache.get('all-schemata')
-    if schemata is None:
-        schemata = get_schema_model().objects.all()
-        cache.set('all-schemata', schemata)
-    return schemata
-
-
 def _get_schema(schema_name):
     """
     Get the matching active schema object for the given name,

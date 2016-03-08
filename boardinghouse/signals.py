@@ -127,7 +127,6 @@ def invalidate_all_user_caches(sender, **kwargs):
     who have access to the sender instance (schema).
     """
     cache.delete('active-schemata')
-    cache.delete('all-schemata')
     for user in kwargs['instance'].users.values('pk'):
         cache.delete('visible-schemata-{pk}'.format(**user))
 
@@ -138,4 +137,3 @@ def invalidate_all_caches(sender, **kwargs):
     """
     if sender.name == 'boardinghouse':
         cache.delete('active-schemata')
-        cache.delete('all-schemata')
