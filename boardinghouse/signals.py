@@ -25,17 +25,31 @@ Signals that are fired as part of the django-boardinghouse project.
 
     Sent when a user-session has changed it's schema.
 
+.. data:: schema_aware_operation
+
+    Sent when a migration operation that needs to be applied to each schema is
+    due to be applied. Internally, this signal is used to ensure that the
+    template schema and all currently existing schemata have the migration
+    applied to them.
+
+    This is also used by the ``contrib.template`` app to ensure that operations
+    are applied to :class:`boardinghouse.contrib.template.models.SchemaTemplate`
+    instances.
 """
 
 import logging
 
-from django.dispatch import Signal
-from django.db import connection
 from django.core.cache import cache
+from django.db import connection
+from django.dispatch import Signal
 
 from .schema import (
-    _schema_exists, is_shared_model, get_schema_model,
-    get_active_schema_name
+    activate_template_schema,
+    get_active_schema_name,
+    get_schema_model,
+    is_shared_model,
+    _schema_exists,
+    _schema_table_exists,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -51,6 +65,8 @@ schema_post_activate = Signal(providing_args=["schema"])
 session_requesting_schema_change = Signal(providing_args=["user", "schema", "session"])
 session_schema_changed = Signal(providing_args=["user", "schema", "session"])
 
+schema_aware_operation = Signal(providing_args=['db_table', 'sql', 'params', 'execute'])
+
 
 # Signal handlers.
 
@@ -60,6 +76,8 @@ def create_schema(sender, instance, created, **kwargs):
 
     We do this in a signal handler instead of .save() so we can catch
     those created using raw methods.
+
+    How do we indicate when we should be using a different template?
     """
     if created:
         schema_name = instance.schema
@@ -137,3 +155,15 @@ def invalidate_all_caches(sender, **kwargs):
     """
     if sender.name == 'boardinghouse':
         cache.delete('active-schemata')
+
+
+def execute_on_all_schemata(sender, db_table, function, **kwargs):
+    if _schema_table_exists():
+        for each in get_schema_model().objects.all():
+            each.activate()
+            function(*kwargs.get('args', []), **kwargs.get('kwargs', {}))
+
+
+def execute_on_template_schema(sender, db_table, function, **kwargs):
+    activate_template_schema()
+    function(*kwargs.get('args', []), **kwargs.get('kwargs', {}))

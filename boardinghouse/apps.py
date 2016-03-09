@@ -183,6 +183,9 @@ def register_signals():
     models.signals.m2m_changed.connect(signals.invalidate_cache,
                                        sender=Schema.users.through)
 
-    models.signals.post_save.connect(signals.invalidate_all_user_caches, sender=Schema)
+    models.signals.post_save.connect(signals.invalidate_all_user_caches, sender=Schema, weak=False)
 
-    models.signals.pre_migrate.connect(signals.invalidate_all_caches)
+    models.signals.pre_migrate.connect(signals.invalidate_all_caches, weak=False)
+
+    signals.schema_aware_operation.connect(signals.execute_on_all_schemata, weak=False)
+    signals.schema_aware_operation.connect(signals.execute_on_template_schema, weak=False)

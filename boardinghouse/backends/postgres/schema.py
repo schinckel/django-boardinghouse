@@ -8,9 +8,8 @@ from django.conf import settings
 import sqlparse
 from sqlparse.tokens import DDL, DML, Keyword
 
-from ...schema import is_shared_table
-from ...schema import get_schema_model, _schema_table_exists
-from ...schema import deactivate_schema, activate_template_schema
+from ...schema import deactivate_schema, is_shared_table
+from ...signals import schema_aware_operation
 
 
 def get_constraints(cursor, table_name):
@@ -171,8 +170,9 @@ def get_table_and_schema(sql, cursor):
             if len(identifiers) > 1:
                 return identifiers[1].get_name(), identifiers[1].get_parent_name()
 
-    # We also care about other non-DDL statements, as the implication is that they
-    # should apply to every known schema, if we are updating as part of a migration.
+    # We also care about other non-DDL statements, as the implication is that
+    # they should apply to every known schema, if we are updating as part of a
+    # migration.
     if grouped[DML] and grouped[DML][0] in ['INSERT INTO', 'UPDATE', 'DELETE FROM']:
         if identifiers:
             return identifiers[0].get_name(), identifiers[0].get_parent_name()
@@ -196,20 +196,18 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         # If we manage to rewrite the SQL so it injects schema clauses, then we can remove this override.
 
     def execute(self, sql, params=None):
-        # We want to execute our SQL multiple times, if it is per-schema.
         execute = super(DatabaseSchemaEditor, self).execute
 
         table_name, schema_name = get_table_and_schema(sql, self.connection.cursor())
 
         # TODO: try to get the apps from current project_state, not global apps.
         if table_name and not schema_name and not is_shared_table(table_name):
-            if _schema_table_exists():
-                for each in get_schema_model().objects.all():
-                    each.activate()
-                    execute(sql, params)
-
-            activate_template_schema()
-            execute(sql, params)
+            schema_aware_operation.send(
+                self.__class__,
+                db_table=table_name,
+                function=execute,
+                args=(sql, params)
+            )
             deactivate_schema()
         else:
             execute(sql, params)

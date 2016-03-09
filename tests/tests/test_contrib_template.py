@@ -1,5 +1,9 @@
 from django.test import TestCase
 from django.contrib.auth.models import User, Permission
+from django.db import connection, migrations, models
+from django.db.migrations.state import ProjectState
+from django.utils import six
+
 
 from boardinghouse.contrib.template.models import SchemaTemplate
 from boardinghouse.schema import (
@@ -12,6 +16,14 @@ CREDENTIALS = {
     'username': 'username',
     'password': 'password'
 }
+
+
+def get_table_list():
+    with connection.cursor() as cursor:
+        table_list = connection.introspection.get_table_list(cursor)
+    if table_list and not isinstance(table_list[0], six.string_types):
+        table_list = [table.name for table in table_list]
+    return table_list
 
 
 class TestContribTemplate(TestCase):
@@ -41,3 +53,26 @@ class TestContribTemplate(TestCase):
 
     def test_editing_template_does_not_change_template_data(self):
         pass
+
+    def test_migrations_apply_to_templates(self):
+        template = SchemaTemplate.objects.create(name='a')
+        operation = migrations.CreateModel("Pony", [
+            ('pony_id', models.AutoField(primary_key=True)),
+            ('pink', models.IntegerField(default=1)),
+        ])
+        project_state = ProjectState()
+        new_state = project_state.clone()
+        operation.state_forwards('tests', new_state)
+
+        activate_schema(template.schema)
+        self.assertFalse('tests_pony' in get_table_list())
+
+        with connection.schema_editor() as editor:
+            operation.database_forwards('tests', editor, project_state, new_state)
+        activate_schema(template.schema)
+        self.assertTrue('tests_pony' in get_table_list())
+
+        with connection.schema_editor() as editor:
+            operation.database_backwards('tests', editor, new_state, project_state)
+        activate_schema(template.schema)
+        self.assertFalse('tests_pony' in get_table_list())
