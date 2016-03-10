@@ -12,117 +12,85 @@ from ...schema import deactivate_schema, is_shared_table
 from ...signals import schema_aware_operation
 
 
-def get_constraints(cursor, table_name):
-    """
-    Retrieves any constraints or keys (unique, pk, fk, check, index) across one or more columns.
+def get_constraints(cursor, table_name, schema_name='__template__'):
+    """Return all constraints for a given table
 
-    This is copied (almost) verbatim from django, but replaces the use of "public" with "public" + "__template__".
+    (in either the given schema, or the public schema: the assumption is made
+    that constraint names will not be the same in both).
 
-    We assume that this will find the relevant constraint, and rely on our operations keeping the others in sync.
     """
-    constraints = {}
-    # Loop over the key table, collecting things as constraints
-    # This will get PKs, FKs, and uniques, but not CHECK
     cursor.execute("""
-        SELECT
-            kc.constraint_name,
-            kc.column_name,
-            c.constraint_type,
-            array(SELECT table_name::text || '.' || column_name::text
-                  FROM information_schema.constraint_column_usage
-                  WHERE constraint_name = kc.constraint_name)
-        FROM information_schema.key_column_usage AS kc
-        JOIN information_schema.table_constraints AS c ON
-            kc.table_schema = c.table_schema AND
-            kc.table_name = c.table_name AND
-            kc.constraint_name = c.constraint_name
-        WHERE
-            kc.table_schema IN (%s, %s) AND
-            kc.table_name = %s
-        ORDER BY kc.ordinal_position ASC
-    """, [settings.PUBLIC_SCHEMA, "__template__", table_name])
-    for constraint, column, kind, used_cols in cursor.fetchall():
-        # If we're the first column, make the record
-        if constraint not in constraints:
-            constraints[constraint] = {
-                "columns": [],
-                "primary_key": kind.lower() == "primary key",
-                "unique": kind.lower() in ["primary key", "unique"],
-                "foreign_key": tuple(used_cols[0].split(".", 1)) if kind.lower() == "foreign key" else None,
-                "check": False,
-                "index": False,
-            }
-        # Record the details
-        constraints[constraint]['columns'].append(column)
-    # Now get CHECK constraint columns
-    cursor.execute("""
-        SELECT kc.constraint_name, kc.column_name
-        FROM information_schema.constraint_column_usage AS kc
-        JOIN information_schema.table_constraints AS c ON
-            kc.table_schema = c.table_schema AND
-            kc.table_name = c.table_name AND
-            kc.constraint_name = c.constraint_name
-        WHERE
-            c.constraint_type = 'CHECK' AND
-            kc.table_schema IN (%s, %s) AND
-            kc.table_name = %s
-    """, [settings.PUBLIC_SCHEMA, "__template__", table_name])
-    for constraint, column in cursor.fetchall():
-        # If we're the first column, make the record
-        if constraint not in constraints:
-            constraints[constraint] = {
-                "columns": [],
-                "primary_key": False,
-                "unique": False,
-                "foreign_key": None,
-                "check": True,
-                "index": False,
-            }
-        # Record the details
-        constraints[constraint]['columns'].append(column)
-    # Now get indexes
-    cursor.execute("""
-        SELECT
-            c2.relname,
-            ARRAY(
-                SELECT (SELECT attname FROM pg_catalog.pg_attribute WHERE attnum = i AND attrelid = c.oid)
-                FROM unnest(idx.indkey) i
-            ),
-            idx.indisunique,
-            idx.indisprimary
-        FROM pg_catalog.pg_class c, pg_catalog.pg_class c2,
-            pg_catalog.pg_index idx, pg_catalog.pg_namespace n
-        WHERE c.oid = idx.indrelid
-            AND idx.indexrelid = c2.oid
-            AND n.oid = c.relnamespace
-            AND n.nspname IN (%s, %s)
-            AND c.relname = %s
-    """, [settings.PUBLIC_SCHEMA, '__template__', table_name])
-    for index, columns, unique, primary in cursor.fetchall():
-        if index not in constraints:
-            constraints[index] = {
-                "columns": list(columns),
-                "primary_key": primary,
-                "unique": unique,
-                "foreign_key": None,
-                "check": False,
-                "index": True,
-            }
-    return constraints
+WITH constraints AS (
+
+          SELECT tc.constraint_type,
+                 tc.constraint_name,
+                 COALESCE(ccu.column_name, kcu.column_name) AS column_name
+            FROM information_schema.table_constraints AS tc
+ LEFT OUTER JOIN information_schema.constraint_column_usage AS ccu
+           USING (table_schema, table_name, constraint_name)
+ LEFT OUTER JOIN information_schema.key_column_usage AS kcu
+           USING (table_schema, table_name, constraint_name)
+           WHERE tc.table_schema IN (%s, %s)
+             AND tc.table_name = %s
+
+             UNION
+
+          SELECT 'INDEX' AS constraint_type,
+                 id.indexname AS constraint_name,
+                 attr.attname AS column_name
+            FROM pg_catalog.pg_indexes AS id
+      INNER JOIN pg_catalog.pg_index  AS idx
+              ON (id.schemaname || '.' || id.indexname)::regclass = idx.indexrelid
+ LEFT OUTER JOIN pg_catalog.pg_attribute AS attr
+              ON idx.indrelid = attr.attrelid AND attr.attnum = ANY(idx.indkey)
+           WHERE id.schemaname IN (%s, %s)
+             AND id.tablename = %s
+),
+by_type AS (
+  SELECT constraint_type,
+         constraint_name,
+         array_agg(column_name ORDER BY column_name) AS columns
+    FROM constraints
+   WHERE column_name IS NOT NULL
+GROUP BY constraint_name, constraint_type
+),
+by_name AS (
+  SELECT array_agg(constraint_type) AS constraints,
+         constraint_name,
+         columns
+    FROM by_type
+GROUP BY constraint_name, columns
+)
+
+
+SELECT constraint_name,
+       columns,
+       'PRIMARY KEY' = ANY(constraints) AS "primary_key",
+       'UNIQUE' = ANY(constraints) OR 'PRIMARY KEY' = ANY(constraints) AS "unique",
+       CASE WHEN 'FOREIGN KEY' = ANY(constraints) THEN
+           (SELECT ARRAY[table_name::text, column_name::text]
+                    FROM information_schema.constraint_column_usage ccu
+                   WHERE by_name.constraint_name = ccu.constraint_name
+                   LIMIT 1)
+       END AS "foreign_key",
+       'CHECK' = ANY(constraints) AS "check",
+       'INDEX' = ANY(constraints) AS "index"
+FROM by_name""", [settings.PUBLIC_SCHEMA, schema_name, table_name] * 2)
+    columns = [x.name for x in cursor.description]
+    return {row[0]: dict(zip(columns, row)) for row in cursor}
 
 
 def get_index_data(cursor, index_name):
 
-    cursor.execute('''SELECT
-    c.relname AS table_name,
-    n.nspname AS schema_name
-FROM pg_catalog.pg_class c, pg_catalog.pg_class c2,
-    pg_catalog.pg_index idx, pg_catalog.pg_namespace n
-WHERE c.oid = idx.indrelid
-    AND idx.indexrelid = c2.oid
-    AND n.oid = c.relnamespace
-    AND n.nspname IN (%s, %s)
-    AND c2.relname = %s
+    cursor.execute('''SELECT c.relname AS table_name,
+                             n.nspname AS schema_name
+                        FROM pg_catalog.pg_class c, pg_catalog.pg_class c2,
+                             pg_catalog.pg_index idx, pg_catalog.pg_namespace n
+                       WHERE c.oid = idx.indrelid
+                         AND idx.indexrelid = c2.oid
+                         AND n.oid = c.relnamespace
+                         AND n.nspname IN (%s, %s)
+                         AND c2.relname = %s
     ''', [settings.PUBLIC_SCHEMA, '__template__', index_name])
 
     return [table_name for (table_name, schema_name) in cursor.fetchall()]
@@ -155,18 +123,25 @@ def get_table_and_schema(sql, cursor):
     if grouped[DDL] and grouped[DDL][0] in ['CREATE', 'DROP', 'ALTER', 'CREATE OR REPLACE']:
         # We may care about this.
         keywords = grouped[Keyword]
-        # DROP INDEX does not have a table associated with it.
-        # We will have to hit the database to see what schema(ta) have an index with that name.
         if 'FUNCTION' in keywords:
+            # At this point, I'm not convinced that functions belong anywhere
+            # other than in the public schema. Perhaps they should, as that
+            # could be a nice way to get different behaviour per-tenant.
             return None, None
         if 'INDEX' in keywords and grouped[DDL][0] == 'DROP':
+            # DROP INDEX does not have a table associated with it.
+            # We will have to hit the database to see what tables have
+            # an index with that name: we can just use the template/public
+            # schemata though.
             return get_index_data(cursor, identifiers[0].get_name())[0], None
         if 'VIEW' in keywords or 'TABLE' in keywords:
-            # We care about identifier 0
+            # We care about identifier 0, which will be the name of the view
+            # or table.
             if identifiers:
                 return identifiers[0].get_name(), identifiers[0].get_parent_name()
         elif 'TRIGGER' in keywords or 'INDEX' in keywords:
-            # We care about identifier 1
+            # We care about identifier 1, as identifier 0 is the name of the
+            # function or index: identifier 1 is the table it refers to.
             if len(identifiers) > 1:
                 return identifiers[1].get_name(), identifiers[1].get_parent_name()
 
