@@ -12,6 +12,7 @@ install-packages:
 	${PIP} install pip --upgrade
 	${PIP} install -e ../..
 	${PIP} install psycopg2
+	${PIP} install coverage
 
 load-data:
 	${PYTHON} manage.py migrate

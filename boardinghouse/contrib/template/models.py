@@ -1,6 +1,7 @@
 from django.db import models
 
 from boardinghouse.base import SharedSchemaMixin
+from boardinghouse.schema import activate_schema, deactivate_schema
 
 
 class SchemaTemplate(SharedSchemaMixin, models.Model):
@@ -33,3 +34,9 @@ class SchemaTemplate(SharedSchemaMixin, models.Model):
 
     def clone_to_schema(self, schema):
         pass
+
+    def activate(self):
+        activate_schema(self.schema)
+
+    def deactivate(self):
+        deactivate_schema()

@@ -1,5 +1,6 @@
 import unittest
 
+from django.apps import apps
 from django.db import connection, models, migrations
 from django.db.migrations.migration import Migration
 from django.db.migrations.state import ProjectState
@@ -393,7 +394,35 @@ class TestMigrations(MigrationTestBase):
         self.assertNoConstraint('tests_pony', ['pink'], 'unique')
 
     def test_alter_primary_key(self):
-        pass
+        project_state = self.set_up_test_model()
+        operations = [
+            migrations.RunSQL(
+                sql='CREATE EXTENSION IF NOT EXISTS "pgcrypto"',
+            ),
+            migrations.RemoveField(
+                model_name='pony',
+                name='pony_id',
+            ),
+            migrations.AddField(
+                model_name='pony',
+                name='pony_id',
+                field=models.UUIDField(primary_key=True, editable=False)
+            ),
+            migrations.RunSQL(
+                sql='UPDATE tests_pony SET pony_id = gen_random_uuid()',
+            ),
+            migrations.RunSQL(
+                sql='ALTER TABLE tests_pony ALTER COLUMN pony_id SET DEFAULT gen_random_uuid()',
+            )
+        ]
+
+        new_state = project_state.clone()
+        for operation in operations:
+            operation.state_forwards('tests', new_state)
+
+        with connection.schema_editor() as editor:
+            for operation in operations:
+                operation.database_forwards('tests', editor, project_state, new_state)
 
     def test_run_sql(self):
         project_state = self.set_up_test_model()
@@ -490,3 +519,17 @@ UPDATE i_love_ponies SET special_thing = 42 WHERE id = 2;
             operation.database_backwards('tests', editor, new_state, project_state)
 
         pony_count(0)
+
+    def test_zero_migration_function(self):
+        project_state = self.set_up_test_model()
+        Pony = project_state.apps.get_model('tests', 'Pony')
+
+        remove_all_schemata = getattr(
+            __import__('boardinghouse.migrations.0001_initial').migrations,
+            '0001_initial').remove_all_schemata
+
+        with connection.schema_editor() as editor:
+            remove_all_schemata(apps, editor)
+
+        Schema.objects.get(schema='a').activate()
+        Pony.objects.all()
