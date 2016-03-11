@@ -16,8 +16,6 @@ Tests to write
 
 * Test backwards migration of :class:`boardinghouse.operations.AddField`
 
-* Test running migration (:meth:`boardinghouse.backends.postgres.schema.wrap`, specifically.)
-
 * Test :meth:`boardinghouse.schema.get_active_schema_name`
 
 * Test saving a schema clears the global active schemata cache
@@ -34,11 +32,6 @@ User.visible_schemata property testing:
 * Test admin with different BOARDINGHOUSE_SCHEMA_MODEL (coverage)
 
 * Test :class:`django.contrib.admin.models.LogEntry` already having ``object_schema`` attribute. Perhaps this should raise an exception? Maybe a :class:`django.core.checks.Error`?
-
-* Test :function:`boardinghouse.schema.get_constrants` with postgres ``CHECK CONSTRAINT``.
-
-* Test constraint handling in general (ie, I feel like only ``FOREIGN KEY`` constraints are being tested.)
-
 
 Example Project
 ---------------
