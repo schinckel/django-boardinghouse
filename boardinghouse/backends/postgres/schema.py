@@ -19,8 +19,8 @@ def get_constraints(cursor, table_name, schema_name='__template__'):
     that constraint names will not be the same in both).
 
     """
-    cursor.execute("""
-WITH constraints AS (
+    cursor.execute(''
+"""WITH constraints AS (
 
           SELECT tc.constraint_type,
                  tc.constraint_name,
@@ -110,12 +110,20 @@ def group_tokens(parsed):
 
 
 def get_table_and_schema(sql, cursor):
+    """
+    Given an SQL statement, determine what the database object that is being
+    operated upon is.
+
+    This logic is quite complex. If you find a case that does not work, please
+    submit a bug report (or even better, pull request!)
+    """
     try:
         parsed = sqlparse.parse(sql)[0]
     except IndexError:
         # In the case of a CREATE * FUNCTION that is a plpgsql function, we
         # know we won't be able to parse it. Functions should probably be in
-        # the public schema anyway.
+        # the public schema anyway. If you had different functions required
+        # per tenant, then you'd need to come up with a way to do that.
         sql_upper = sql.upper()
         if (
             'CREATE FUNCTION' in sql_upper or
@@ -161,6 +169,19 @@ def get_table_and_schema(sql, cursor):
 
 
 class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
+    """
+    This Schema Editor alters behaviour in three ways.
+
+    1. Remove duplicates of deferred sql statements. These are
+       executed using `self.execute()` anyway, so they will get
+       applied to all schemata as appropriate.
+    2. Fire a signal during `self.execute()` so that listeners may choose
+       to apply this statement to all schemata. This signal only fires for
+       objects that are private objects.
+    3. Change the mechanism for grabbing constraint names to also look in
+       the template schema (instead of just `public`, as is hard-coded in
+       the original method).
+    """
 
     def __exit__(self, exc_type, exc_value, traceback):
         # It seems that actions that add stuff to the deferred sql
