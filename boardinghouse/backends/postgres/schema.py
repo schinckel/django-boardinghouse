@@ -15,9 +15,16 @@ from ...signals import schema_aware_operation
 def get_constraints(cursor, table_name, schema_name='__template__'):
     """Return all constraints for a given table
 
-    (in either the given schema, or the public schema: the assumption is made
-    that constraint names will not be the same in both).
+    This function looks in the `settings.PUBLIC_SCHEMA`, and the supplied schema
+    (defaulting to `__template__` if none supplied) for all constraints
+    that exist on the provided table name. The assumption is made that the
+    same table will not exist in both schemata: if so, and the constraints
+    differ between the two tables in any way, then the union of constraints
+    will be returned.
 
+    This is an improvement on the django implementation in two ways:
+    it runs in a single query, rather than three. It also allows for
+    a different schema than `public`, which is hardcoded.
     """
     cursor.execute(''
 """WITH constraints AS (
