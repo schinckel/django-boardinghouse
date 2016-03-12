@@ -15,6 +15,7 @@ Multi-tenancy for Django applications, using Postgres Schemas.
 
    philosophy
    installation
+   how-it-works
    interactions
    example
    contrib

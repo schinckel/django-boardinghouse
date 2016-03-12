@@ -78,6 +78,7 @@ def load_app_settings():
 
 @register('settings')
 def check_middleware_installed(app_configs=None, **kwargs):
+    "Ensure that _our_ middleware is installed."
     from django.conf import settings
 
     MIDDLEWARE = 'boardinghouse.middleware.SchemaMiddleware'
@@ -95,6 +96,7 @@ def check_middleware_installed(app_configs=None, **kwargs):
 
 @register('settings')
 def check_context_processor_installed(app_configs=None, **kwargs):
+    "Warn if our context processor is not installed."
     from django.conf import settings
 
     errors = []
@@ -127,6 +129,11 @@ def check_context_processor_installed(app_configs=None, **kwargs):
 
 @register('settings')
 def check_installed_before_admin(app_configs=None, **kwargs):
+    """
+    If `django.contrib.admin` is also installed, we must be installed before it.
+
+    Is this even true anymore?
+    """
     from django.conf import settings
 
     errors = []

@@ -96,6 +96,19 @@ def get_index_data(cursor, index_name):
     return [table_name for (table_name, schema_name) in cursor.fetchall()]
 
 
+def group_tokens(parsed):
+    grouped = defaultdict(list)
+    identifiers = []
+
+    for token in parsed.tokens:
+        if token.ttype:
+            grouped[token.ttype].append(token.value)
+        elif token.get_name():
+            identifiers.append(token)
+
+    return grouped, identifiers
+
+
 def get_table_and_schema(sql, cursor):
     try:
         parsed = sqlparse.parse(sql)[0]
@@ -111,14 +124,7 @@ def get_table_and_schema(sql, cursor):
             return None, None
         raise
 
-    grouped = defaultdict(list)
-    identifiers = []
-
-    for token in parsed.tokens:
-        if token.ttype:
-            grouped[token.ttype].append(token.value)
-        elif token.get_name():
-            identifiers.append(token)
+    grouped, identifiers = group_tokens(parsed)
 
     if grouped[DDL] and grouped[DDL][0] in ['CREATE', 'DROP', 'ALTER', 'CREATE OR REPLACE']:
         # We may care about this.
@@ -128,29 +134,28 @@ def get_table_and_schema(sql, cursor):
             # other than in the public schema. Perhaps they should, as that
             # could be a nice way to get different behaviour per-tenant.
             return None, None
-        if 'INDEX' in keywords and grouped[DDL][0] == 'DROP':
+        elif 'INDEX' in keywords and grouped[DDL][0] == 'DROP':
             # DROP INDEX does not have a table associated with it.
             # We will have to hit the database to see what tables have
             # an index with that name: we can just use the template/public
             # schemata though.
             return get_index_data(cursor, identifiers[0].get_name())[0], None
-        if 'VIEW' in keywords or 'TABLE' in keywords:
+        elif ('VIEW' in keywords or 'TABLE' in keywords) and identifiers:
             # We care about identifier 0, which will be the name of the view
             # or table.
-            if identifiers:
-                return identifiers[0].get_name(), identifiers[0].get_parent_name()
-        elif 'TRIGGER' in keywords or 'INDEX' in keywords:
+            return identifiers[0].get_name(), identifiers[0].get_parent_name()
+        elif ('TRIGGER' in keywords or 'INDEX' in keywords) and len(identifiers) > 1:
             # We care about identifier 1, as identifier 0 is the name of the
             # function or index: identifier 1 is the table it refers to.
-            if len(identifiers) > 1:
-                return identifiers[1].get_name(), identifiers[1].get_parent_name()
+            return identifiers[1].get_name(), identifiers[1].get_parent_name()
 
     # We also care about other non-DDL statements, as the implication is that
     # they should apply to every known schema, if we are updating as part of a
     # migration.
-    if grouped[DML] and grouped[DML][0] in ['INSERT INTO', 'UPDATE', 'DELETE FROM']:
-        if identifiers:
-            return identifiers[0].get_name(), identifiers[0].get_parent_name()
+    if grouped[DML] and \
+       grouped[DML][0] in ['INSERT INTO', 'UPDATE', 'DELETE FROM'] and\
+       identifiers:
+        return identifiers[0].get_name(), identifiers[0].get_parent_name()
 
     return None, None
 

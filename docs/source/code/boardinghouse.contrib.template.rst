@@ -14,6 +14,7 @@ Submodules
 .. toctree::
 
    boardinghouse.contrib.template.admin
+   boardinghouse.contrib.template.apps
    boardinghouse.contrib.template.models
 
 Module contents
