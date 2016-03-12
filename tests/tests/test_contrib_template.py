@@ -66,7 +66,27 @@ class TestContribTemplate(TestCase):
         AwareModel.objects.get(name=aware.name)
 
     def test_editing_template_does_not_change_template_data(self):
-        pass
+        template = SchemaTemplate.objects.create(name='Foo')
+        activate_schema(template.schema)
+
+        original = AwareModel.objects.create(name=uuid.uuid4().hex[:10])
+
+        schema = Schema(name='cloned', schema='cloned')
+        schema._clone = template.schema
+        schema.save()
+
+        schema.activate()
+        cloned = AwareModel.objects.get(name=original.name)
+        cloned.status = True
+        cloned.save()
+
+        activate_schema(template.schema)
+        self.assertEqual(1, AwareModel.objects.filter(status=False).count())
+        self.assertEqual(0, AwareModel.objects.filter(status=True).count())
+
+        activate_schema(schema.schema)
+        self.assertEqual(0, AwareModel.objects.filter(status=False).count())
+        self.assertEqual(1, AwareModel.objects.filter(status=True).count())
 
     def test_migrations_apply_to_templates(self):
         template = SchemaTemplate.objects.create(name='a')

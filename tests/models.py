@@ -56,3 +56,8 @@ class SettingsSharedModel(models.Model):
 
 class SettingsPrivateModel(models.Model):
     pass
+
+
+class ViewBackedModel(models.Model):
+    class Meta:
+        managed = False

@@ -95,5 +95,17 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField())
             ],
             bases=(models.Model,)
+        ),
+        migrations.CreateModel(
+            name='ViewBackedModel',
+            fields=[
+                ('id', models.AutoField())
+            ],
+            bases=(models.Model,),
+            options={'managed': False},
+        ),
+        migrations.RunSQL(
+            sql='CREATE VIEW tests_viewbackedmodel AS (SELECT x AS id FROM generate_series(1, 1000) x)',
+            reverse_sql='DROP VIEW tests_viewbackedmodel'
         )
     ]
