@@ -433,6 +433,22 @@ UPDATE i_love_ponies SET special_thing = 42 WHERE id = 2;
             operation.database_backwards('tests', editor, new_state, project_state)
         self.assertTableNotExists('i_love_ponies')
 
+    def test_sql_create_function(self):
+        project_state = self.set_up_test_model()
+
+        operation = migrations.RunSQL(
+            sql='CREATE FUNCTION das_func () RETURNS INTEGER AS $$ BEGIN RETURN 1; END $$ LANGUAGE plpgsql',
+            reverse_sql='DROP FUNCTION das_func()'
+        )
+        new_state = project_state.clone()
+        operation.state_forwards('tests', new_state)
+
+        with connection.schema_editor() as editor:
+            operation.database_forwards('tests', editor, new_state, project_state)
+
+        with connection.schema_editor() as editor:
+            operation.database_backwards('tests', editor, project_state, new_state)
+
     @unittest.expectedFailure
     def test_run_python(self):
         """

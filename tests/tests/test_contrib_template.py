@@ -1,16 +1,20 @@
+import uuid
+
 from django.test import TestCase
 from django.contrib.auth.models import User, Permission
 from django.db import connection, migrations, models
 from django.db.migrations.state import ProjectState
 from django.utils import six
 
-
 from boardinghouse.contrib.template.models import SchemaTemplate
+from boardinghouse.models import Schema
 from boardinghouse.schema import (
     activate_schema,
     _schema_exists,
     get_active_schema_name,
 )
+
+from ..models import AwareModel
 
 CREDENTIALS = {
     'username': 'username',
@@ -49,7 +53,17 @@ class TestContribTemplate(TestCase):
         self.assertEquals(200, response.status_code)
 
     def test_cloning_templates_clones_data(self):
-        pass
+        template = SchemaTemplate.objects.create(name='Foo')
+        activate_schema(template.schema)
+
+        aware = AwareModel.objects.create(name=uuid.uuid4().hex[:10])
+
+        schema = Schema(name='cloned', schema='cloned')
+        schema._clone = template.schema
+        schema.save()
+
+        schema.activate()
+        AwareModel.objects.get(name=aware.name)
 
     def test_editing_template_does_not_change_template_data(self):
         pass

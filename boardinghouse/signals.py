@@ -83,8 +83,10 @@ def create_schema(sender, instance, created, **kwargs):
         schema_name = instance.schema
 
         # How can we work out what values need to go here?
-        template_name = '__template__'
-        include_records = False
+        # Currently, we just allow a single attribute `_clone`, that,
+        # if set, will indicate that we should clone a schema.
+        template_name = getattr(instance, '_clone', '__template__')
+        include_records = bool(getattr(instance, '_clone', False))
 
         cursor = connection.cursor()
 
