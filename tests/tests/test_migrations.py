@@ -1,5 +1,6 @@
 import unittest
 
+from django.apps import apps
 from django.db import connection, models, migrations
 from django.db.migrations.migration import Migration
 from django.db.migrations.state import ProjectState
@@ -10,6 +11,7 @@ from django.utils import six
 
 from boardinghouse.schema import get_schema_model, get_template_schema
 from boardinghouse.schema import activate_template_schema, deactivate_schema
+from boardinghouse.backends.postgres.schema import get_constraints
 
 Schema = get_schema_model()
 template_schema = get_template_schema()
@@ -83,36 +85,28 @@ class MigrationTestBase(TransactionTestCase):
         self.assertEqual([c.null_ok for c in self.get_table_description(table) if c.name == column][0], False)
 
     @all_schemata
+    def assertConstraint(self, table, columns, constraint_type, value=True, **kwargs):
+        with connection.cursor() as cursor:
+            constraints = get_constraints(cursor, table, kwargs['schema'])
+            self.assertEqual(value,
+                             any(c[constraint_type] for c in constraints.values()
+                                 if set(c['columns']) == set(columns)))
+
+    # These will get the all_schemata from the inner call
+    def assertNoConstraint(self, table, columns, constraint_type, **kwargs):
+        return self.assertConstraint(table, columns, constraint_type, value=False, **kwargs)
+
     def assertIndexExists(self, table, columns, value=True, **kwargs):
-        with connection.cursor() as cursor:
-            self.assertEqual(
-                value,
-                any(
-                    c["index"]
-                    for c in connection.introspection.get_constraints(cursor, table).values()
-                    if set(c['columns']) == set(columns)
-                ),
-            )
+        return self.assertConstraint(table, columns, constraint_type='index', value=True, **kwargs)
 
-    @all_schemata
     def assertIndexNotExists(self, table, columns, **kwargs):
-        return self.assertIndexExists(table, columns, False)
+        return self.assertConstraint(table, columns, constraint_type='index', value=False, **kwargs)
 
-    @all_schemata
-    def assertFKExists(self, table, columns, to, value=True, **kwargs):
-        with connection.cursor() as cursor:
-            self.assertEqual(
-                value,
-                any(
-                    c["foreign_key"] == to
-                    for c in connection.introspection.get_constraints(cursor, table).values()
-                    if c['columns'] == list(columns)
-                ),
-            )
+    def assertFKExists(self, table, columns, to, **kwargs):
+        return self.assertConstraint(table, columns, constraint_type='foreign_key', value=to, **kwargs)
 
-    @all_schemata
     def assertFKNotExists(self, table, columns, to, value=True, **kwargs):
-        return self.assertFKExists(table, columns, to, False)
+        return self.assertConstraint(table, columns, constraint_type='foreign_key', value=False, **kwargs)
 
     def apply_operations(self, app_label, project_state, operations):
         migration = Migration('name', app_label)
@@ -356,13 +350,48 @@ class TestMigrations(MigrationTestBase):
         self.assertColumnNotExists('tests_rider', '_order')
 
     def test_add_check_constraint(self):
-        pass
+        project_state = self.set_up_test_model()
+        operation = migrations.AlterField(
+            model_name='pony',
+            name='pink',
+            field=models.PositiveIntegerField(default=3)
+        )
+        new_state = project_state.clone()
+        operation.state_forwards('tests', new_state)
+
+        self.assertNoConstraint('tests_pony', ['pink'], 'check')
+
+        with connection.schema_editor() as editor:
+            operation.database_forwards('tests', editor, project_state, new_state)
+
+        self.assertConstraint('tests_pony', ['pink'], 'check')
+
+        with connection.schema_editor() as editor:
+            operation.database_backwards('tests', editor, new_state, project_state)
+
+        self.assertNoConstraint('tests_pony', ['pink'], 'check')
 
     def test_add_unique_constraint(self):
-        pass
+        project_state = self.set_up_test_model()
+        operation = migrations.AlterField(
+            model_name='pony',
+            name='pink',
+            field=models.IntegerField(unique=True, default=3)
+        )
+        new_state = project_state.clone()
+        operation.state_forwards('tests', new_state)
 
-    def test_alter_primary_key(self):
-        pass
+        self.assertNoConstraint('tests_pony', ['pink'], 'unique')
+
+        with connection.schema_editor() as editor:
+            operation.database_forwards('tests', editor, project_state, new_state)
+
+        self.assertConstraint('tests_pony', ['pink'], 'unique')
+
+        with connection.schema_editor() as editor:
+            operation.database_backwards('tests', editor, new_state, project_state)
+
+        self.assertNoConstraint('tests_pony', ['pink'], 'unique')
 
     def test_run_sql(self):
         project_state = self.set_up_test_model()
@@ -403,6 +432,22 @@ UPDATE i_love_ponies SET special_thing = 42 WHERE id = 2;
         with connection.schema_editor() as editor:
             operation.database_backwards('tests', editor, new_state, project_state)
         self.assertTableNotExists('i_love_ponies')
+
+    def test_sql_create_function(self):
+        project_state = self.set_up_test_model()
+
+        operation = migrations.RunSQL(
+            sql='CREATE FUNCTION das_func () RETURNS INTEGER AS $$ BEGIN RETURN 1; END $$ LANGUAGE plpgsql',
+            reverse_sql='DROP FUNCTION das_func()'
+        )
+        new_state = project_state.clone()
+        operation.state_forwards('tests', new_state)
+
+        with connection.schema_editor() as editor:
+            operation.database_forwards('tests', editor, new_state, project_state)
+
+        with connection.schema_editor() as editor:
+            operation.database_backwards('tests', editor, project_state, new_state)
 
     @unittest.expectedFailure
     def test_run_python(self):
@@ -459,3 +504,17 @@ UPDATE i_love_ponies SET special_thing = 42 WHERE id = 2;
             operation.database_backwards('tests', editor, new_state, project_state)
 
         pony_count(0)
+
+    def test_zero_migration_function(self):
+        project_state = self.set_up_test_model()
+        Pony = project_state.apps.get_model('tests', 'Pony')
+
+        remove_all_schemata = getattr(
+            __import__('boardinghouse.migrations.0001_initial').migrations,
+            '0001_initial').remove_all_schemata
+
+        with connection.schema_editor() as editor:
+            remove_all_schemata(apps, editor)
+
+        Schema.objects.get(schema='a').activate()
+        Pony.objects.all()

@@ -4,11 +4,11 @@ import logging
 import re
 
 from django.contrib import messages
+from django.conf import settings
 from django.db import ProgrammingError
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import redirect
 from django.utils.translation import ugettext_lazy as _
-from django.utils import six
 
 from .schema import (
     TemplateSchemaActivation, Forbidden,
@@ -41,49 +41,49 @@ def change_schema(request, schema):
         session.pop('schema', None)
         raise Forbidden()
 
-    # We actually want the schema name, so we can see if we
-    # don't actually need to change the schema at all (if the
-    # session is already set, then we assume that it's all good)
-    if isinstance(schema, six.string_types):
-        schema_name = schema
-    else:
-        schema_name = schema.schema
-
     # Don't allow anyone, even superusers, to select the template schema.
-    if schema_name == '__template__':
+    if schema == '__template__':
         raise TemplateSchemaActivation()
 
     # If the schema is already set to this name for this session, then
     # we can just exit early, saving some db access.
-    if schema_name == session.get('schema', None):
+    if schema == session.get('schema', None):
         return
 
-    Schema = get_schema_model()
+    if schema.startswith('__template_'):
+        # We have some special-casing here for template schemata, I'd like to
+        # resolve that, and allow hooks for any type of extra schemata model to
+        # go here.
+        if (
+            'boardinghouse.contrib.template' in settings.INSTALLED_APPS and
+            user.has_perm('template.activate_schematemplate')
+        ):
 
-    if user.is_superuser or user.is_staff:
+            from boardinghouse.contrib.template.models import SchemaTemplate
+            try:
+                SchemaTemplate.objects.get(pk=schema.split('__template_')[1])
+            except SchemaTemplate.DoesNotExist:
+                raise Forbidden()
+        else:
+            raise Forbidden()
+
+    elif user.is_superuser or user.is_staff:
         # Just a sanity check: that the schema actually
         # exists at all, when the superuser attempts to set
         # the schema.
-        if schema_name == schema:
-            try:
-                schema = Schema.objects.get(schema=schema_name)
-            except Schema.DoesNotExist:
-                raise Forbidden()
+        Schema = get_schema_model()
+
+        try:
+            Schema.objects.get(schema=schema)
+        except Schema.DoesNotExist:
+            raise Forbidden()
+
     else:
-        # If we were passed in a schema object, rather than a string,
-        # then we can check to see if that schema is active before
-        # having to hit the database.
-        if isinstance(schema, Schema):
-            # I'm not sure that it's logically possible to get this
-            # line to return True - we only pass in data from user.visible_schemata,
-            # which excludes inactives.
-            if not schema.is_active:
-                raise Forbidden()
         # Ensure that this user has access to this schema,
         # and that this schema is active. We can do this using the
         # cache, which prevents hitting the database.
-        visible_schemata = [schema.schema for schema in user.visible_schemata]
-        if schema_name not in visible_schemata:
+        visible_schemata = [s.schema for s in user.visible_schemata]
+        if schema not in visible_schemata:
             raise Forbidden()
 
     # Allow 3rd-party applications to listen for an attempt to change
@@ -92,17 +92,17 @@ def change_schema(request, schema):
     # call stack.
     session_requesting_schema_change.send(
         sender=request,
-        schema=schema_name,
+        schema=schema,
         user=request.user,
         session=request.session,
     )
     # Actually set the schema on the session.
-    session['schema'] = schema_name
+    session['schema'] = schema
     # Allow 3rd-party applications to listen for a change, and act upon
     # it accordingly.
     session_schema_changed.send(
         sender=request,
-        schema=schema_name,
+        schema=schema,
         user=request.user,
         session=request.session,
     )
@@ -205,7 +205,7 @@ class SchemaMiddleware:
 
         elif 'schema' not in request.session and len(request.user.visible_schemata) == 1:
             # Can we not require a db hit each request here?
-            change_schema(request, request.user.visible_schemata[0])
+            change_schema(request, request.user.visible_schemata[0].schema)
 
         if 'schema' in request.session:
             activate_schema(request.session['schema'])
@@ -224,15 +224,14 @@ class SchemaMiddleware:
         """
         if isinstance(exception, ProgrammingError) and not request.session.get('schema'):
             if re.search('relation ".*" does not exist', exception.args[0]):
-                # I'm not sure if this should be done or not, but it does
-                # fail without the if statement from django 1.8+
-                # if not transaction.get_autocommit():
-                #     transaction.rollback()
-
                 # Should we return an error, or redirect? When should we
                 # do one or the other? For an API, we would want an error
                 # but for a regular user, a redirect may be better.
-
+                if request.is_ajax():
+                    return HttpResponse(
+                        _('You must select a schema to access that resource'),
+                        status_code=400
+                    )
                 # Can we see if there is already a pending message for this
                 # request that has the same content as us?
                 messages.error(request,

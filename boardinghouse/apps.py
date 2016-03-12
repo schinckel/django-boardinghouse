@@ -78,6 +78,7 @@ def load_app_settings():
 
 @register('settings')
 def check_middleware_installed(app_configs=None, **kwargs):
+    "Ensure that _our_ middleware is installed."
     from django.conf import settings
 
     MIDDLEWARE = 'boardinghouse.middleware.SchemaMiddleware'
@@ -95,6 +96,7 @@ def check_middleware_installed(app_configs=None, **kwargs):
 
 @register('settings')
 def check_context_processor_installed(app_configs=None, **kwargs):
+    "Warn if our context processor is not installed."
     from django.conf import settings
 
     errors = []
@@ -127,6 +129,11 @@ def check_context_processor_installed(app_configs=None, **kwargs):
 
 @register('settings')
 def check_installed_before_admin(app_configs=None, **kwargs):
+    """
+    If `django.contrib.admin` is also installed, we must be installed before it.
+
+    Is this even true anymore?
+    """
     from django.conf import settings
 
     errors = []
@@ -169,18 +176,23 @@ def register_signals():
 
     Schema = get_schema_model()
 
+    # How do we identify that this schema should be created from a different
+    # template? Where can we get that information?
     models.signals.post_save.connect(signals.create_schema,
                                      sender=Schema,
-                                     weak=True,
+                                     weak=False,
                                      dispatch_uid='create-schema')
 
-    models.signals.post_init.connect(signals.inject_schema_attribute,
-                                     sender=None, weak=True)
+    models.signals.post_delete.connect(signals.drop_schema, sender=Schema, weak=False)
+
+    models.signals.post_init.connect(signals.inject_schema_attribute, sender=None)
 
     models.signals.m2m_changed.connect(signals.invalidate_cache,
-                                       sender=Schema.users.through, weak=True)
+                                       sender=Schema.users.through)
 
-    models.signals.post_save.connect(signals.invalidate_all_user_caches,
-                                     sender=Schema, weak=True)
+    models.signals.post_save.connect(signals.invalidate_all_user_caches, sender=Schema, weak=False)
 
-    models.signals.pre_migrate.connect(signals.invalidate_all_caches, weak=True)
+    models.signals.pre_migrate.connect(signals.invalidate_all_caches, weak=False)
+
+    signals.schema_aware_operation.connect(signals.execute_on_all_schemata, weak=False)
+    signals.schema_aware_operation.connect(signals.execute_on_template_schema, weak=False)

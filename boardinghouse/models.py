@@ -8,6 +8,7 @@ from django.core.validators import RegexValidator
 from django.db import models
 from django.forms import ValidationError
 from django.utils.translation import ugettext_lazy as _
+from django.utils import six
 
 from .base import SharedSchemaMixin
 from .schema import activate_schema, deactivate_schema, _schema_exists
@@ -49,13 +50,17 @@ class SchemaQuerySet(models.query.QuerySet):
     def inactive(self):
         return self.filter(is_active=False)
 
-    def delete(self):
-        self.update(is_active=False)
+    def delete(self, drop=False):
+        if drop:
+            super(SchemaQuerySet, self).delete()
+        else:
+            self.update(is_active=False)
 
     def activate(self, pk):
         self.get(pk=pk).activate()
 
 
+@six.python_2_unicode_compatible
 class AbstractSchema(SharedSchemaMixin, models.Model):
     """
     The Schema model provides an abstraction for a Postgres schema.
@@ -89,8 +94,8 @@ class AbstractSchema(SharedSchemaMixin, models.Model):
         super(AbstractSchema, self).__init__(*args, **kwargs)
         self._initial_schema = self.schema
 
-    def __unicode__(self):
-        return u'%s (%s)' % (self.name, self.schema)
+    def __str__(self):
+        return '{} ({})'.format(self.name, self.schema)
 
     def save(self, *args, **kwargs):
         self._meta.get_field('schema').run_validators(self.schema)
@@ -107,9 +112,12 @@ class AbstractSchema(SharedSchemaMixin, models.Model):
 
         return super(AbstractSchema, self).save(*args, **kwargs)
 
-    def delete(self):
-        self.is_active = False
-        self.save()
+    def delete(self, drop=False):
+        if drop:
+            super(AbstractSchema, self).delete()
+        else:
+            self.is_active = False
+            self.save()
 
     def activate(self, cursor=None):
         activate_schema(self.schema)

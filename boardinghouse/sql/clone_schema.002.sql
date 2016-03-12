@@ -16,6 +16,7 @@ DECLARE
   view_                 record;
   constraint_           record;
   function_             text;
+  insert_query          text;
 
 BEGIN
   -- I seemed to be getting errors if I didn't do this.
@@ -95,7 +96,7 @@ BEGIN
      WHERE table_schema = quote_ident(source_schema)
        AND table_type = 'BASE TABLE'
   LOOP
-    RAISE DEBUG 'CREATE TABLE % LIKE (%.% INCLUDING ALL)', buffer,
+    RAISE DEBUG 'CREATE TABLE % (LIKE %.% INCLUDING ALL)', buffer,
                                                            source_schema,
                                                            object;
     EXECUTE 'CREATE TABLE '
@@ -104,8 +105,9 @@ BEGIN
             || ' INCLUDING ALL);';
 
     IF include_records THEN
+    -- RAISE NOTICE 'INSERT INTO % SELECT * FROM %.%', buffer, quote_ident(source_schema), object;
       EXECUTE 'INSERT INTO ' || buffer || ' SELECT * FROM '
-              || quote_ident(source_schema) || '.' || object ';';
+              || quote_ident(source_schema) || '.' || object || ';';
     END IF;
 
     -- Ensure any default values that refer to the old schema now refer to the new schema.
@@ -123,6 +125,8 @@ BEGIN
 
     -- Ensure any triggers also come across...
     -- We can do the same trick we did for the default values.
+    -- Hmm. Need to test this, because I think that triggers may already come
+    -- across...
     FOR trigger_ IN
       SELECT replace(pg_catalog.pg_get_triggerdef(oid, false)::text,
                      source_schema, dest_schema)

@@ -1,12 +1,13 @@
 from django.db import models
-from django.conf import settings
-from django.utils.translation import ugettext as _
+# from django.conf import settings
+# from django.utils.translation import ugettext as _
 
 from boardinghouse.models import AbstractSchema
 
 
 class School(AbstractSchema):
     pass
+    # When I fix the swappable model, can fix this.
     # users = models.ManyToManyField(settings.AUTH_USER_MODEL,
     #     blank=True, related_name='schemata',
     #     help_text=_(u'Which users may access data from this schema.')
@@ -17,22 +18,22 @@ class StaffMember(models.Model):
     name = models.CharField(max_length=64)
     staff_id = models.CharField(unique=True, max_length=16)
 
-    def __unicode__(self):
-        return u"%s (%s)" % (self.name, self.staff_id)
+    def __str__(self):
+        return "{} ({})".format(self.name, self.staff_id)
 
 
 class Student(models.Model):
     name = models.CharField(max_length=64)
     student_id = models.CharField(unique=True, max_length=16)
 
-    def __unicode__(self):
-        return u"%s (%s)" % (self.name, self.student_id)
+    def __str__(self):
+        return "{} ({})".format(self.name, self.student_id)
 
 
 class Subject(models.Model):
     name = models.CharField(unique=True, max_length=64)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 SEMESTERS = (
@@ -62,16 +63,16 @@ class Enrolment(models.Model):
     semester = models.IntegerField(choices=SEMESTERS)
     grade = models.CharField(choices=GRADES, max_length=3, null=True, blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         if self.grade:
-            return u'%s studied %s in %s %s. Grade was %s' % (
+            return '{} studied {} in {} {}. Grade was {}'.format(
                 self.student.name,
                 self.subject.name,
                 self.get_semester_display(),
                 self.year,
                 self.get_grade_display()
             )
-        return u'%s enrolled in %s in %s %s.' % (
+        return u'{} enrolled in {} in {} {}.'.format(
             self.student.name,
             self.subject.name,
             self.get_semester_display(),

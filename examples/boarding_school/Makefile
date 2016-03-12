@@ -1,34 +1,39 @@
+BINDIR=.boarding-school/bin
+PIP=${BINDIR}/pip
+PYTHON=${BINDIR}/python
 
 database:
 	createdb school-demo
 
 virtualenv:
-	virtualenv .boarding-school
+	virtualenv --python `which python3` .boarding-school
 
 install-packages:
-	.boarding-school/bin/pip install -e ../..
-	.boarding-school/bin/pip install psycopg2
+	${PIP} install pip --upgrade
+	${PIP} install -e ../..
+	${PIP} install psycopg2
+	${PIP} install coverage
 
 load-data:
-	./manage.py migrate
-	./manage.py loaddata user
-	./manage.py loaddata schools
-	./manage.py loaddata --schema hamilton hamilton
-	./manage.py loaddata --schema naracoorte_hs naracoorte_hs
+	${PYTHON} manage.py migrate
+	${PYTHON} manage.py loaddata user
+	${PYTHON} manage.py loaddata schools
+	${PYTHON} manage.py loaddata --schema hamilton hamilton
+	${PYTHON} manage.py loaddata --schema naracoorte_hs naracoorte_hs
 
 clean:
 	dropdb school-demo || true
 	rm -rf .boarding-school
 
 runserver:
-	./manage.py runserver ${PORT}
+	${PYTHON} manage.py runserver ${PORT}
 
 test:
-	./manage.py test
+	${PYTHON} manage.py test
 
 all: database virtualenv install-packages load-data
 
 remigrate:
-	./manage.py migrate boardinghouse zero
+	${PYTHON} manage.py migrate boardinghouse zero
 
 test-for-coverage: all remigrate load-data

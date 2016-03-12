@@ -8,142 +8,102 @@ from django.conf import settings
 import sqlparse
 from sqlparse.tokens import DDL, DML, Keyword
 
-from ...schema import is_shared_table
-from ...schema import get_schema_model, _schema_table_exists
-from ...schema import deactivate_schema, activate_template_schema
+from ...schema import deactivate_schema, is_shared_table
+from ...signals import schema_aware_operation
 
 
-def get_constraints(cursor, table_name):
+def get_constraints(cursor, table_name, schema_name='__template__'):
+    """Return all constraints for a given table
+
+    This function looks in the `settings.PUBLIC_SCHEMA`, and the supplied schema
+    (defaulting to `__template__` if none supplied) for all constraints
+    that exist on the provided table name. The assumption is made that the
+    same table will not exist in both schemata: if so, and the constraints
+    differ between the two tables in any way, then the union of constraints
+    will be returned.
+
+    This is an improvement on the django implementation in two ways:
+    it runs in a single query, rather than three. It also allows for
+    a different schema than `public`, which is hardcoded.
     """
-    Retrieves any constraints or keys (unique, pk, fk, check, index) across one or more columns.
+    cursor.execute(''
+"""WITH constraints AS (
 
-    This is copied (almost) verbatim from django, but replaces the use of "public" with "public" + "__template__".
+          SELECT tc.constraint_type,
+                 tc.constraint_name,
+                 COALESCE(ccu.column_name, kcu.column_name) AS column_name
+            FROM information_schema.table_constraints AS tc
+ LEFT OUTER JOIN information_schema.constraint_column_usage AS ccu
+           USING (table_schema, table_name, constraint_name)
+ LEFT OUTER JOIN information_schema.key_column_usage AS kcu
+           USING (table_schema, table_name, constraint_name)
+           WHERE tc.table_schema IN (%s, %s)
+             AND tc.table_name = %s
 
-    We assume that this will find the relevant constraint, and rely on our operations keeping the others in sync.
-    """
-    constraints = {}
-    # Loop over the key table, collecting things as constraints
-    # This will get PKs, FKs, and uniques, but not CHECK
-    cursor.execute("""
-        SELECT
-            kc.constraint_name,
-            kc.column_name,
-            c.constraint_type,
-            array(SELECT table_name::text || '.' || column_name::text
-                  FROM information_schema.constraint_column_usage
-                  WHERE constraint_name = kc.constraint_name)
-        FROM information_schema.key_column_usage AS kc
-        JOIN information_schema.table_constraints AS c ON
-            kc.table_schema = c.table_schema AND
-            kc.table_name = c.table_name AND
-            kc.constraint_name = c.constraint_name
-        WHERE
-            kc.table_schema IN (%s, %s) AND
-            kc.table_name = %s
-        ORDER BY kc.ordinal_position ASC
-    """, [settings.PUBLIC_SCHEMA, "__template__", table_name])
-    for constraint, column, kind, used_cols in cursor.fetchall():
-        # If we're the first column, make the record
-        if constraint not in constraints:
-            constraints[constraint] = {
-                "columns": [],
-                "primary_key": kind.lower() == "primary key",
-                "unique": kind.lower() in ["primary key", "unique"],
-                "foreign_key": tuple(used_cols[0].split(".", 1)) if kind.lower() == "foreign key" else None,
-                "check": False,
-                "index": False,
-            }
-        # Record the details
-        constraints[constraint]['columns'].append(column)
-    # Now get CHECK constraint columns
-    cursor.execute("""
-        SELECT kc.constraint_name, kc.column_name
-        FROM information_schema.constraint_column_usage AS kc
-        JOIN information_schema.table_constraints AS c ON
-            kc.table_schema = c.table_schema AND
-            kc.table_name = c.table_name AND
-            kc.constraint_name = c.constraint_name
-        WHERE
-            c.constraint_type = 'CHECK' AND
-            kc.table_schema IN (%s, %s) AND
-            kc.table_name = %s
-    """, [settings.PUBLIC_SCHEMA, "__template__", table_name])
-    for constraint, column in cursor.fetchall():
-        # If we're the first column, make the record
-        if constraint not in constraints:
-            constraints[constraint] = {
-                "columns": [],
-                "primary_key": False,
-                "unique": False,
-                "foreign_key": None,
-                "check": True,
-                "index": False,
-            }
-        # Record the details
-        constraints[constraint]['columns'].append(column)
-    # Now get indexes
-    cursor.execute("""
-        SELECT
-            c2.relname,
-            ARRAY(
-                SELECT (SELECT attname FROM pg_catalog.pg_attribute WHERE attnum = i AND attrelid = c.oid)
-                FROM unnest(idx.indkey) i
-            ),
-            idx.indisunique,
-            idx.indisprimary
-        FROM pg_catalog.pg_class c, pg_catalog.pg_class c2,
-            pg_catalog.pg_index idx, pg_catalog.pg_namespace n
-        WHERE c.oid = idx.indrelid
-            AND idx.indexrelid = c2.oid
-            AND n.oid = c.relnamespace
-            AND n.nspname IN (%s, %s)
-            AND c.relname = %s
-    """, [settings.PUBLIC_SCHEMA, '__template__', table_name])
-    for index, columns, unique, primary in cursor.fetchall():
-        if index not in constraints:
-            constraints[index] = {
-                "columns": list(columns),
-                "primary_key": primary,
-                "unique": unique,
-                "foreign_key": None,
-                "check": False,
-                "index": True,
-            }
-    return constraints
+             UNION
+
+          SELECT 'INDEX' AS constraint_type,
+                 id.indexname AS constraint_name,
+                 attr.attname AS column_name
+            FROM pg_catalog.pg_indexes AS id
+      INNER JOIN pg_catalog.pg_index  AS idx
+              ON (id.schemaname || '.' || id.indexname)::regclass = idx.indexrelid
+ LEFT OUTER JOIN pg_catalog.pg_attribute AS attr
+              ON idx.indrelid = attr.attrelid AND attr.attnum = ANY(idx.indkey)
+           WHERE id.schemaname IN (%s, %s)
+             AND id.tablename = %s
+),
+by_type AS (
+  SELECT constraint_type,
+         constraint_name,
+         array_agg(column_name ORDER BY column_name) AS columns
+    FROM constraints
+   WHERE column_name IS NOT NULL
+GROUP BY constraint_name, constraint_type
+),
+by_name AS (
+  SELECT array_agg(constraint_type) AS constraints,
+         constraint_name,
+         columns
+    FROM by_type
+GROUP BY constraint_name, columns
+)
+
+
+SELECT constraint_name,
+       columns,
+       'PRIMARY KEY' = ANY(constraints) AS "primary_key",
+       'UNIQUE' = ANY(constraints) OR 'PRIMARY KEY' = ANY(constraints) AS "unique",
+       CASE WHEN 'FOREIGN KEY' = ANY(constraints) THEN
+           (SELECT ARRAY[table_name::text, column_name::text]
+                    FROM information_schema.constraint_column_usage ccu
+                   WHERE by_name.constraint_name = ccu.constraint_name
+                   LIMIT 1)
+       END AS "foreign_key",
+       'CHECK' = ANY(constraints) AS "check",
+       'INDEX' = ANY(constraints) AS "index"
+FROM by_name""", [settings.PUBLIC_SCHEMA, schema_name, table_name] * 2)
+    columns = [x.name for x in cursor.description]
+    return {row[0]: dict(zip(columns, row)) for row in cursor}
 
 
 def get_index_data(cursor, index_name):
 
-    cursor.execute('''SELECT
-    c.relname AS table_name,
-    n.nspname AS schema_name
-FROM pg_catalog.pg_class c, pg_catalog.pg_class c2,
-    pg_catalog.pg_index idx, pg_catalog.pg_namespace n
-WHERE c.oid = idx.indrelid
-    AND idx.indexrelid = c2.oid
-    AND n.oid = c.relnamespace
-    AND n.nspname IN (%s, %s)
-    AND c2.relname = %s
+    cursor.execute('''SELECT c.relname AS table_name,
+                             n.nspname AS schema_name
+                        FROM pg_catalog.pg_class c, pg_catalog.pg_class c2,
+                             pg_catalog.pg_index idx, pg_catalog.pg_namespace n
+                       WHERE c.oid = idx.indrelid
+                         AND idx.indexrelid = c2.oid
+                         AND n.oid = c.relnamespace
+                         AND n.nspname IN (%s, %s)
+                         AND c2.relname = %s
     ''', [settings.PUBLIC_SCHEMA, '__template__', index_name])
 
     return [table_name for (table_name, schema_name) in cursor.fetchall()]
 
 
-def get_table_and_schema(sql, cursor):
-    try:
-        parsed = sqlparse.parse(sql)[0]
-    except IndexError:
-        # In the case of a CREATE * FUNCTION that is a plpgsql function, we
-        # know we won't be able to parse it. Functions should probably be in
-        # the public schema anyway.
-        sql_upper = sql.upper()
-        if (
-            'CREATE FUNCTION' in sql_upper or
-            'CREATE OR REPLACE FUNCTION' in sql_upper
-        ) and 'LANGUAGE PLPGSQL' in sql_upper:
-            return None, None
-        raise
-
+def group_tokens(parsed):
     grouped = defaultdict(list)
     identifiers = []
 
@@ -153,34 +113,82 @@ def get_table_and_schema(sql, cursor):
         elif token.get_name():
             identifiers.append(token)
 
+    return grouped, identifiers
+
+
+def get_table_and_schema(sql, cursor):
+    """
+    Given an SQL statement, determine what the database object that is being
+    operated upon is.
+
+    This logic is quite complex. If you find a case that does not work, please
+    submit a bug report (or even better, pull request!)
+    """
+    try:
+        parsed = sqlparse.parse(sql)[0]
+    except IndexError:
+        # In the case of a CREATE * FUNCTION that is a plpgsql function, we
+        # know we won't be able to parse it. Functions should probably be in
+        # the public schema anyway. If you had different functions required
+        # per tenant, then you'd need to come up with a way to do that.
+        sql_upper = sql.upper()
+        if (
+            'CREATE FUNCTION' in sql_upper or
+            'CREATE OR REPLACE FUNCTION' in sql_upper
+        ) and 'LANGUAGE PLPGSQL' in sql_upper:
+            return None, None
+        raise
+
+    grouped, identifiers = group_tokens(parsed)
+
     if grouped[DDL] and grouped[DDL][0] in ['CREATE', 'DROP', 'ALTER', 'CREATE OR REPLACE']:
         # We may care about this.
         keywords = grouped[Keyword]
-        # DROP INDEX does not have a table associated with it.
-        # We will have to hit the database to see what schema(ta) have an index with that name.
         if 'FUNCTION' in keywords:
+            # At this point, I'm not convinced that functions belong anywhere
+            # other than in the public schema. Perhaps they should, as that
+            # could be a nice way to get different behaviour per-tenant.
             return None, None
-        if 'INDEX' in keywords and grouped[DDL][0] == 'DROP':
+        elif 'INDEX' in keywords and grouped[DDL][0] == 'DROP':
+            # DROP INDEX does not have a table associated with it.
+            # We will have to hit the database to see what tables have
+            # an index with that name: we can just use the template/public
+            # schemata though.
             return get_index_data(cursor, identifiers[0].get_name())[0], None
-        if 'VIEW' in keywords or 'TABLE' in keywords:
-            # We care about identifier 0
-            if identifiers:
-                return identifiers[0].get_name(), identifiers[0].get_parent_name()
-        elif 'TRIGGER' in keywords or 'INDEX' in keywords:
-            # We care about identifier 1
-            if len(identifiers) > 1:
-                return identifiers[1].get_name(), identifiers[1].get_parent_name()
-
-    # We also care about other non-DDL statements, as the implication is that they
-    # should apply to every known schema, if we are updating as part of a migration.
-    if grouped[DML] and grouped[DML][0] in ['INSERT INTO', 'UPDATE', 'DELETE FROM']:
-        if identifiers:
+        elif ('VIEW' in keywords or 'TABLE' in keywords) and identifiers:
+            # We care about identifier 0, which will be the name of the view
+            # or table.
             return identifiers[0].get_name(), identifiers[0].get_parent_name()
+        elif ('TRIGGER' in keywords or 'INDEX' in keywords) and len(identifiers) > 1:
+            # We care about identifier 1, as identifier 0 is the name of the
+            # function or index: identifier 1 is the table it refers to.
+            return identifiers[1].get_name(), identifiers[1].get_parent_name()
+
+    # We also care about other non-DDL statements, as the implication is that
+    # they should apply to every known schema, if we are updating as part of a
+    # migration.
+    if grouped[DML] and \
+       grouped[DML][0] in ['INSERT INTO', 'UPDATE', 'DELETE FROM'] and\
+       identifiers:
+        return identifiers[0].get_name(), identifiers[0].get_parent_name()
 
     return None, None
 
 
 class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
+    """
+    This Schema Editor alters behaviour in three ways.
+
+    1. Remove duplicates of deferred sql statements. These are
+       executed using `self.execute()` anyway, so they will get
+       applied to all schemata as appropriate.
+    2. Fire a signal during `self.execute()` so that listeners may choose
+       to apply this statement to all schemata. This signal only fires for
+       objects that are private objects.
+    3. Change the mechanism for grabbing constraint names to also look in
+       the template schema (instead of just `public`, as is hard-coded in
+       the original method).
+    """
 
     def __exit__(self, exc_type, exc_value, traceback):
         # It seems that actions that add stuff to the deferred sql
@@ -196,20 +204,18 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
         # If we manage to rewrite the SQL so it injects schema clauses, then we can remove this override.
 
     def execute(self, sql, params=None):
-        # We want to execute our SQL multiple times, if it is per-schema.
         execute = super(DatabaseSchemaEditor, self).execute
 
         table_name, schema_name = get_table_and_schema(sql, self.connection.cursor())
 
         # TODO: try to get the apps from current project_state, not global apps.
         if table_name and not schema_name and not is_shared_table(table_name):
-            if _schema_table_exists():
-                for each in get_schema_model().objects.all():
-                    each.activate()
-                    execute(sql, params)
-
-            activate_template_schema()
-            execute(sql, params)
+            schema_aware_operation.send(
+                self.__class__,
+                db_table=table_name,
+                function=execute,
+                args=(sql, params)
+            )
             deactivate_schema()
         else:
             execute(sql, params)

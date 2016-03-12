@@ -1,37 +1,42 @@
 from django.db import models
-from django.dispatch import receiver
 
 from boardinghouse.base import SharedSchemaMixin
+from boardinghouse.schema import activate_schema, deactivate_schema
 
 
-class TemplateSchema(SharedSchemaMixin, models.Model):
+class SchemaTemplate(SharedSchemaMixin, models.Model):
     """
-    A ``boardinghouse.contrib.template.models.TemplateSchema``
+    A ``boardinghouse.contrib.template.models.SchemaTemplate`` can be used
+    for creating a new schema complete with some initial data.
     """
+    template_schema_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=128, unique=True)
+    is_active = models.BooleanField(default=True)
+    description = models.TextField(null=True, blank=True)
 
     class Meta:
-        default_permissions = ('add', 'change', 'delete', 'view', 'activate')
+        default_permissions = ('add', 'change', 'delete', 'view', 'activate', 'clone')
         verbose_name_plural = u'template schemata'
 
     def __unicode__(self):
         return self.name
 
+    def __str__(self):
+        return self.name
+
     @property
     def schema(self):
-        return '__template_%i' % self.pk
+        return '__template_{}'.format(self.pk)
 
     @classmethod
     def create_from_schema(cls, schema='__template__'):
         pass
 
-    def update_from_schema(self, schema):
-        pass
-
     def clone_to_schema(self, schema):
         pass
 
+    def activate(self):
+        activate_schema(self.schema)
 
-@receiver(models.signals.post_save, sender=TemplateSchema)
-def create_template_schema(sender, instance, **kwargs):
-    assert None, "Create schema missing."
+    def deactivate(self):
+        deactivate_schema()

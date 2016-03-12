@@ -25,17 +25,31 @@ Signals that are fired as part of the django-boardinghouse project.
 
     Sent when a user-session has changed it's schema.
 
+.. data:: schema_aware_operation
+
+    Sent when a migration operation that needs to be applied to each schema is
+    due to be applied. Internally, this signal is used to ensure that the
+    template schema and all currently existing schemata have the migration
+    applied to them.
+
+    This is also used by the ``contrib.template`` app to ensure that operations
+    are applied to :class:`boardinghouse.contrib.template.models.SchemaTemplate`
+    instances.
 """
 
 import logging
 
-from django.dispatch import Signal
-from django.db import connection
 from django.core.cache import cache
+from django.db import connection
+from django.dispatch import Signal
 
 from .schema import (
-    _schema_exists, is_shared_model, get_schema_model,
-    get_active_schema_name
+    activate_template_schema,
+    get_active_schema_name,
+    get_schema_model,
+    is_shared_model,
+    _schema_exists,
+    _schema_table_exists,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -51,6 +65,8 @@ schema_post_activate = Signal(providing_args=["schema"])
 session_requesting_schema_change = Signal(providing_args=["user", "schema", "session"])
 session_schema_changed = Signal(providing_args=["user", "schema", "session"])
 
+schema_aware_operation = Signal(providing_args=['db_table', 'sql', 'params', 'execute'])
+
 
 # Signal handlers.
 
@@ -60,23 +76,42 @@ def create_schema(sender, instance, created, **kwargs):
 
     We do this in a signal handler instead of .save() so we can catch
     those created using raw methods.
+
+    How do we indicate when we should be using a different template?
     """
     if created:
         schema_name = instance.schema
 
+        # How can we work out what values need to go here?
+        # Currently, we just allow a single attribute `_clone`, that,
+        # if set, will indicate that we should clone a schema.
+        template_name = getattr(instance, '_clone', '__template__')
+        include_records = bool(getattr(instance, '_clone', False))
+
         cursor = connection.cursor()
 
         if _schema_exists(schema_name):
-            LOGGER.warn('Attempt to create an existing schema: %s' % schema_name)
-            return
+            raise ValueError('Attempt to create an existing schema: {}'.format(schema_name))
 
-        cursor.execute("SELECT clone_schema('__template__', %s)", [schema_name])
+        cursor.execute("SELECT clone_schema(%s, %s, %s)", [
+            template_name,
+            schema_name,
+            include_records
+        ])
         cursor.close()
 
         if schema_name != '__template__':
-            schema_created.send(sender=get_schema_model(), schema=schema_name)
+            schema_created.send(sender=get_schema_model(),
+                                schema=schema_name)
 
-        LOGGER.info('New schema created: %s' % schema_name)
+        LOGGER.info('New schema created: %s', schema_name)
+
+
+def drop_schema(sender, instance, **kwargs):
+    cursor = connection.cursor()
+    # Is there a way to do this without opening up an SQL injection hole?
+    cursor.execute("DROP SCHEMA IF EXISTS {} CASCADE".format(instance.schema))
+    LOGGER.info('Schema dropped: %s', instance.schema)
 
 
 def inject_schema_attribute(sender, instance, **kwargs):
@@ -99,11 +134,11 @@ def invalidate_cache(sender, **kwargs):
     user's visible schemata items.
     """
     if kwargs['reverse']:
-        cache.delete('visible-schemata-%s' % kwargs['instance'].pk)
+        cache.delete('visible-schemata-{instance.pk}'.format(**kwargs))
     else:
         if kwargs['pk_set']:
             for pk in kwargs['pk_set']:
-                cache.delete('visible-schemata-%s' % pk)
+                cache.delete('visible-schemata-{}'.format(pk))
 
 
 def invalidate_all_user_caches(sender, **kwargs):
@@ -112,9 +147,8 @@ def invalidate_all_user_caches(sender, **kwargs):
     who have access to the sender instance (schema).
     """
     cache.delete('active-schemata')
-    cache.delete('all-schemata')
     for user in kwargs['instance'].users.values('pk'):
-        cache.delete('visible-schemata-%s' % user['pk'])
+        cache.delete('visible-schemata-{pk}'.format(**user))
 
 
 def invalidate_all_caches(sender, **kwargs):
@@ -123,4 +157,15 @@ def invalidate_all_caches(sender, **kwargs):
     """
     if sender.name == 'boardinghouse':
         cache.delete('active-schemata')
-        cache.delete('all-schemata')
+
+
+def execute_on_all_schemata(sender, db_table, function, **kwargs):
+    if _schema_table_exists():
+        for each in get_schema_model().objects.all():
+            each.activate()
+            function(*kwargs.get('args', []), **kwargs.get('kwargs', {}))
+
+
+def execute_on_template_schema(sender, db_table, function, **kwargs):
+    activate_template_schema()
+    function(*kwargs.get('args', []), **kwargs.get('kwargs', {}))
