@@ -18,7 +18,7 @@ class BoardingHouseTemplateConfig(AppConfig):
 
         models.signals.post_delete.connect(signals.drop_schema, sender=SchemaTemplate)
 
-        @receiver(signals.schema_aware_operation, weak=False)
+        @receiver(signals.schema_aware_operation, weak=False, dispatch_uid='execute-all-templates')
         def execute_on_all_templates(sender, db_table, function, **kwargs):
             for schema in SchemaTemplate.objects.all():
                 activate_schema(schema.schema)
