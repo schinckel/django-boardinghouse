@@ -22,4 +22,6 @@ class BoardingHouseTemplateConfig(AppConfig):
         def execute_on_all_templates(sender, db_table, function, **kwargs):
             for schema in SchemaTemplate.objects.all():
                 activate_schema(schema.schema)
+                print schema.schema
+                print kwargs
                 function(*kwargs.get('args', []), **kwargs.get('kwargs', {}))
