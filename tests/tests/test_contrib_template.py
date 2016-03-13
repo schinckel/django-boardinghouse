@@ -52,6 +52,14 @@ class TestContribTemplate(TestCase):
         response = self.client.get('/__change_schema__/{}/'.format(template.schema))
         self.assertEquals(200, response.status_code)
 
+    def test_invalid_template_raises_forbidden(self):
+        template = SchemaTemplate.objects.create(name='Foo')
+        user = User.objects.create_user(**CREDENTIALS)
+        user.user_permissions.add(Permission.objects.get(codename='activate_schematemplate'))
+        self.client.login(**CREDENTIALS)
+        response = self.client.get('/__change_schema__/{}1/'.format(template.schema))
+        self.assertEquals(403, response.status_code)
+
     def test_cloning_templates_clones_data(self):
         template = SchemaTemplate.objects.create(name='Foo')
         activate_schema(template.schema)
