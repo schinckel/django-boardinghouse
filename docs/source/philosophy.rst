@@ -56,7 +56,7 @@ Whenever a request comes in, :class:`boardinghouse.middleware.SchemaMiddleware` 
 
 Models will, by default, only live in a non-shared schema, unless they:
 
-* are explicitly marked within their definition as shared, by subclassing :class:`boardinghouse.base.SharedSchemaModel`, or by having the attribute ``_is_shared_model`` set to ``True``.
+* are explicitly marked within their definition as shared, by subclassing :class:`boardinghouse.base.SharedSchemaModel`.
 
 * are listed in ``settings.BOARDINGHOUSE.SHARED_MODELS``.
 
