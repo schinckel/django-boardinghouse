@@ -531,9 +531,6 @@ class TestMigrations(MigrationTestBase):
         new_state = project_state.clone()
         operation.state_forwards('tests', new_state)
 
-        Pony = new_state.apps.get_model('tests', 'Pony')
-        self.assertTrue(hasattr(Pony(), 'yellow'))
-
         self.assertColumnNotExists('tests_pony', 'yellow')
         with connection.schema_editor() as editor:
             operation.database_forwards('tests', editor, project_state, new_state)
