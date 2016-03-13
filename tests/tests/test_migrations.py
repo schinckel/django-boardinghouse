@@ -545,6 +545,7 @@ class TestMigrations(MigrationTestBase):
         from ..models import AwareModel, NaiveModel, SelfReferentialModel
 
         with connection.schema_editor() as editor:
+            self.assertEqual(3, len(editor._constraint_names(AwareModel, index=True)))
             six.assertCountEqual(
                 self,
                 ['tests_awaremodel_pkey'],
