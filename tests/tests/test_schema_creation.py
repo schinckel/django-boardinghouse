@@ -160,6 +160,11 @@ class TestGetSetSearchPath(TestCase):
     def test_default_search_path(self):
         self.assertEquals(None, get_active_schema_name())
 
+    def test_manual_set_search_path(self):
+        Schema.objects.create(name='a', schema='a')
+        connection.cursor().execute('SET search_path TO a,public')
+        self.assertEquals('a', get_active_schema_name())
+
     def test_activate_schema_sets_search_path(self):
         schema = Schema.objects.create(name='a', schema='a')
         schema.activate()
