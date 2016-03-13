@@ -124,21 +124,7 @@ def get_table_and_schema(sql, cursor):
     This logic is quite complex. If you find a case that does not work, please
     submit a bug report (or even better, pull request!)
     """
-    try:
-        parsed = sqlparse.parse(sql)[0]
-    except IndexError:
-        # In the case of a CREATE * FUNCTION that is a plpgsql function, we
-        # know we won't be able to parse it. Functions should probably be in
-        # the public schema anyway. If you had different functions required
-        # per tenant, then you'd need to come up with a way to do that.
-        sql_upper = sql.upper()
-        if (
-            'CREATE FUNCTION' in sql_upper or
-            'CREATE OR REPLACE FUNCTION' in sql_upper
-        ) and 'LANGUAGE PLPGSQL' in sql_upper:
-            return None, None
-        raise
-
+    parsed = sqlparse.parse(sql)[0]
     grouped, identifiers = group_tokens(parsed)
 
     if grouped[DDL] and grouped[DDL][0] in ['CREATE', 'DROP', 'ALTER', 'CREATE OR REPLACE']:
