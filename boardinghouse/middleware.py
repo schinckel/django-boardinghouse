@@ -230,7 +230,7 @@ class SchemaMiddleware:
                 if request.is_ajax():
                     return HttpResponse(
                         _('You must select a schema to access that resource'),
-                        status_code=400
+                        status=400
                     )
                 # Can we see if there is already a pending message for this
                 # request that has the same content as us?

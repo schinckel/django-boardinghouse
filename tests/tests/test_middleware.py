@@ -136,6 +136,16 @@ class TestMiddleware(TestCase):
         resp = self.client.get('/aware/')
         self.assertEquals(302, resp.status_code)
 
+    def test_exception_caused_by_no_active_schema_ajax(self):
+        Schema.objects.create(schema='a', name='a').activate()
+        AwareModel.objects.create(name='foo')
+        AwareModel.objects.create(name='bar')
+
+        User.objects.create_user(**CREDENTIALS)
+        self.client.login(**CREDENTIALS)
+        resp = self.client.get('/aware/', HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEquals(400, resp.status_code)
+
     def test_attempt_to_activate_template_schema(self):
         User.objects.create_user(**CREDENTIALS)
         self.client.login(**CREDENTIALS)
