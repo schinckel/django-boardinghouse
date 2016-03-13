@@ -18,8 +18,5 @@ class AddField(migrations.AddField):
     def database_forwards(self, app_label, *args):
         return super(AddField, self).database_forwards(self.app_label, *args)
 
-    def state_backwards(self, app_label, state):
-        return super(AddField, self).state_backwards(self.app_label, state)
-
     def database_backwards(self, app_label, *args):
         return super(AddField, self).database_backwards(self.app_label, *args)
