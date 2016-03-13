@@ -7,6 +7,9 @@ from django.shortcuts import render
 
 from django.contrib import admin
 from django.contrib.auth.views import login, logout_then_login
+
+from boardinghouse.schema import activate_schema
+
 admin.autodiscover()
 
 
@@ -31,12 +34,19 @@ def sql_error(request):
     connection.cursor().execute('foo')
 
 
+def activate_schema_view(request, schema):
+    # Don't do this.
+    activate_schema(schema)
+    return HttpResponse(schema)
+
+
 urlpatterns = [
     url(r'^$', echo_schema),
     url(r'^sql/error/$', sql_error),
     url(r'^change/$', change_schema_view),
     url(r'^aware/$', aware_objects_view),
     url(r'^admin/', include(admin.site.urls)),
-    url(r'login/$', login, {'template_name': 'admin/login.html'}, name='login'),
-    url(r'logout/$', logout_then_login, name='logout'),
+    url(r'^login/$', login, {'template_name': 'admin/login.html'}, name='login'),
+    url(r'^logout/$', logout_then_login, name='logout'),
+    url(r'^bad/activate/schema/(.*)/$', activate_schema_view, name='bad-view'),
 ]

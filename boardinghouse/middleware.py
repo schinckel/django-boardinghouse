@@ -240,7 +240,8 @@ class SchemaMiddleware:
                 )
                 return HttpResponseRedirect('..')
         # I'm not sure we ever really hit this one, but it's worth keeping
-        # here just in case we've missed something.
+        # here just in case we've missed something. I guess it could occur
+        # if a view manually attempted to activate the template schema.
         if isinstance(exception, TemplateSchemaActivation):
             request.session.pop('schema', None)
             return HttpResponseForbidden(_('You may not select that schema'))

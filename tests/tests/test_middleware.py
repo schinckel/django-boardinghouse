@@ -230,6 +230,10 @@ class TestMiddleware(TestCase):
         with self.assertRaises(Forbidden):
             change_schema(request, 'b')
 
+    def test_view_changes_to_template_schema(self):
+        response = self.client.get('/bad/activate/schema/__template__/')
+        self.assertEquals(403, response.status_code)
+
 
 class TestContextProcessor(TestCase):
     def setUp(self):
@@ -257,7 +261,7 @@ class TestContextProcessor(TestCase):
         self.assertIn(schemata[1], resp.context['schemata'])
         self.assertEquals('a', resp.context['selected_schema'])
 
-    def user_has_no_schemata(self):
+    def test_user_has_no_schemata(self):
         User.objects.create_user(**CREDENTIALS)
         self.client.login(**CREDENTIALS)
         resp = self.client.get('/change/')
