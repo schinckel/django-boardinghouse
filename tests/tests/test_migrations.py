@@ -12,6 +12,7 @@ from django.utils import six
 from boardinghouse.schema import get_schema_model, get_template_schema
 from boardinghouse.schema import activate_template_schema, deactivate_schema
 from boardinghouse.backends.postgres.schema import get_constraints
+from boardinghouse.operations import AddField
 
 Schema = get_schema_model()
 template_schema = get_template_schema()
@@ -396,14 +397,14 @@ class TestMigrations(MigrationTestBase):
     def test_run_sql(self):
         project_state = self.set_up_test_model()
         operation = migrations.RunSQL("""
-CREATE TABLE i_love_ponies (id int, special_thing int);
-CREATE INDEX i_love_ponies_special_idx ON i_love_ponies (special_thing);
-INSERT INTO i_love_ponies (id, special_thing) VALUES (1, 42);
-INSERT INTO i_love_ponies (id, special_thing) VALUES (2, 51), (3, 60);
-DELETE FROM i_love_ponies WHERE special_thing = 42;
-UPDATE i_love_ponies SET special_thing = 42 WHERE id = 2;
-""",
-" DROP TABLE i_love_ponies")
+            CREATE TABLE i_love_ponies (id int, special_thing int);
+            CREATE INDEX i_love_ponies_special_idx ON i_love_ponies (special_thing);
+            INSERT INTO i_love_ponies (id, special_thing) VALUES (1, 42);
+            INSERT INTO i_love_ponies (id, special_thing) VALUES (2, 51), (3, 60);
+            DELETE FROM i_love_ponies WHERE special_thing = 42;
+            UPDATE i_love_ponies SET special_thing = 42 WHERE id = 2;
+            """,
+            " DROP TABLE i_love_ponies")
         new_state = project_state.clone()
         operation.state_forwards('tests', new_state)
         self.assertTableNotExists('i_love_ponies')
@@ -518,3 +519,24 @@ UPDATE i_love_ponies SET special_thing = 42 WHERE id = 2;
 
         Schema.objects.get(schema='a').activate()
         Pony.objects.all()
+
+    def test_custom_migration_operation(self):
+        project_state = self.set_up_test_model()
+        operation = AddField(
+            app_label='tests',
+            model_name='pony',
+            name='yellow',
+            field=models.BooleanField(default=True)
+        )
+        new_state = project_state.clone()
+        operation.state_forwards('tests', new_state)
+
+        self.assertColumnNotExists('tests_pony', 'yellow')
+        with connection.schema_editor() as editor:
+            operation.database_forwards('tests', editor, project_state, new_state)
+
+        self.assertColumnExists('tests_pony', 'yellow')
+        with connection.schema_editor() as editor:
+            operation.database_backwards('tests', editor, new_state, project_state)
+
+        self.assertColumnNotExists('tests_pony', 'yellow')
