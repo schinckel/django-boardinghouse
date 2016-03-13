@@ -117,7 +117,7 @@ class TestDumpData(TestCase):
             data = sorted(json.loads(output))
 
         self.assertEquals(1, len(data))
-        self.assertEquals({"status": False, "name": "foo"}, data[0]['fields'])
+        self.assertEquals({"factor": 7, "status": False, "name": "foo"}, data[0]['fields'])
 
         with capture(call_command, 'dumpdata', 'tests.AwareModel', schema='b') as output:
             data = sorted(json.loads(output))

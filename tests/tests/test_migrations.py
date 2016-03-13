@@ -540,3 +540,33 @@ class TestMigrations(MigrationTestBase):
             operation.database_backwards('tests', editor, new_state, project_state)
 
         self.assertColumnNotExists('tests_pony', 'yellow')
+
+    def test_constraint_name_method(self):
+        from ..models import AwareModel, NaiveModel, SelfReferentialModel
+
+        with connection.schema_editor() as editor:
+            six.assertCountEqual(
+                self,
+                ['tests_awaremodel_pkey'],
+                editor._constraint_names(AwareModel, primary_key=True)
+            )
+            six.assertCountEqual(self, [
+                'tests_awaremodel_pkey',
+                'tests_awaremodel_name_key'
+            ], editor._constraint_names(AwareModel, unique=True))
+            six.assertCountEqual(self, [
+                'tests_awaremodel_name_key'
+            ], editor._constraint_names(AwareModel, unique=True, primary_key=False))
+            six.assertCountEqual(self, ['tests_awaremodel_pkey'], editor._constraint_names(AwareModel, primary_key=True, unique=True))
+            six.assertCountEqual(self, [], editor._constraint_names(AwareModel, foreign_key=True))
+            six.assertCountEqual(self, [], editor._constraint_names(AwareModel, foreign_key=True, primary_key=True))
+            six.assertCountEqual(self, ['tests_awaremodel_factor_check'], editor._constraint_names(AwareModel, check=True))
+
+        with connection.schema_editor() as editor:
+            six.assertCountEqual(self, ['tests_naivemodel_pkey'], editor._constraint_names(NaiveModel, primary_key=True))
+            six.assertCountEqual(self, ['tests_naivemodel_name_key'], editor._constraint_names(NaiveModel, unique=True, primary_key=False))
+
+        with connection.schema_editor() as editor:
+            six.assertCountEqual(self, [
+                'tests_selfr_parent_id_50446391_fk_tests_selfreferentialmodel_id'
+            ], editor._constraint_names(SelfReferentialModel, foreign_key=True))

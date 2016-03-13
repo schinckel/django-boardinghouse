@@ -1,11 +1,18 @@
-import unittest
-
-from django.conf import settings
 from django.test import TestCase
 
 from boardinghouse.schema import is_shared_model, is_shared_table
 
-from ..models import *
+from ..models import (
+    AwareModel,
+    CoReferentialModelA,
+    CoReferentialModelB,
+    ModelA,
+    ModelB,
+    ModelBPrefix,
+    NaiveModel,
+    SelfReferentialModel,
+)
+
 
 class TestIsSharedModel(TestCase):
     def test_aware_model(self):
