@@ -9,13 +9,11 @@ from ..models import AwareModel, ViewBackedModel
 
 class TestCloneSchemaDBFunction(TestCase):
     def test_clone_schema_with_trigger(self):
-        TRIGGER_FUNCTION = '''CREATE FUNCTION trigger_this()
-                              RETURNS TRIGGER AS $$
-                                BEGIN
-                                  RAISE EXCEPTION 'Trigger fired correctly';
-                                END;
-                              $$
-                              LANGUAGE PLPGSQL'''
+        TRIGGER_FUNCTION = '''CREATE OR REPLACE FUNCTION trigger_this() RETURNS TRIGGER AS $$
+                              BEGIN
+                                RAISE EXCEPTION 'Trigger fired correctly';
+                              END;
+                              $$ LANGUAGE plpgsql'''
         TRIGGER_TRIGGER = '''CREATE TRIGGER "test_trigger_this"
                              BEFORE INSERT ON tests_awaremodel
                              FOR EACH STATEMENT
