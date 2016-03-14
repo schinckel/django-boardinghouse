@@ -32,7 +32,8 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'boardinghouse',
-    # 'boardinghouse.contrib.template',
+    'boardinghouse.contrib.template',
+    'boardinghouse.contrib.demo',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

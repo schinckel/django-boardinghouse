@@ -2,8 +2,6 @@ from django.apps import AppConfig
 from django.db import models
 from django.dispatch import receiver
 
-from boardinghouse.schema import activate_schema
-
 
 class BoardingHouseTemplateConfig(AppConfig):
     name = 'boardinghouse.contrib.template'
@@ -21,5 +19,5 @@ class BoardingHouseTemplateConfig(AppConfig):
         @receiver(signals.schema_aware_operation, weak=False, dispatch_uid='execute-all-templates')
         def execute_on_all_templates(sender, db_table, function, **kwargs):
             for schema in SchemaTemplate.objects.all():
-                activate_schema(schema.schema)
+                schema.activate()
                 function(*kwargs.get('args', []), **kwargs.get('kwargs', {}))
