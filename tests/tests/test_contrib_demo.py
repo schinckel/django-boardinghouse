@@ -25,3 +25,15 @@ class TestContribDemo(TestCase):
 
     def test_cleanup_expired_removes_expired(self):
         pass
+
+    def test_demo_schemata_get_migrated(self):
+        pass
+
+    def test_demo_schemata_get_deleted(self):
+        pass
+
+    def test_default_expiry_period_from_settings(self):
+        pass
+
+    def test_custom_expiry_period(self):
+        pass
