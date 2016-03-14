@@ -28,13 +28,6 @@ class SchemaTemplate(SharedSchemaMixin, models.Model):
     def schema(self):
         return '__template_{}'.format(self.pk)
 
-    @classmethod
-    def create_from_schema(cls, schema='__template__'):
-        pass
-
-    def clone_to_schema(self, schema):
-        pass
-
     def activate(self):
         activate_schema(self.schema)
 

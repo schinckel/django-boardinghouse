@@ -9,7 +9,6 @@ from django.utils import six
 from boardinghouse.contrib.template.models import SchemaTemplate
 from boardinghouse.models import Schema
 from boardinghouse.schema import (
-    activate_schema,
     _schema_exists,
     get_active_schema_name,
 )
@@ -34,8 +33,10 @@ class TestContribTemplate(TestCase):
     def test_templates_can_be_created(self):
         template = SchemaTemplate.objects.create(name='Foo')
         self.assertTrue(_schema_exists(template.schema))
-        activate_schema(template.schema)
+        template.activate()
         self.assertEqual(get_active_schema_name(), template.schema)
+        template.deactivate()
+        self.assertEqual('Foo', unicode(template))
 
     def test_templates_cannot_be_activated_normally(self):
         template = SchemaTemplate.objects.create(name='Foo')
@@ -62,7 +63,7 @@ class TestContribTemplate(TestCase):
 
     def test_cloning_templates_clones_data(self):
         template = SchemaTemplate.objects.create(name='Foo')
-        activate_schema(template.schema)
+        template.activate()
 
         aware = AwareModel.objects.create(name=uuid.uuid4().hex[:10])
 
@@ -75,7 +76,7 @@ class TestContribTemplate(TestCase):
 
     def test_editing_template_does_not_change_template_data(self):
         template = SchemaTemplate.objects.create(name='Foo')
-        activate_schema(template.schema)
+        template.activate()
 
         original = AwareModel.objects.create(name=uuid.uuid4().hex[:10])
 
@@ -88,11 +89,11 @@ class TestContribTemplate(TestCase):
         cloned.status = True
         cloned.save()
 
-        activate_schema(template.schema)
+        template.activate()
         self.assertEqual(1, AwareModel.objects.filter(status=False).count())
         self.assertEqual(0, AwareModel.objects.filter(status=True).count())
 
-        activate_schema(schema.schema)
+        schema.activate()
         self.assertEqual(0, AwareModel.objects.filter(status=False).count())
         self.assertEqual(1, AwareModel.objects.filter(status=True).count())
 
@@ -106,15 +107,15 @@ class TestContribTemplate(TestCase):
         new_state = project_state.clone()
         operation.state_forwards('tests', new_state)
 
-        activate_schema(template.schema)
+        template.activate()
         self.assertFalse('tests_pony' in get_table_list())
 
         with connection.schema_editor() as editor:
             operation.database_forwards('tests', editor, project_state, new_state)
-        activate_schema(template.schema)
+        template.activate()
         self.assertTrue('tests_pony' in get_table_list())
 
         with connection.schema_editor() as editor:
             operation.database_backwards('tests', editor, new_state, project_state)
-        activate_schema(template.schema)
+        template.activate()
         self.assertFalse('tests_pony' in get_table_list())
