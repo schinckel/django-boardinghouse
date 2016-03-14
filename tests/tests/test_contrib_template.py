@@ -30,13 +30,16 @@ def get_table_list():
 
 
 class TestContribTemplate(TestCase):
+    def test_template_str(self):
+        template = SchemaTemplate(name='Foo')
+        self.assertEqual(u'Foo', six.text_type(template))
+
     def test_templates_can_be_created(self):
         template = SchemaTemplate.objects.create(name='Foo')
         self.assertTrue(_schema_exists(template.schema))
         template.activate()
         self.assertEqual(get_active_schema_name(), template.schema)
         template.deactivate()
-        self.assertEqual('Foo', unicode(template))
 
     def test_templates_cannot_be_activated_normally(self):
         template = SchemaTemplate.objects.create(name='Foo')

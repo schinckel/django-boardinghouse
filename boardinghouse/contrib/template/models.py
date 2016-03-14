@@ -1,9 +1,11 @@
 from django.db import models
+from django.utils import six
 
 from boardinghouse.base import SharedSchemaMixin
 from boardinghouse.schema import activate_schema, deactivate_schema
 
 
+@six.python_2_unicode_compatible
 class SchemaTemplate(SharedSchemaMixin, models.Model):
     """
     A ``boardinghouse.contrib.template.models.SchemaTemplate`` can be used
@@ -17,9 +19,6 @@ class SchemaTemplate(SharedSchemaMixin, models.Model):
     class Meta:
         default_permissions = ('add', 'change', 'delete', 'view', 'activate', 'clone')
         verbose_name_plural = u'template schemata'
-
-    def __unicode__(self):
-        return self.name
 
     def __str__(self):
         return self.name
