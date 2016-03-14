@@ -19,3 +19,9 @@ class TestContribDemo(TestCase):
 
     def test_demo_can_only_be_activated_by_user(self):
         pass
+
+    def test_activation_of_expired_demo_raises(self):
+        pass
+
+    def test_cleanup_expired_removes_expired(self):
+        pass

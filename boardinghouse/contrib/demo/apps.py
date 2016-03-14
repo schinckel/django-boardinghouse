@@ -3,7 +3,7 @@ from django.db import models
 from django.dispatch import receiver
 
 
-class BoardingHouseTemplateConfig(AppConfig):
+class BoardingHouseDemoConfig(AppConfig):
     name = 'boardinghouse.contrib.demo'
 
     def ready(self):

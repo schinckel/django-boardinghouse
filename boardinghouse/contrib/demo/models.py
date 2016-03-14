@@ -5,6 +5,7 @@ from django.db import models
 
 from boardinghouse.base import SharedSchemaMixin
 from boardinghouse.schema import activate_schema, deactivate_schema
+from boardinghouse.schema import Forbidden
 
 
 class ExpiringObjectsQuerySet(models.query.QuerySet):
@@ -40,5 +41,5 @@ class DemoSchema(SharedSchemaMixin, models.Model):
         deactivate_schema()
 
 
-class DemoSchemaExpired(Exception):
+class DemoSchemaExpired(Forbidden):
     pass
