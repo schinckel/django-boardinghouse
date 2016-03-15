@@ -1,12 +1,14 @@
+import datetime
+
 from django.test import TestCase
 
 from django.contrib.auth.models import User
 from django.db import migrations, models, connection
 from django.db.migrations.state import ProjectState
 
-from boardinghouse.contrib.demo.models import DemoSchema
-
 from .utils import get_table_list
+
+from boardinghouse.contrib.demo.models import DemoSchema, DemoSchemaExpired
 
 CREDENTIALS = {
     'username': 'username',
@@ -25,7 +27,10 @@ class TestContribDemo(TestCase):
         pass
 
     def test_activation_of_expired_demo_raises(self):
-        pass
+        user = User.objects.create_user(**CREDENTIALS)
+        schema = DemoSchema.objects.create(user=user, expiry_date=datetime.datetime.utcnow())
+        with self.assertRaises(DemoSchemaExpired):
+            schema.activate()
 
     def test_cleanup_expired_removes_expired(self):
         pass
@@ -54,9 +59,6 @@ class TestContribDemo(TestCase):
             operation.database_backwards('tests', editor, new_state, project_state)
         schema.activate()
         self.assertFalse('tests_pony' in get_table_list())
-
-    def test_demo_schemata_get_deleted(self):
-        pass
 
     def test_default_expiry_period_from_settings(self):
         pass
