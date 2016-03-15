@@ -1,8 +1,12 @@
 from django.test import TestCase
 
 from django.contrib.auth.models import User
+from django.db import migrations, models, connection
+from django.db.migrations.state import ProjectState
 
 from boardinghouse.contrib.demo.models import DemoSchema
+
+from .utils import get_table_list
 
 CREDENTIALS = {
     'username': 'username',
@@ -27,7 +31,29 @@ class TestContribDemo(TestCase):
         pass
 
     def test_demo_schemata_get_migrated(self):
-        pass
+        user = User.objects.create_user(**CREDENTIALS)
+        schema = DemoSchema.objects.create(user=user)
+
+        operation = migrations.CreateModel("Pony", [
+            ('pony_id', models.AutoField(primary_key=True)),
+            ('pink', models.IntegerField(default=1)),
+        ])
+        project_state = ProjectState()
+        new_state = project_state.clone()
+        operation.state_forwards('tests', new_state)
+
+        schema.activate()
+        self.assertFalse('tests_pony' in get_table_list())
+
+        with connection.schema_editor() as editor:
+            operation.database_forwards('tests', editor, project_state, new_state)
+        schema.activate()
+        self.assertTrue('tests_pony' in get_table_list())
+
+        with connection.schema_editor() as editor:
+            operation.database_backwards('tests', editor, new_state, project_state)
+        schema.activate()
+        self.assertFalse('tests_pony' in get_table_list())
 
     def test_demo_schemata_get_deleted(self):
         pass
