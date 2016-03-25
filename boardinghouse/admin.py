@@ -3,7 +3,6 @@
 """
 from __future__ import unicode_literals
 
-from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.models import LogEntry
 from django.db import models
@@ -62,9 +61,10 @@ def get_inline_instances(self, request, obj=None):
 admin.ModelAdmin.get_inline_instances = get_inline_instances
 
 if not getattr(LogEntry, 'object_schema', None):
+    # We can't use a proper foreign key, as it plays havoc with migrations.
     LogEntry.add_to_class(
-        'object_schema',
-        models.ForeignKey(settings.BOARDINGHOUSE_SCHEMA_MODEL, blank=True, null=True)
+        'object_schema_id',
+        models.TextField(blank=True, null=True)
     )
 
     @receiver(models.signals.pre_save, sender=LogEntry)
@@ -85,3 +85,10 @@ if not getattr(LogEntry, 'object_schema', None):
         return url
 
     LogEntry.get_admin_url = get_admin_url_with_schema
+
+    SchemaModel = get_schema_model()
+
+    def object_schema(self):
+        return SchemaModel.objects.get(pk=self.object_schema_id)
+
+    LogEntry.object_schema = property(object_schema)

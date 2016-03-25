@@ -1,17 +1,15 @@
 from django.db import models
-# from django.conf import settings
-# from django.utils.translation import ugettext as _
+from django.conf import settings
+from django.utils.translation import ugettext as _
 
 from boardinghouse.models import AbstractSchema
 
 
 class School(AbstractSchema):
-    pass
-    # When I fix the swappable model, can fix this.
-    # users = models.ManyToManyField(settings.AUTH_USER_MODEL,
-    #     blank=True, related_name='schemata',
-    #     help_text=_(u'Which users may access data from this schema.')
-    # )
+    users = models.ManyToManyField(settings.AUTH_USER_MODEL,
+        blank=True, related_name='schemata',
+        help_text=_(u'Which users may access data from this schema.')
+    )
 
 
 class StaffMember(models.Model):

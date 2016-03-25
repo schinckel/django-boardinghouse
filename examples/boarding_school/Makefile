@@ -22,7 +22,7 @@ load-data:
 	${PYTHON} manage.py loaddata --schema naracoorte_hs naracoorte_hs
 
 clean:
-	dropdb school-demo || true
+	dropdb --if-exists school-demo
 	rm -rf .boarding-school
 
 runserver:

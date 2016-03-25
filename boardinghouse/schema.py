@@ -4,6 +4,7 @@ import threading
 
 from django.apps import apps
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 from django.core.cache import cache
 from django.db import connection
 from django.db.migrations.operations.base import Operation
@@ -37,7 +38,12 @@ def get_schema_model():
     """
     Return the class that is currently set as the schema model.
     """
-    return apps.get_model(settings.BOARDINGHOUSE_SCHEMA_MODEL)
+    try:
+        return apps.get_model(settings.BOARDINGHOUSE_SCHEMA_MODEL)
+    except ValueError:
+        raise ImproperlyConfigured("BOARDINGHOUSE_SCHEMA_MODEL must be of the form 'app_label.model_name'")
+    except LookupError:
+        raise ImproperlyConfigured("BOARDINGHOUSE_SCHEMA_MODEL refers to model '%s' that has not been installed" % settings.BOARDINGHOUSE_SCHEMA_MODEL)
 
 
 def _get_search_path():
@@ -191,8 +197,7 @@ REQUIRED_SHARED_MODELS = [
     'contenttypes.contenttype',
     'admin.logentry',
     'migrations.migration',
-    # Maybe lazy() these? They only apply if the values for the settings.*
-    # are not the defaults.
+    # In the case these are not the default values.
     lazy(lambda: settings.BOARDINGHOUSE_SCHEMA_MODEL.lower()),
     lazy(lambda: settings.AUTH_USER_MODEL.lower()),
 ]
