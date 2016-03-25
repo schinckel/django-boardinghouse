@@ -29,12 +29,7 @@ class ProtectSchemaColumn(migrations.RunSQL):
 
 def remove_all_schemata(apps, schema_editor):
     Schema = apps.get_model(*settings.BOARDINGHOUSE_SCHEMA_MODEL.split('.'))
-    db_alias = schema_editor.connection.alias
-    sql = ';'.join([
-        'DROP SCHEMA {} CASCADE'.format(schema.schema)
-        for schema in Schema.objects.using(db_alias).all()
-    ])
-    schema_editor.connection.cursor().execute(sql)
+    Schema.objects.all().delete()
 
 
 class Migration(migrations.Migration):
