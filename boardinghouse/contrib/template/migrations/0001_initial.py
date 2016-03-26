@@ -3,6 +3,7 @@
 from __future__ import unicode_literals
 
 import boardinghouse.base
+from django.conf import settings
 from django.db import migrations, models
 
 
@@ -10,7 +11,9 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
+    dependencies = []
+    run_before = [
+        migrations.swappable_dependency(settings.BOARDINGHOUSE_SCHEMA_MODEL),
     ]
 
     operations = [
