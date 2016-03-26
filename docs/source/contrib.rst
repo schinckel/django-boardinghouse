@@ -41,9 +41,7 @@ It is possible for a logged in user to see the following things (dependent upon 
 boardinghouse.contrib.template
 ------------------------------
 
-.. note:: This app has not been developed.
-
-Introduces the concept of "Template" schemata, which can be used to create a schema that contains initial data.
+Introduces the concept of "SchemaTemplate" objects, which can be used to create a schema that contains initial data.
 
 Actions:
 
@@ -76,7 +74,6 @@ This app alters the `django.contrib.auth` application, so that, whilst the `Grou
 
 This basically requires us just to move the `auth_group_permissions` table into the various schemata.
 
-Can we just do this by having a
 
 .. _demo:
 
