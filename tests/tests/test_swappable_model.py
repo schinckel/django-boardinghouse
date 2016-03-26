@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase, modify_settings
+from django.utils import six
 
 from boardinghouse.schema import get_schema_model
 
@@ -24,3 +25,10 @@ class TestSwappableModel(TestCase):
         settings.BOARDINGHOUSE_SCHEMA_MODEL = 'foo__bar'
         with self.assertRaises(ImproperlyConfigured):
             get_schema_model()
+
+    @modify_settings()
+    def test_swappable_model_changes_schema_template_verbose_names(self):
+        settings.BOARDINGHOUSE_SCHEMA_MODEL = 'tests.NaiveModel'
+        from boardinghouse.contrib.template.models import SchemaTemplate
+        self.assertEquals('template naive model', six.text_type(SchemaTemplate._meta.verbose_name))
+        self.assertEquals('template naive models', six.text_type(SchemaTemplate._meta.verbose_name_plural))
