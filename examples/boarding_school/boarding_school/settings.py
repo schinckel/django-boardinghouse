@@ -126,4 +126,4 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 # Swappable model is not currently working.
-# BOARDINGHOUSE_SCHEMA_MODEL = 'school.School'
+BOARDINGHOUSE_SCHEMA_MODEL = 'school.School'

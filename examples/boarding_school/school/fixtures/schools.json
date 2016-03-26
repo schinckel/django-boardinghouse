@@ -1,14 +1,14 @@
 [
 {
   "pk": "hamilton",
-  "model": "boardinghouse.schema",
+  "model": "school.school",
   "fields": {
     "name": "Hamilton College"
   }
 },
 {
   "pk": "naracoorte_hs",
-  "model": "boardinghouse.schema",
+  "model": "school.school",
   "fields": {
     "name": "Naracoorte High School"
   }
