@@ -198,8 +198,8 @@ REQUIRED_SHARED_MODELS = [
     'admin.logentry',
     'migrations.migration',
     # In the case these are not the default values.
-    lazy(lambda: settings.BOARDINGHOUSE_SCHEMA_MODEL.lower()),
-    lazy(lambda: settings.AUTH_USER_MODEL.lower()),
+    lazy(lambda: settings.BOARDINGHOUSE_SCHEMA_MODEL.lower())(),
+    lazy(lambda: settings.AUTH_USER_MODEL.lower())(),
 ]
 
 REQUIRED_SHARED_TABLES = [
