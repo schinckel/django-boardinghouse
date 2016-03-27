@@ -81,7 +81,6 @@ def check_middleware_installed(app_configs=None, **kwargs):
     "Ensure that _our_ middleware is installed."
     from django.conf import settings
 
-    MIDDLEWARE = 'boardinghouse.middleware.SchemaMiddleware'
     errors = []
 
     if MIDDLEWARE not in settings.MIDDLEWARE_CLASSES:
