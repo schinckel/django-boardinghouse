@@ -43,9 +43,10 @@ class TestSettings(TestCase):
         self.assertTrue(isinstance(errors[0], checks.Error))
         self.assertEqual('boardinghouse.E002', errors[0].id)
 
-    @modify_settings(INSTALLED_APPS={'remove': ['boardinghouse']})
-    @modify_settings(INSTALLED_APPS={'append': 'boardinghouse'})
+    @modify_settings()
     def test_installed_before_admin(self):
+        settings.INSTALLED_APPS.remove('boardinghouse')
+        settings.INSTALLED_APPS.append('boardinghouse')
         errors = apps.check_installed_before_admin()
         self.assertEqual(1, len(errors))
         self.assertTrue(isinstance(errors[0], checks.Error))
