@@ -26,6 +26,7 @@ class SchemaAdmin(admin.ModelAdmin):
         return ()
 
     filter_horizontal = ('users',)
+    actions = []
 
 # We only want to install our SchemaAdmin if our schema model is the
 # one that is used: otherwise it's up to the project developer to
