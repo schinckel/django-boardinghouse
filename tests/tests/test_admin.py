@@ -111,6 +111,12 @@ class TestAdminAdditions(TestCase):
         self.assertEqual(None, entry.object_schema_id)
         self.assertEqual(1, len(entry.get_admin_url().split('?')))
 
+    def test_create_schema_with_contrib_template(self):
+        pass
+
+    def test_create_schema_without_contrib_template(self):
+        pass
+
 
 class TestAdminTemplate(TestCase):
     def test_admin_template_renders_switcher(self):
