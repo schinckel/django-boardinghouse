@@ -57,6 +57,3 @@ class BoardingHouseTemplateConfig(AppConfig):
                     return super(SchemaAdmin, self).save_model(request, obj, form, change)
 
             admin.site.register(Schema, SchemaAdmin)
-
-
-        # SchemaAdmin.actions = list(SchemaAdmin.actions) + [create_template_from_schema]
