@@ -5,10 +5,10 @@ import os
 from django.db import migrations
 from django.conf import settings
 
-CLONE_SCHEMA = (
-    open(os.path.join(os.path.dirname(__file__), '..', 'sql', 'clone_schema.002.sql')).read(),
-    open(os.path.join(os.path.dirname(__file__), '..', 'sql', 'clone_schema.001.sql')).read(),
-)
+with open(os.path.join(os.path.dirname(__file__), '..', 'sql', 'clone_schema.002.sql')) as fp:
+    FORWARDS = fp.read()
+with open(os.path.join(os.path.dirname(__file__), '..', 'sql', 'clone_schema.001.sql')) as fp:
+    REVERSE = fp.read()
 
 
 class Migration(migrations.Migration):
@@ -20,5 +20,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunSQL(sql=CLONE_SCHEMA[0], reverse_sql=CLONE_SCHEMA[1])
+        migrations.RunSQL(sql=FORWARDS, reverse_sql=REVERSE)
     ]

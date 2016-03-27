@@ -7,32 +7,32 @@ from boardinghouse.schema import get_active_schema_name
 class TestSchemaQuerysetMethods(TestCase):
     def test_active(self):
         Schema.objects.mass_create('a', 'b', 'c')
-        self.assertEquals(
+        self.assertEqual(
             set(['a', 'b', 'c']),
             set(Schema.objects.active().values_list('schema', flat=True))
         )
 
         Schema.objects.filter(schema='a').update(is_active=False)
-        self.assertEquals(
+        self.assertEqual(
             set(['b', 'c']),
             set(Schema.objects.active().values_list('schema', flat=True))
         )
 
     def test_inactive(self):
         Schema.objects.mass_create('a', 'b', 'c')
-        self.assertEquals(
+        self.assertEqual(
             set([]),
             set(Schema.objects.inactive().values_list('schema', flat=True))
         )
 
         Schema.objects.filter(schema='a').delete()
-        self.assertEquals(
+        self.assertEqual(
             set(['a']),
             set(Schema.objects.inactive().values_list('schema', flat=True))
         )
 
         Schema.objects.get(schema='b').delete()
-        self.assertEquals(
+        self.assertEqual(
             set(['a', 'b']),
             set(Schema.objects.inactive().values_list('schema', flat=True))
         )
@@ -41,8 +41,8 @@ class TestSchemaQuerysetMethods(TestCase):
         Schema.objects.mass_create('a', 'b', 'c')
         Schema().deactivate()
 
-        self.assertEquals(None, get_active_schema_name())
+        self.assertEqual(None, get_active_schema_name())
 
         Schema.objects.activate('a')
 
-        self.assertEquals('a', get_active_schema_name())
+        self.assertEqual('a', get_active_schema_name())

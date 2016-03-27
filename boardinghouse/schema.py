@@ -2,6 +2,7 @@ import logging
 import inspect
 import threading
 
+import django
 from django.apps import apps
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -14,6 +15,12 @@ LOGGER = logging.getLogger(__name__)
 LOGGER.addHandler(logging.NullHandler())
 
 _thread_locals = threading.local()
+
+
+def remote_field(field):
+    if django.VERSION < (1, 9):
+        return field.rel and field.rel.get_related_field()
+    return field.remote_field
 
 
 class Forbidden(Exception):
@@ -218,7 +225,7 @@ def _is_join_model(model):
     and all automatic join models will have just (pk, from, to).
     """
     return all([
-        (field.primary_key or field.rel)
+        (field.primary_key or remote_field(field))
         for field in model._meta.fields
     ]) and len(model._meta.fields) > 1
 
@@ -250,8 +257,8 @@ def is_shared_model(model):
     # above.
     if _is_join_model(model):
         return all([
-            is_shared_model(field.rel.get_related_field().model)
-            for field in model._meta.fields if field.rel
+            is_shared_model(remote_field(field).model)
+            for field in model._meta.fields if remote_field(field)
         ])
 
     return False
@@ -299,9 +306,9 @@ def is_shared_table(table, apps=apps):
 
     # It may be a join table.
     prefixes = [
-        (db_table, model, model._meta.get_field(
+        (db_table, model, remote_field(model._meta.get_field(
             table.replace(db_table, '').lstrip('_')
-        ).rel.get_related_field().model)
+        )).model)
         for db_table, model in table_map.items()
         if table.startswith(db_table)
     ]

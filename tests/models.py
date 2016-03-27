@@ -22,7 +22,10 @@ class NaiveModel(SharedSchemaModel):
 # a check for self-referencing models is not made in is_shared_model()
 class SelfReferentialModel(models.Model):
     name = models.CharField(max_length=10, unique=True)
-    parent = models.ForeignKey('tests.SelfReferentialModel', related_name='children', null=True, blank=True)
+    parent = models.ForeignKey('tests.SelfReferentialModel',
+                               on_delete=models.CASCADE,
+                               related_name='children',
+                               null=True, blank=True)
 
 
 # If you have two models that _only_ have foreign keys, and they happen
@@ -30,12 +33,18 @@ class SelfReferentialModel(models.Model):
 # recursion. However, I can't see that this model structure makes sense.
 class CoReferentialModelA(models.Model):
     name = models.CharField(max_length=10, unique=True)
-    other = models.ForeignKey('tests.CoReferentialModelB', related_name='model_a', null=True, blank=True)
+    other = models.ForeignKey('tests.CoReferentialModelB',
+                              on_delete=models.CASCADE,
+                              related_name='model_a',
+                              null=True, blank=True)
 
 
 class CoReferentialModelB(models.Model):
     name = models.CharField(max_length=10, unique=True)
-    other = models.ForeignKey('tests.CoReferentialModelA', related_name='model_b', null=True, blank=True)
+    other = models.ForeignKey('tests.CoReferentialModelA',
+                              on_delete=models.CASCADE,
+                              related_name='model_b',
+                              null=True, blank=True)
 
 
 # We do prefix testing to determine if a model is shared.

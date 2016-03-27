@@ -6,7 +6,8 @@ import os
 from django.conf import settings
 from django.db import migrations
 
-CLONE_SCHEMA = open(os.path.join(os.path.dirname(__file__), '..', 'sql', 'clone_schema.001.sql')).read()
+with open(os.path.join(os.path.dirname(__file__), '..', 'sql', 'clone_schema.001.sql')) as fp:
+    CLONE_SCHEMA = fp.read()
 
 
 class Migration(migrations.Migration):

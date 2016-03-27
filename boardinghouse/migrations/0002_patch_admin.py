@@ -9,8 +9,8 @@ import django.core.validators
 from boardinghouse.operations import AddField
 import boardinghouse
 
-PROTECT_SCHEMA_COLUMN = open(os.path.join(os.path.dirname(__file__),
-    '..', 'sql', 'protect_schema_column.001.sql')).read()
+with open(os.path.join(os.path.dirname(__file__), '..', 'sql', 'protect_schema_column.001.sql')) as fp:
+    PROTECT_SCHEMA_COLUMN = fp.read()
 
 
 class ProtectSchemaColumn(migrations.RunSQL):

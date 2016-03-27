@@ -1,12 +1,12 @@
 from __future__ import unicode_literals
 
 from django.conf.urls import include, url
+from django.contrib import admin
+from django.contrib.auth.views import login, logout_then_login
 from django.db import connection
 from django.http import HttpResponse
 from django.shortcuts import render
-
-from django.contrib import admin
-from django.contrib.auth.views import login, logout_then_login
+import django
 
 from boardinghouse.schema import activate_schema
 
@@ -39,14 +39,17 @@ def activate_schema_view(request, schema):
     activate_schema(schema)
     return HttpResponse(schema)
 
-
 urlpatterns = [
     url(r'^$', echo_schema),
     url(r'^sql/error/$', sql_error),
     url(r'^change/$', change_schema_view),
     url(r'^aware/$', aware_objects_view),
-    url(r'^admin/', include(admin.site.urls)),
     url(r'^login/$', login, {'template_name': 'admin/login.html'}, name='login'),
     url(r'^logout/$', logout_then_login, name='logout'),
     url(r'^bad/activate/schema/(.*)/$', activate_schema_view, name='bad-view'),
 ]
+
+if django.VERSION < (1, 9):
+    urlpatterns.append(url(r'^admin/', include(admin.site.urls)))
+else:
+    urlpatterns.append(url(r'^admin/', include(admin.site.urls[:2], namespace='admin')))

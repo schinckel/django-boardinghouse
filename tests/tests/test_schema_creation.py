@@ -26,14 +26,14 @@ class TestPostgresSchemaCreation(TestCase):
         table_name = Schema._meta.db_table
         cursor.execute(TABLE_QUERY, ['public', table_name])
         data = cursor.fetchone()
-        self.assertEquals((table_name,), data)
+        self.assertEqual((table_name,), data)
         cursor.close()
 
     def test_template_schema_is_created(self):
         cursor = connection.cursor()
         cursor.execute(SCHEMA_QUERY, ['__template__'])
         data = cursor.fetchone()
-        self.assertEquals(('__template__',), data)
+        self.assertEqual(('__template__',), data)
         cursor.close()
 
     def test_schema_object_creation_creates_schema(self):
@@ -41,14 +41,14 @@ class TestPostgresSchemaCreation(TestCase):
         cursor = connection.cursor()
         cursor.execute(SCHEMA_QUERY, ['test_schema'])
         data = cursor.fetchone()
-        self.assertEquals(('test_schema',), data)
+        self.assertEqual(('test_schema',), data)
         cursor.close()
 
     def test_schema_object_creation_does_not_leak_between_tests(self):
         cursor = connection.cursor()
         cursor.execute(SCHEMA_QUERY, ['test_schema'])
         data = cursor.fetchone()
-        self.assertEquals(None, data)
+        self.assertEqual(None, data)
         cursor.close()
 
     def test_schema_creation_clones_template(self):
@@ -58,7 +58,7 @@ class TestPostgresSchemaCreation(TestCase):
         Schema.objects.create(name="Duplicate", schema='duplicate')
         cursor.execute(TABLE_QUERY, ['duplicate', 'foo'])
         data = cursor.fetchone()
-        self.assertEquals(('foo',), data)
+        self.assertEqual(('foo',), data)
         cursor.close()
 
     def test_bulk_create_creates_schemata(self):
@@ -71,7 +71,7 @@ class TestPostgresSchemaCreation(TestCase):
             activate_schema(schema)
             cursor.execute(SCHEMA_QUERY, [schema])
             data = cursor.fetchone()
-            self.assertEquals((schema,), data)
+            self.assertEqual((schema,), data)
         cursor.close()
 
     def test_mass_create(self):
@@ -90,7 +90,7 @@ class TestSchemaDrop(TestCase):
     def test_dropping_schema_model(self):
         Schema.objects.mass_create('a', 'b')
         Schema.objects.get(schema='a').delete(drop=True)
-        self.assertEquals(['b'],
+        self.assertEqual(['b'],
             list(Schema.objects.values_list('pk', flat=True)))
         cursor = connection.cursor()
         cursor.execute(SCHEMA_QUERY, ['a'])
@@ -158,36 +158,36 @@ class TestSchemaClassValidationLogic(TestCase):
 
 class TestGetSetSearchPath(TestCase):
     def test_default_search_path(self):
-        self.assertEquals(None, get_active_schema_name())
+        self.assertEqual(None, get_active_schema_name())
 
     def test_manual_set_search_path(self):
         Schema.objects.create(name='a', schema='a')
         connection.cursor().execute('SET search_path TO a,public')
-        self.assertEquals('a', get_active_schema_name())
+        self.assertEqual('a', get_active_schema_name())
 
     def test_activate_schema_sets_search_path(self):
         schema = Schema.objects.create(name='a', schema='a')
         schema.activate()
-        self.assertEquals(schema.schema, get_active_schema_name())
+        self.assertEqual(schema.schema, get_active_schema_name())
 
         activate_template_schema()
-        self.assertEquals('__template__', _get_search_path()[0])
+        self.assertEqual('__template__', _get_search_path()[0])
 
     def test_deactivate_schema_resets_search_path(self):
         schema = Schema.objects.create(name='a', schema='a')
         schema.activate()
         schema.deactivate()
-        self.assertEquals(None, get_active_schema_name())
+        self.assertEqual(None, get_active_schema_name())
 
     def test_get_schema_or_template_helper(self):
         schema = Schema.objects.create(name='a', schema='a')
-        self.assertEquals(None, get_active_schema_name())
+        self.assertEqual(None, get_active_schema_name())
 
         schema.activate()
-        self.assertEquals('a', get_active_schema_name())
+        self.assertEqual('a', get_active_schema_name())
 
         schema.deactivate()
-        self.assertEquals(None, get_active_schema_name())
+        self.assertEqual(None, get_active_schema_name())
 
     def test_activate_schema_function(self):
         self.assertRaises(TemplateSchemaActivation, activate_schema, '__template__')
@@ -195,10 +195,10 @@ class TestGetSetSearchPath(TestCase):
         Schema.objects.mass_create('a', 'b')
 
         activate_schema('a')
-        self.assertEquals('a', get_active_schema_name())
+        self.assertEqual('a', get_active_schema_name())
 
         activate_schema('b')
-        self.assertEquals('b', get_active_schema_name())
+        self.assertEqual('b', get_active_schema_name())
 
         deactivate_schema()
-        self.assertEquals(None, get_active_schema_name())
+        self.assertEqual(None, get_active_schema_name())

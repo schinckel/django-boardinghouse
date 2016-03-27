@@ -15,10 +15,10 @@ class TestTemplateTags(TestCase):
         
     def test_schema_name_filter(self):
         Schema.objects.create(name='Schema Name', schema='foo')
-        self.assertEquals('Schema Name', schema_name('foo'))
-        self.assertEquals('no schema', schema_name(None))
-        self.assertEquals('no schema', schema_name(''))
-        self.assertEquals('no schema', schema_name(False))
-        self.assertEquals('no schema', schema_name('foobar'))
-        self.assertEquals('no schema', schema_name('foo_'))
-        self.assertEquals('no schema', schema_name('foofoo'))
+        self.assertEqual('Schema Name', schema_name('foo'))
+        self.assertEqual('no schema', schema_name(None))
+        self.assertEqual('no schema', schema_name(''))
+        self.assertEqual('no schema', schema_name(False))
+        self.assertEqual('no schema', schema_name('foobar'))
+        self.assertEqual('no schema', schema_name('foo_'))
+        self.assertEqual('no schema', schema_name('foofoo'))

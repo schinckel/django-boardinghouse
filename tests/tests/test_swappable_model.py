@@ -30,5 +30,5 @@ class TestSwappableModel(TestCase):
     def test_swappable_model_changes_schema_template_verbose_names(self):
         settings.BOARDINGHOUSE_SCHEMA_MODEL = 'tests.NaiveModel'
         from boardinghouse.contrib.template.models import SchemaTemplate
-        self.assertEquals('template naive model', six.text_type(SchemaTemplate._meta.verbose_name))
-        self.assertEquals('template naive models', six.text_type(SchemaTemplate._meta.verbose_name_plural))
+        self.assertEqual('template naive model', six.text_type(SchemaTemplate._meta.verbose_name))
+        self.assertEqual('template naive models', six.text_type(SchemaTemplate._meta.verbose_name_plural))

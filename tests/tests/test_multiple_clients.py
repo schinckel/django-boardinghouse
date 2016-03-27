@@ -37,10 +37,10 @@ class TestMultipleClients(TestCase):
         client_b.login(username='b', password='b')
 
         resp = client_a.get('/aware/')
-        self.assertEquals(b'foo', resp.content)
+        self.assertEqual(b'foo', resp.content)
 
         resp = client_b.get('/aware/')
-        self.assertEquals(b'bar', resp.content)
+        self.assertEqual(b'bar', resp.content)
 
         resp = client_a.get('/aware/')
-        self.assertEquals(b'foo', resp.content)
+        self.assertEqual(b'foo', resp.content)

@@ -135,7 +135,7 @@ class MigrationTestBase(TransactionTestCase):
                 'Rider',
                 [
                     ('rider_id', models.AutoField(primary_key=True)),
-                    ('pony', models.ForeignKey('Pony'))
+                    ('pony', models.ForeignKey('Pony', on_delete=models.CASCADE))
                 ],
             ),
         ]
