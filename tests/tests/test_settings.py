@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 from django.conf import settings
-from django.test import TestCase, modify_settings
+from django.test import TestCase, modify_settings, override_settings
 from django.core import checks
 
 from boardinghouse import apps
@@ -43,7 +43,7 @@ class TestSettings(TestCase):
         self.assertTrue(isinstance(errors[0], checks.Error))
         self.assertEqual('boardinghouse.E002', errors[0].id)
 
-    @modify_settings()
+    @override_settings()
     def test_installed_before_admin(self):
         settings.INSTALLED_APPS.remove('boardinghouse')
         settings.INSTALLED_APPS.append('boardinghouse')
