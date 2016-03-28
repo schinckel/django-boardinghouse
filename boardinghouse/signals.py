@@ -35,6 +35,7 @@ Signals that are fired as part of the django-boardinghouse project.
     This is also used by the ``contrib.template`` app to ensure that operations
     are applied to :class:`boardinghouse.contrib.template.models.SchemaTemplate`
     instances.
+
 """
 
 import logging
