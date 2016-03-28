@@ -1,11 +1,15 @@
 from __future__ import unicode_literals
 
+from django.contrib import admin
+from django.contrib.admin.models import LogEntry, ADDITION
+from django.contrib.auth.models import Permission
+from django.contrib.contenttypes.models import ContentType
+from django.core.urlresolvers import reverse
 from django.test import TestCase, modify_settings
 from django.utils import six
-from django.core.urlresolvers import reverse
-from django.contrib.auth.models import Permission
 
 from boardinghouse.schema import get_schema_model
+from boardinghouse.contrib.template.models import SchemaTemplate
 
 from ..models import AwareModel, NaiveModel, User
 
@@ -61,9 +65,6 @@ class TestAdminAdditions(TestCase):
         self.assertEqual(set(['a', 'b', 'c']), set(schemata(user).split('<br>')))
 
     def test_admin_log_includes_schema(self):
-        from django.contrib.admin.models import LogEntry, ADDITION
-        from django.contrib.contenttypes.models import ContentType
-
         Schema.objects.mass_create('a')
         schema = Schema.objects.get(name='a')
         schema.activate()
@@ -87,9 +88,6 @@ class TestAdminAdditions(TestCase):
         self.assertEqual('__schema=a', entry.get_admin_url().split('?')[1])
 
     def test_admin_log_naive_object_no_schema(self):
-        from django.contrib.admin.models import LogEntry, ADDITION
-        from django.contrib.contenttypes.models import ContentType
-
         Schema.objects.mass_create('a')
         schema = Schema.objects.get(name='a')
         schema.activate()
@@ -111,7 +109,7 @@ class TestAdminAdditions(TestCase):
         self.assertEqual(None, entry.object_schema_id)
         self.assertEqual(1, len(entry.get_admin_url().split('?')))
 
-    def test_create_schema_with_contrib_template(self):
+    def test_create_schema_with_contrib_template_installed(self):
         User.objects.create_superuser(
             username="su",
             password="su",
@@ -121,7 +119,6 @@ class TestAdminAdditions(TestCase):
         response = self.client.get(reverse('admin:boardinghouse_schema_add'))
         # We want to assert that there is a field on the form with the name 'clone_schema'
         self.assertTrue('clone_schema' in response.context['adminform'].form.fields)
-        from boardinghouse.contrib.template.models import SchemaTemplate
         template = SchemaTemplate.objects.create(name='foo')
         response = self.client.post(
             reverse('admin:boardinghouse_schema_add'),
@@ -135,7 +132,7 @@ class TestAdminAdditions(TestCase):
         self.assertTrue(Schema.objects.filter(schema='bar').exists(),
                         'Did not create schema without template from admin form')
 
-    def test_create_schema_without_contrib_template(self):
+    def test_create_schema_without_contrib_template_installed(self):
         User.objects.create_superuser(
             username="su",
             password="su",
@@ -145,8 +142,6 @@ class TestAdminAdditions(TestCase):
         # Wow. This is a bit of a PITA to test. We can't just unset the settings, because django.contrib.admin
         # doesn't consult INSTALLED_APPS when it goes to render stuff, so it gets a KeyError, because a model
         # from a non-installed-app is found.
-        from django.contrib import admin
-        from boardinghouse.contrib.template.models import SchemaTemplate
         TemplateAdmin = admin.site._registry[SchemaTemplate].__class__
         admin.site.unregister(SchemaTemplate)
         with modify_settings(INSTALLED_APPS={'remove': ['boardinghouse.contrib.template']}):
@@ -154,8 +149,19 @@ class TestAdminAdditions(TestCase):
             self.assertFalse('clone_schema' in response.context['adminform'].form.fields)
         admin.site.register(SchemaTemplate, TemplateAdmin)
 
+    def test_admin_action_convert_to_template(self):
+        Schema.objects.mass_create('a', 'b', 'c')
+        User.objects.create_superuser(
+            username="su",
+            password="su",
+            email="su@example.com"
+        )
+        self.client.login(username='su', password='su')
+        self.client.post(
+            reverse('admin:boardinghouse_schema_changelist'),
+            {'action': 'create_template_from_schema', '_selected_action': ['a', 'c']})
+        self.assertEqual(2, SchemaTemplate.objects.count())
 
-class TestAdminTemplate(TestCase):
     def test_admin_template_renders_switcher(self):
         user = User.objects.create_user(
             username='admin',
