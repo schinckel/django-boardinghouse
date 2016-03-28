@@ -2,8 +2,8 @@ from __future__ import unicode_literals
 
 from collections import defaultdict
 
-from django.db.backends.postgresql_psycopg2 import schema
 from django.conf import settings
+from django.db.backends.postgresql_psycopg2 import schema
 
 import sqlparse
 from sqlparse.tokens import DDL, DML, Keyword

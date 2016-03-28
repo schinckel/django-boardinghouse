@@ -1,6 +1,6 @@
 from django.views import generic
 
-from .forms import InvitePersonForm, AcceptForm, DeclineForm
+from .forms import AcceptForm, DeclineForm, InvitePersonForm
 from .models import Invitation
 
 

@@ -1,12 +1,12 @@
-import logging
 import inspect
+import logging
 import threading
 
 import django
 from django.apps import apps
 from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
 from django.core.cache import cache
+from django.core.exceptions import ImproperlyConfigured
 from django.db import connection
 from django.db.migrations.operations.base import Operation
 from django.utils.translation import lazy

@@ -5,6 +5,7 @@ from django import forms
 from django.utils.translation import ugettext_lazy as _
 
 from boardinghouse.schema import get_active_schema
+
 from .models import Invitation
 
 ALREADY_REDEEMED = _('This invitation has already been redeemed.')

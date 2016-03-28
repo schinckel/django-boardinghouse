@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
 import os
 
-from django.db import migrations
 from django.conf import settings
+from django.db import migrations
 
 with open(os.path.join(os.path.dirname(__file__), '..', 'sql', 'clone_schema.002.sql')) as fp:
     FORWARDS = fp.read()

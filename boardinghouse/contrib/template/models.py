@@ -3,7 +3,8 @@ from django.utils import six
 from django.utils.functional import lazy
 
 from boardinghouse.base import SharedSchemaMixin
-from boardinghouse.schema import activate_schema, deactivate_schema, get_schema_model
+from boardinghouse.schema import (activate_schema, deactivate_schema,
+                                  get_schema_model)
 
 
 def verbose_name_plural():

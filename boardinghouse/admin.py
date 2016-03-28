@@ -9,7 +9,7 @@ from django.db import models
 from django.dispatch import receiver
 
 from .models import Schema
-from .schema import get_active_schema, is_shared_model, get_schema_model
+from .schema import get_active_schema, get_schema_model, is_shared_model
 
 
 class SchemaAdmin(admin.ModelAdmin):

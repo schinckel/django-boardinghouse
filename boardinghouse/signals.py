@@ -43,14 +43,9 @@ from django.core.cache import cache
 from django.db import connection
 from django.dispatch import Signal
 
-from .schema import (
-    activate_template_schema,
-    get_active_schema_name,
-    get_schema_model,
-    is_shared_model,
-    _schema_exists,
-    _schema_table_exists,
-)
+from .schema import (_schema_exists, _schema_table_exists,
+                     activate_template_schema, get_active_schema_name,
+                     get_schema_model, is_shared_model)
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.addHandler(logging.NullHandler())

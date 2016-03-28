@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 from django.apps import AppConfig
-from django.core.checks import register, Error, Warning
+from django.core.checks import Error, Warning, register
 
 CONTEXT = 'boardinghouse.context_processors.schemata'
 MIDDLEWARE = 'boardinghouse.middleware.SchemaMiddleware'

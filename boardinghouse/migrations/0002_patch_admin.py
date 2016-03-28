@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
 import os
 
-from django.db import models, migrations
-from django.conf import settings
 import django.core.validators
+from django.conf import settings
+from django.db import migrations, models
 
-from boardinghouse.operations import AddField
 import boardinghouse
+from boardinghouse.operations import AddField
 
 with open(os.path.join(os.path.dirname(__file__), '..', 'sql', 'protect_schema_column.001.sql')) as fp:
     PROTECT_SCHEMA_COLUMN = fp.read()
