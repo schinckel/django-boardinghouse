@@ -48,8 +48,8 @@ class BoardingHouseTemplateConfig(AppConfig):
                     else:
                         class form(forms.ModelForm):
                             pass
-
-                    return super(SchemaAdmin, self).get_form(request, obj, form=form, **kwargs)
+                    kwargs['form'] = form
+                    return super(SchemaAdmin, self).get_form(request, obj, **kwargs)
 
                 def get_fields(self, request, obj):
                     fields = super(SchemaAdmin, self).get_fields(request, obj)
