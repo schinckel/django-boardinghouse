@@ -126,7 +126,14 @@ class TestAdminAdditions(TestCase):
         response = self.client.post(
             reverse('admin:boardinghouse_schema_add'),
             {'name': 'foo', 'clone_schema': template.pk, 'schema': 'foo'})
-        self.assertTrue(Schema.objects.filter(schema='foo').exists(), 'Did not create schema from admin form')
+        self.assertTrue(Schema.objects.filter(schema='foo').exists(),
+                        'Did not create schema from admin form')
+
+        response = self.client.post(
+            reverse('admin:boardinghouse_schema_add'),
+            {'name': 'bar', 'schema': 'bar'})
+        self.assertTrue(Schema.objects.filter(schema='bar').exists(),
+                        'Did not create schema without template from admin form')
 
     def test_create_schema_without_contrib_template(self):
         User.objects.create_superuser(
