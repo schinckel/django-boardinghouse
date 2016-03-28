@@ -121,6 +121,12 @@ class TestAdminAdditions(TestCase):
         response = self.client.get(reverse('admin:boardinghouse_schema_add'))
         # We want to assert that there is a field on the form with the name 'clone_schema'
         self.assertTrue('clone_schema' in response.context['adminform'].form.fields)
+        from boardinghouse.contrib.template.models import SchemaTemplate
+        template = SchemaTemplate.objects.create(name='foo')
+        response = self.client.post(
+            reverse('admin:boardinghouse_schema_add'),
+            {'name': 'foo', 'clone_schema': template.pk, 'schema': 'foo'})
+        self.assertTrue(Schema.objects.filter(schema='foo').exists(), 'Did not create schema from admin form')
 
     def test_create_schema_without_contrib_template(self):
         User.objects.create_superuser(

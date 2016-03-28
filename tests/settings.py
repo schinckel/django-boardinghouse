@@ -32,6 +32,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'boardinghouse.middleware.SchemaMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
 )
 PASSWORD_HASHERS = (
     'django.contrib.auth.hashers.MD5PasswordHasher',
