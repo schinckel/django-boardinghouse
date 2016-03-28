@@ -17,8 +17,10 @@ from django.apps import apps
 from django.core.management.base import CommandError
 from django.core.management.commands import dumpdata
 
-from ...schema import (activate_template_schema, deactivate_schema,
-                       get_schema_model, is_shared_model)
+from ...schema import (
+    activate_template_schema, deactivate_schema, get_schema_model,
+    is_shared_model,
+)
 
 
 class Command(dumpdata.Command):

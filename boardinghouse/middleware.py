@@ -6,13 +6,16 @@ import re
 from django.conf import settings
 from django.contrib import messages
 from django.db import ProgrammingError
-from django.http import (HttpResponse, HttpResponseForbidden,
-                         HttpResponseRedirect)
+from django.http import (
+    HttpResponse, HttpResponseForbidden, HttpResponseRedirect,
+)
 from django.shortcuts import redirect
 from django.utils.translation import ugettext_lazy as _
 
-from .schema import (Forbidden, TemplateSchemaActivation, activate_schema,
-                     deactivate_schema, get_schema_model)
+from .schema import (
+    Forbidden, TemplateSchemaActivation, activate_schema, deactivate_schema,
+    get_schema_model,
+)
 from .signals import session_requesting_schema_change, session_schema_changed
 
 logger = logging.getLogger('boardinghouse.middleware')
