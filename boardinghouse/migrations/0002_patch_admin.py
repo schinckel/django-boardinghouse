@@ -30,7 +30,8 @@ class ProtectSchemaColumn(migrations.RunSQL):
 
 def remove_all_schemata(apps, schema_editor):
     Schema = apps.get_model(*settings.BOARDINGHOUSE_SCHEMA_MODEL.split('.'))
-    Schema.objects.all().delete()
+    for schema in Schema.objects.all():
+        schema.delete()
 
 
 class Migration(migrations.Migration):

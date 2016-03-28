@@ -41,8 +41,15 @@ class BoardingHouseTemplateConfig(AppConfig):
             class SchemaAdmin(BaseSchemaAdmin):
                 actions = [create_template_from_schema]
 
-                class form(BaseSchemaAdmin.form):
-                    clone_schema = forms.ModelChoiceField(required=False, queryset=SchemaTemplate.objects.all())
+                def get_form(self, request, obj=None, **kwargs):
+                    if not obj and 'boardinghouse.contrib.template' in settings.INSTALLED_APPS:
+                        class form(forms.ModelForm):
+                            clone_schema = forms.ModelChoiceField(required=False, queryset=SchemaTemplate.objects.all())
+                    else:
+                        class form(forms.ModelForm):
+                            pass
+
+                    return super(SchemaAdmin, self).get_form(request, obj, form=form, **kwargs)
 
                 def get_fields(self, request, obj):
                     fields = super(SchemaAdmin, self).get_fields(request, obj)
@@ -52,7 +59,7 @@ class BoardingHouseTemplateConfig(AppConfig):
                     return fields
 
                 def save_model(self, request, obj, form, change):
-                    if not change:
+                    if not change and 'clone_schema' in form.cleaned_data:
                         obj._clone = form.cleaned_data['clone_schema'].schema
                     return super(SchemaAdmin, self).save_model(request, obj, form, change)
 

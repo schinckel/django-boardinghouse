@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from django.test import TestCase
+from django.test import TestCase, modify_settings
 from django.utils import six
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import Permission
@@ -112,10 +112,34 @@ class TestAdminAdditions(TestCase):
         self.assertEqual(1, len(entry.get_admin_url().split('?')))
 
     def test_create_schema_with_contrib_template(self):
-        pass
+        User.objects.create_superuser(
+            username="su",
+            password="su",
+            email="su@example.com"
+        )
+        self.client.login(username='su', password='su')
+        response = self.client.get(reverse('admin:boardinghouse_schema_add'))
+        # We want to assert that there is a field on the form with the name 'clone_schema'
+        self.assertTrue('clone_schema' in response.context['adminform'].form.fields)
 
     def test_create_schema_without_contrib_template(self):
-        pass
+        User.objects.create_superuser(
+            username="su",
+            password="su",
+            email="su@example.com"
+        )
+        self.client.login(username='su', password='su')
+        # Wow. This is a bit of a PITA to test. We can't just unset the settings, because django.contrib.admin
+        # doesn't consult INSTALLED_APPS when it goes to render stuff, so it gets a KeyError, because a model
+        # from a non-installed-app is found.
+        from django.contrib import admin
+        from boardinghouse.contrib.template.models import SchemaTemplate
+        TemplateAdmin = admin.site._registry[SchemaTemplate].__class__
+        admin.site.unregister(SchemaTemplate)
+        with modify_settings(INSTALLED_APPS={'remove': ['boardinghouse.contrib.template']}):
+            response = self.client.get(reverse('admin:boardinghouse_schema_add'))
+            self.assertFalse('clone_schema' in response.context['adminform'].form.fields)
+        admin.site.register(SchemaTemplate, TemplateAdmin)
 
 
 class TestAdminTemplate(TestCase):
