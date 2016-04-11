@@ -1,9 +1,13 @@
 from __future__ import unicode_literals
 from importlib import import_module
+import unittest
 
 from django.db import ProgrammingError
-from django.test import TestCase
 from django.conf import settings
+
+from hypothesis import given
+from hypothesis.strategies import text
+from hypothesis.extra.django import TestCase
 
 from boardinghouse.schema import get_schema_model, Forbidden
 from boardinghouse.middleware import change_schema
@@ -31,15 +35,14 @@ class TestMiddleware(TestCase):
         self.assertEqual(b'None', resp.content)
 
     def test_unauth_cannot_change_schema(self):
-        Schema.objects.create(name='first', schema='first')
-        Schema.objects.create(name='second', schema='second')
+        first, second = Schema.objects.mass_create('first', 'second')
 
         resp = self.client.get('/', HTTP_X_CHANGE_SCHEMA='first')
         self.assertEqual(403, resp.status_code)
 
-    def test_invalid_schema(self):
-        Schema.objects.create(name='first', schema='first')
-        Schema.objects.create(name='second', schema='second')
+    @given(text(min_size=1, alphabet='abcdefghijklmnopqrstuvwxyz_0123456789'))
+    def test_invalid_schema(self, invalid):
+        first, second = Schema.objects.mass_create('first', 'second')
 
         User.objects.create_superuser(
             username="su",
@@ -48,18 +51,21 @@ class TestMiddleware(TestCase):
         )
         self.client.login(username='su', password='su')
 
-        resp = self.client.get('/', HTTP_X_CHANGE_SCHEMA='third')
+        resp = self.client.get('/', HTTP_X_CHANGE_SCHEMA=invalid)
         self.assertEqual(403, resp.status_code)
 
         resp = self.client.get('/', HTTP_X_CHANGE_SCHEMA='second')
         self.assertEqual(b'second', resp.content)
 
-        resp = self.client.get('/__change_schema__/third/')
+        resp = self.client.get('/__change_schema__/{}/'.format(invalid))
+        self.assertEqual(403, resp.status_code)
+
+        resp = self.client.get('/?__schema={}'.format(invalid))
         self.assertEqual(403, resp.status_code)
 
     def test_only_one_available_schema(self):
-        first = Schema.objects.create(name='first', schema='first')
-        self.assertEqual(1, Schema.objects.count())
+        first, second = Schema.objects.mass_create('first', 'second')
+        self.assertEqual(2, Schema.objects.count())
 
         user = User.objects.create_user(**CREDENTIALS)
         user.schemata.add(first)
@@ -68,8 +74,7 @@ class TestMiddleware(TestCase):
         self.assertEqual(b'first', resp.content)
 
     def test_middleware_activation(self):
-        Schema.objects.create(name='first', schema='first')
-        Schema.objects.create(name='second', schema='second')
+        first, second = Schema.objects.mass_create('first', 'second')
 
         User.objects.create_superuser(**SU_CREDENTIALS)
         self.client.login(username='su', password='su')
@@ -88,8 +93,7 @@ class TestMiddleware(TestCase):
         self.assertEqual(b'first', resp.content)
 
     def test_middleware_activation_on_post(self):
-        Schema.objects.create(name='first', schema='first')
-        Schema.objects.create(name='second', schema='second')
+        Schema.objects.mass_create('first', 'second')
 
         User.objects.create_superuser(**SU_CREDENTIALS)
         self.client.login(username='su', password='su')
@@ -209,10 +213,13 @@ class TestMiddleware(TestCase):
         self.assertEqual(b'a', resp.content)
 
     def test_other_db_error_not_handled_by_us(self):
-        self.assertRaises(ProgrammingError, self.client.get, '/sql/error/?sql=foo')
+        with self.assertRaises(ProgrammingError):
+            self.client.get('/sql/?sql=foo')
 
+    @unittest.expectedFailure
     def test_missing_table_when_schema_set(self):
-        self.assertRaises(ProgrammingError, self.client.get, '/sql/error/?sql=SELECT+1+FROM+foo')
+        with self.assertRaises(ProgrammingError):
+            self.client.get('/sql/?sql=SELECT+1+FROM+foo.bar')
 
     def test_explicit_change_to_inactive_schema(self):
         Schema.objects.mass_create('a', 'b', 'c')

@@ -63,9 +63,7 @@ class TestPostgresSchemaCreation(TestCase):
 
     def test_bulk_create_creates_schemata(self):
         schemata = ['first', 'second', 'third']
-        Schema.objects.bulk_create([
-            Schema(name=x, schema=x) for x in schemata
-        ])
+        Schema.objects.mass_create(*schemata)
         cursor = connection.cursor()
         for schema in schemata:
             activate_schema(schema)
@@ -76,8 +74,7 @@ class TestPostgresSchemaCreation(TestCase):
 
     def test_mass_create(self):
         Schema.objects.mass_create('a', 'b', 'c')
-        six.assertCountEqual(self, ['a', 'b', 'c'],
-            Schema.objects.values_list('pk', flat=True))
+        self.assertEqual(['a', 'b', 'c'], sorted(Schema.objects.values_list('pk', flat=True)))
 
     def test_schema_already_exists(self):
         cursor = connection.cursor()

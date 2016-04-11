@@ -9,3 +9,4 @@ htmlcov
 coverage-status.svg
 status.svg
 dist
+.hypothesis

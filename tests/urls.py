@@ -30,8 +30,9 @@ def aware_objects_view(request):
     return HttpResponse(obj.name)
 
 
-def sql_error(request):
-    connection.cursor().execute('foo')
+def sql_injection(request):
+    # Yes, this is an SQL injection view.
+    connection.cursor().execute(request.GET.get('sql', 'foo'))
 
 
 def activate_schema_view(request, schema):
@@ -41,7 +42,7 @@ def activate_schema_view(request, schema):
 
 urlpatterns = [
     url(r'^$', echo_schema),
-    url(r'^sql/error/$', sql_error),
+    url(r'^sql/$', sql_injection),
     url(r'^change/$', change_schema_view),
     url(r'^aware/$', aware_objects_view),
     url(r'^login/$', login, {'template_name': 'admin/login.html'}, name='login'),

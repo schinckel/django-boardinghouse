@@ -12,8 +12,7 @@ Schema = get_schema_model()
 
 class TestMultipleClients(TestCase):
     def test_simultaneous_access(self):
-        schema_a = Schema.objects.create(name='a', schema='a')
-        schema_b = Schema.objects.create(name='b', schema='b')
+        schema_a, schema_b = Schema.objects.mass_create('a', 'b')
 
         user_a = User.objects.create_user(
             username='a', email='a@example.com', password='a'

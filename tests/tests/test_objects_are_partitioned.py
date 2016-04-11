@@ -8,8 +8,7 @@ Schema = get_schema_model()
 
 class TestPartitioning(TestCase):
     def test_aware_objects_are_created_in_active_schema(self):
-        first = Schema.objects.create(name='first', schema='first')
-        second = Schema.objects.create(name='second', schema='second')
+        first, second = Schema.objects.mass_create('first', 'second')
 
         first.activate()
         AwareModel.objects.create(name="Foo object")
@@ -29,8 +28,7 @@ class TestPartitioning(TestCase):
         self.assertRaises(AwareModel.DoesNotExist, AwareModel.objects.get, name='Baz object')
 
     def test_boardinghouse_manager(self):
-        first = Schema.objects.create(name='first', schema='first')
-        second = Schema.objects.create(name='second', schema='second')
+        first, second = Schema.objects.mass_create('first', 'second')
 
         first.activate()
         AwareModel.objects.create(name="Foo object").name
@@ -47,8 +45,7 @@ class TestPartitioning(TestCase):
         self.assertNotIn(baz, [x.name for x in AwareModel.objects.from_schemata(first)])
 
     def test_naive_objects_are_created_in_public_schema(self):
-        first = Schema.objects.create(name='first', schema='first')
-        second = Schema.objects.create(name='second', schema='second')
+        first, second = Schema.objects.mass_create('first', 'second')
 
         NaiveModel.objects.create(name="Public")
 

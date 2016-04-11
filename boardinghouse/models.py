@@ -43,6 +43,11 @@ class SchemaQuerySet(models.query.QuerySet):
         # Perhaps it could slugify the schema value?
         self.bulk_create([self.model(name=x, schema=x) for x in args])
         cache.delete('active-schemata')
+        # Need to be able to supply the schemata in the order they were passed in,
+        # but a version that has been loaded from the database: otherwise the database
+        # will not be set, and using these will fail.
+        schemata = {x.schema: x for x in self.model.objects.filter(schema__in=args)}
+        return [schemata[x] for x in args]
 
     def active(self):
         return self.filter(is_active=True)
