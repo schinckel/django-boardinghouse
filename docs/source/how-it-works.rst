@@ -11,6 +11,8 @@ The core of the package revolves around a swappable model that stores all of the
 
 When an instance of the model is deleted, the relevant postgres schema is dropped.
 
+There is an abstract class you'll probably want to inherit from: :class:`boardinghouse.models.AbstractSchema`, although this is not necessary. However, there is a perfectly sane default concrete implementation: :class:`boardinghouse.models.Schema`. This contains a many-to-many field with ``settings.AUTH_USER_MODEL``, but if you need anything different, then a subclass may be your best bet.
+
 
 Shared vs Private Models
 ------------------------

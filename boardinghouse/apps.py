@@ -186,10 +186,11 @@ def register_signals():
 
     models.signals.post_init.connect(signals.inject_schema_attribute, sender=None)
 
-    models.signals.m2m_changed.connect(signals.invalidate_cache,
-                                       sender=Schema.users.through)
+    if hasattr(Schema, 'users'):
+        models.signals.m2m_changed.connect(signals.invalidate_cache,
+                                           sender=Schema.users.through)
 
-    models.signals.post_save.connect(signals.invalidate_all_user_caches, sender=Schema, weak=False)
+        models.signals.post_save.connect(signals.invalidate_all_user_caches, sender=Schema, weak=False)
 
     models.signals.pre_migrate.connect(signals.invalidate_all_caches, weak=False)
 
