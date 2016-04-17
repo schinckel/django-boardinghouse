@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from django.db.backends.postgresql import base
+from django.db.backends.postgresql_psycopg2 import base
 
 from .schema import DatabaseSchemaEditor
 from .creation import DatabaseCreation

@@ -1,4 +1,4 @@
-from django.db.backends.postgresql import creation
+from django.db.backends.postgresql_psycopg2 import creation
 
 from boardinghouse.schema import activate_template_schema
 
