@@ -305,26 +305,15 @@ def is_shared_table(table, apps=apps):
         return is_shared_model(table_map[table])
 
     # It may be a join table.
-    prefixes = [
-        (db_table, model, remote_field(model._meta.get_field(
-            table.replace(db_table, '').lstrip('_')
-        )).model)
-        for db_table, model in table_map.items()
-        if table.startswith(db_table)
-    ]
+    for db_table, model in table_map.items():
+        if table.startswith(db_table):
+            for field in model._meta.local_many_to_many:
+                through = (field.remote_field if hasattr(field, 'remote_field') else field.rel).through
+                if through._meta.db_table == table:
+                    return is_shared_model(through)
 
-    # If we didn't find any candidate matches for this being a join
-    # table, assume that means it is not a shared table.
-    if not prefixes:
-        return False
-
-    # Only if all of the candidate matches are shared models (and the
-    # relevant join model is a shared model) does that make this table
-    # a shared table/model.
-    return all(
-        is_shared_model(model) and is_shared_model(rel_model)
-        for db_table, model, rel_model in prefixes
-    )
+    # Not a join table: just assume that it's not shared.
+    return False
 
 
 # Internal helper functions.

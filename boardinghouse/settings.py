@@ -7,10 +7,7 @@ Note that some models are *always* shared, which you
 can see in :attr:`boardinghouse.schema.REQUIRED_SHARED_MODELS`
 """
 
-PRIVATE_MODELS = [
-    # 'auth.user_permissions',
-    # 'auth.user_groups',
-]
+PRIVATE_MODELS = []
 """
 Overrides for models that should be place in each schema.
 
