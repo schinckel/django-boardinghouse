@@ -48,11 +48,9 @@ def drop_views(apps, schema_editor):
 class Migration(migrations.Migration):
     initial = True
 
-    runs_before = [
+    dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
-
-    dependencies = []
 
     operations = [
         migrations.RunPython(create_views, drop_views)

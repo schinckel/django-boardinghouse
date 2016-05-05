@@ -15,7 +15,6 @@ class Migration(migrations.Migration):
 
     run_before = [
         migrations.swappable_dependency(settings.BOARDINGHOUSE_SCHEMA_MODEL),
-        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     dependencies = []
