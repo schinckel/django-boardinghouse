@@ -32,4 +32,12 @@ class GroupsConfig(SharedGroupsConfig):
 
     def ready(self):
         from django.conf import settings
+        from django.contrib.auth.models import Group
+
+        super(GroupsConfig, self).ready()
         settings.PRIVATE_MODELS.append('auth.groups')
+
+        self.required_public_views.extend([
+            Group,
+            Group.permissions.through
+        ])

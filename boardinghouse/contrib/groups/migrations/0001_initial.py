@@ -13,8 +13,8 @@ def view_from_model(model, connection):
         ),
     ]
     for field in model._meta.fields:
-        view_parts.append('NULL::{db_type} AS "{column}",'.format(
-            db_type=field.db_type(connection), column=field.db_column
+        view_parts.append('NULL::INTEGER AS "{column}",'.format(
+            db_type=field.db_type(connection), column=field.db_column or field.attname
         ))
     # Remove the comma off the last one.
     view_parts[-1] = view_parts[-1][:-1]
