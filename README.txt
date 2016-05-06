@@ -1,7 +1,7 @@
 Django Boardinghouse
 ====================
 
-Multi-tenancy for Django applications, using Postgres Schemas.
+Multi-tenancy for Django applications, using Postgres Schemata.
 
 See full documentation at: http://django-boardinghouse.readthedocs.io
 

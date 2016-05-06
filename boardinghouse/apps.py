@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 from django.apps import AppConfig
 from django.core.checks import Error, Warning, register
-from django.test.client import Client
 
 CONTEXT = 'boardinghouse.context_processors.schemata'
 MIDDLEWARE = 'boardinghouse.middleware.SchemaMiddleware'
@@ -19,12 +18,6 @@ class BoardingHouseConfig(AppConfig):
         load_app_settings()
         monkey_patch_user()
         register_signals()
-
-
-def activate_schema(client, schema):
-    client.session['schema'] = schema
-
-Client.activate_schema = activate_schema
 
 
 @register('settings')
