@@ -40,6 +40,7 @@ Signals that are fired as part of the django-boardinghouse project.
 
 import logging
 
+from django.conf import settings
 from django.core.cache import cache
 from django.db import connection
 from django.dispatch import Signal
@@ -82,7 +83,7 @@ def create_schema(sender, instance, created, **kwargs):
         # How can we work out what values need to go here?
         # Currently, we just allow a single attribute `_clone`, that,
         # if set, will indicate that we should clone a schema.
-        template_name = getattr(instance, '_clone', '__template__')
+        template_name = getattr(instance, '_clone', settings.TEMPLATE_SCHEMA)
         include_records = bool(getattr(instance, '_clone', False))
 
         cursor = connection.cursor()
@@ -97,7 +98,7 @@ def create_schema(sender, instance, created, **kwargs):
         ])
         cursor.close()
 
-        if schema_name != '__template__':
+        if schema_name != settings.TEMPLATE_SCHEMA:
             schema_created.send(sender=get_schema_model(),
                                 schema=schema_name)
 

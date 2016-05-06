@@ -43,7 +43,7 @@ def change_schema(request, schema):
         raise Forbidden()
 
     # Don't allow anyone, even superusers, to select the template schema.
-    if schema == '__template__':
+    if schema == settings.TEMPLATE_SCHEMA:
         raise TemplateSchemaActivation()
 
     # If the schema is already set to this name for this session, then

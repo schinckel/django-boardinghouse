@@ -33,7 +33,7 @@ class Forbidden(Exception):
 class TemplateSchemaActivation(Forbidden):
     """
     An exception that will be raised when a user attempts to activate
-    the __template__ schema.
+    the settings.TEMPLATE_SCHEMA schema.
     """
     def __init__(self, *args, **kwargs):
         super(TemplateSchemaActivation, self).__init__(
@@ -150,7 +150,7 @@ def activate_schema(schema_name):
     """
     from .signals import schema_pre_activate, schema_post_activate
 
-    if schema_name == '__template__':
+    if schema_name == settings.TEMPLATE_SCHEMA:
         raise TemplateSchemaActivation()
 
     schema_pre_activate.send(sender=None, schema_name=schema_name)
@@ -169,7 +169,7 @@ def activate_template_schema():
     from .signals import schema_pre_activate, schema_post_activate
 
     _thread_locals.schema = None
-    schema_name = '__template__'
+    schema_name = settings.TEMPLATE_SCHEMA
     schema_pre_activate.send(sender=None, schema_name=schema_name)
     _set_search_path(schema_name)
     schema_post_activate.send(sender=None, schema_name=schema_name)
@@ -178,7 +178,7 @@ def activate_template_schema():
 
 
 def get_template_schema():
-    return get_schema_model()('__template__')
+    return get_schema_model()(settings.TEMPLATE_SCHEMA)
 
 
 def deactivate_schema(schema=None):
