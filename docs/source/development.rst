@@ -11,4 +11,4 @@ If you have `tox`_ installed, then you'll be able to run it from the checked out
 
 Bugs and feature requests can be reported on BitBucket, and Pull Requests may be accepted.
 
-.. _tox: http://tox.readthedocs.org
+.. _tox: http://tox.readthedocs.io

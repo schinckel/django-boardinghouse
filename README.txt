@@ -3,7 +3,7 @@ Django Boardinghouse
 
 Multi-tenancy for Django applications, using Postgres Schemas.
 
-See full documentation at: http://django-boardinghouse.readthedocs.org
+See full documentation at: http://django-boardinghouse.readthedocs.io
 
 This is alpha quality software. You use it at your own risk in production code.
 
@@ -18,8 +18,8 @@ This is alpha quality software. You use it at your own risk in production code.
 .. |deps| image:: https://requires.io/bitbucket/schinckel/django-boardinghouse/requirements.svg?branch=default
    :target: https://requires.io/bitbucket/schinckel/django-boardinghouse/requirements.svg/?branch=default
    :alt: Dependencies status
-.. |docs| image:: https://readthedocs.org/projects/django-boardinghouse/badge/
-   :target: https://readthedocs.org/projects/django-boardinghouse/
+.. |docs| image:: https://readthedocs.io/projects/django-boardinghouse/badge/
+   :target: https://readthedocs.io/projects/django-boardinghouse/
    :alt: Documentation Status
 .. |pypi| image:: https://img.shields.io/pypi/v/django-boardinghouse.svg
    :target: https://pypi.python.org/pypi/django-boardinghouse
