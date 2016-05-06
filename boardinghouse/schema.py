@@ -173,6 +173,8 @@ def activate_template_schema():
     schema_pre_activate.send(sender=None, schema_name=schema_name)
     _set_search_path(schema_name)
     schema_post_activate.send(sender=None, schema_name=schema_name)
+    if _get_search_path() != [schema_name]:
+        raise ValueError("Template schema was not activated.")
 
 
 def get_template_schema():
