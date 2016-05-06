@@ -1,7 +1,8 @@
 from __future__ import unicode_literals
 
 from django.apps import AppConfig
-from django.core.checks import register, Error, Warning
+from django.core.checks import Error, Warning, register
+from django.test.client import Client
 
 CONTEXT = 'boardinghouse.context_processors.schemata'
 MIDDLEWARE = 'boardinghouse.middleware.SchemaMiddleware'
@@ -18,6 +19,12 @@ class BoardingHouseConfig(AppConfig):
         load_app_settings()
         monkey_patch_user()
         register_signals()
+
+
+def activate_schema(client, schema):
+    client.session['schema'] = schema
+
+Client.activate_schema = activate_schema
 
 
 @register('settings')
@@ -81,7 +88,6 @@ def check_middleware_installed(app_configs=None, **kwargs):
     "Ensure that _our_ middleware is installed."
     from django.conf import settings
 
-    MIDDLEWARE = 'boardinghouse.middleware.SchemaMiddleware'
     errors = []
 
     if MIDDLEWARE not in settings.MIDDLEWARE_CLASSES:
@@ -187,10 +193,11 @@ def register_signals():
 
     models.signals.post_init.connect(signals.inject_schema_attribute, sender=None)
 
-    models.signals.m2m_changed.connect(signals.invalidate_cache,
-                                       sender=Schema.users.through)
+    if hasattr(Schema, 'users'):
+        models.signals.m2m_changed.connect(signals.invalidate_cache,
+                                           sender=Schema.users.through)
 
-    models.signals.post_save.connect(signals.invalidate_all_user_caches, sender=Schema, weak=False)
+        models.signals.post_save.connect(signals.invalidate_all_user_caches, sender=Schema, weak=False)
 
     models.signals.pre_migrate.connect(signals.invalidate_all_caches, weak=False)
 

@@ -39,7 +39,7 @@ class TestContribTemplate(TestCase):
         User.objects.create_user(**CREDENTIALS)
         self.client.login(**CREDENTIALS)
         response = self.client.get('/__change_schema__/{}/'.format(template.schema))
-        self.assertEquals(403, response.status_code)
+        self.assertEqual(403, response.status_code)
 
     def test_templates_can_be_activated_with_permission(self):
         template = SchemaTemplate.objects.create(name='Foo')
@@ -47,7 +47,7 @@ class TestContribTemplate(TestCase):
         user.user_permissions.add(Permission.objects.get(codename='activate_schematemplate'))
         self.client.login(**CREDENTIALS)
         response = self.client.get('/__change_schema__/{}/'.format(template.schema))
-        self.assertEquals(200, response.status_code)
+        self.assertEqual(200, response.status_code)
 
     def test_invalid_template_raises_forbidden(self):
         template = SchemaTemplate.objects.create(name='Foo')
@@ -55,7 +55,7 @@ class TestContribTemplate(TestCase):
         user.user_permissions.add(Permission.objects.get(codename='activate_schematemplate'))
         self.client.login(**CREDENTIALS)
         response = self.client.get('/__change_schema__/{}1/'.format(template.schema))
-        self.assertEquals(403, response.status_code)
+        self.assertEqual(403, response.status_code)
 
     def test_cloning_templates_clones_data(self):
         template = SchemaTemplate.objects.create(name='Foo')

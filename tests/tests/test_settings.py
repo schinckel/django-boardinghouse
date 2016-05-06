@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 from django.conf import settings
-from django.test import TestCase, modify_settings
+from django.test import TestCase, modify_settings, override_settings
 from django.core import checks
 
 from boardinghouse import apps
@@ -35,25 +35,25 @@ class TestSettings(TestCase):
         self.assertTrue(isinstance(errors[0], checks.Error))
         self.assertEqual('boardinghouse.E003', errors[0].id)
 
-    @modify_settings(MIDDLEWARE_CLASSES={'remove': [
-        'django.contrib.sessions.middleware.SessionMiddleware']})
+    @modify_settings(MIDDLEWARE_CLASSES={'remove': ['django.contrib.sessions.middleware.SessionMiddleware']})
     def test_session_middleware_missing(self):
         errors = apps.check_session_middleware_installed()
         self.assertEqual(1, len(errors))
         self.assertTrue(isinstance(errors[0], checks.Error))
         self.assertEqual('boardinghouse.E002', errors[0].id)
 
-    @modify_settings(INSTALLED_APPS={'remove': ['boardinghouse']})
-    @modify_settings(INSTALLED_APPS={'append': 'boardinghouse'})
     def test_installed_before_admin(self):
-        errors = apps.check_installed_before_admin()
-        self.assertEqual(1, len(errors))
-        self.assertTrue(isinstance(errors[0], checks.Error))
-        self.assertEqual('boardinghouse.E004', errors[0].id)
+        INSTALLED_APPS = list(settings.INSTALLED_APPS)
+        INSTALLED_APPS.remove('boardinghouse')
+        INSTALLED_APPS.append('boardinghouse')
 
-    @modify_settings(INSTALLED_APPS={
-        'remove': ['django.contrib.admin'],
-    })
+        with override_settings(INSTALLED_APPS=INSTALLED_APPS):
+            errors = apps.check_installed_before_admin()
+            self.assertEqual(1, len(errors))
+            self.assertTrue(isinstance(errors[0], checks.Error))
+            self.assertEqual('boardinghouse.E004', errors[0].id)
+
+    @modify_settings(INSTALLED_APPS={'remove': ['django.contrib.admin']})
     def test_admin_not_installed(self):
         errors = apps.check_installed_before_admin()
         self.assertEqual(0, len(errors))

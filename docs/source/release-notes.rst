@@ -1,6 +1,22 @@
 Release Notes
 =============
 
+0.4.0
+-----
+
+:class:`boardinghouse.contrib.template.models.SchemaTemplate` support.
+
+Change the mechanism of applying migrations to use signals instead of hard-coding. This allows for multiple schema models (ie, templates).
+
+Remove no-longer-required flush/migrate overrides for management commands.
+
+Fix swappable schema model.
+
+Update the ``clone_schema()`` database function.
+
+
+
+
 0.3.5
 -----
 

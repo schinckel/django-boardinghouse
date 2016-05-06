@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
 import os
 
-from django.db import models, migrations
+import django.core.validators
 from django.conf import settings
+from django.db import migrations, models
 
+import boardinghouse
 from boardinghouse.operations import AddField
 
-PROTECT_SCHEMA_COLUMN = open(os.path.join(os.path.dirname(__file__),
-    '..', 'sql', 'protect_schema_column.001.sql')).read()
+with open(os.path.join(os.path.dirname(__file__), '..', 'sql', 'protect_schema_column.001.sql')) as fp:
+    PROTECT_SCHEMA_COLUMN = fp.read()
 
 
 class ProtectSchemaColumn(migrations.RunSQL):
@@ -25,7 +28,20 @@ class ProtectSchemaColumn(migrations.RunSQL):
         super(ProtectSchemaColumn, self).database_forwards(app_label, schema_editor, from_state, to_state)
 
 
+def remove_all_schemata(apps, schema_editor):
+    Schema = apps.get_model(*settings.BOARDINGHOUSE_SCHEMA_MODEL.split('.'))
+    db_alias = schema_editor.connection.alias
+    sql = ';'.join([
+        'DROP SCHEMA {} CASCADE'.format(schema.schema)
+        for schema in Schema.objects.using(db_alias).all()
+    ])
+    if sql:
+        schema_editor.connection.cursor().execute(sql)
+    Schema.objects.all().delete()
+
+
 class Migration(migrations.Migration):
+    initial = True
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
@@ -37,11 +53,28 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.CreateModel(
+            name='Schema',
+            fields=[
+                ('schema', models.CharField(primary_key=True, serialize=False, max_length=36, validators=[django.core.validators.RegexValidator(regex=r'^[a-z][a-z0-9_]*$', message='May only contain lowercase letters, digits and underscores. Must start with a letter.')], help_text='The internal name of the schema.<br>May only contain lowercase letters, digits and underscores. Must start with a letter.<br>May not be changed after creation.', unique=True)),
+                ('name', models.CharField(help_text='The display name of the schema.', unique=True, max_length=128)),
+                ('is_active', models.BooleanField(default=True, help_text='Use this instead of deleting schemata.')),
+                ('users', models.ManyToManyField(help_text='Which users may access data from this schema.', related_name='schemata', to=settings.AUTH_USER_MODEL, blank=True)),
+            ],
+            options={
+                'swappable': 'BOARDINGHOUSE_SCHEMA_MODEL',
+                'verbose_name_plural': 'schemata',
+            },
+            bases=(boardinghouse.base.SharedSchemaMixin, models.Model),
+        ),
+
+        migrations.RunPython(code=lambda apps, schema_editor: None, reverse_code=remove_all_schemata),
+
         AddField(
             app_label='admin',
             model_name='logentry',
-            name='object_schema',
-            field=models.ForeignKey(blank=True, to=settings.BOARDINGHOUSE_SCHEMA_MODEL, null=True),
+            name='object_schema_id',
+            field=models.TextField(blank=True, null=True),
             preserve_default=True,
         ),
         ProtectSchemaColumn(),

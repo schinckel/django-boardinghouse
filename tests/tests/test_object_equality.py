@@ -8,8 +8,7 @@ Schema = get_schema_model()
 
 class TestObjectEquality(TestCase):
     def test_objects_from_different_schema_differ(self):
-        first = Schema.objects.create(name='first', schema='first')
-        second = Schema.objects.create(name='second', schema='second')
+        first, second = Schema.objects.mass_create('first', 'second')
 
         first.activate()
         object_1 = AwareModel.objects.create(name="foo")
@@ -18,11 +17,12 @@ class TestObjectEquality(TestCase):
         object_2 = AwareModel.objects.create(name="foo")
 
         self.assertEqual(object_1.pk, object_2.pk)
-        self.assertNotEqual(object_1, object_2, "Objects with the same id from different schemata should not be equal.")
+        self.assertNotEqual(object_1,
+                            object_2,
+                            "Objects with the same id from different schemata should not be equal.")
 
     def test_objects_from_same_schema_equal(self):
-        first = Schema.objects.create(name='first', schema='first')
-        second = Schema.objects.create(name='second', schema='second')
+        first, second = Schema.objects.mass_create('first', 'second')
 
         first.activate()
         AwareModel.objects.create(name="foo")

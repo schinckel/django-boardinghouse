@@ -10,12 +10,21 @@
         url when we have changed schema.
       {% endcomment %}
 
-      <select {% if disabled %}disabled="disabled"{% endif %} name="__schema" id="__schemalist" onchange="window.location.search = '?__schema=' + this.value;" style="background: none; -webkit-appearance: menulist-button; color: white">
+      <select {% if disabled %}disabled="disabled"{% endif %} name="__schema" id="__schemalist" onchange="window.location.search = '?__schema=' + this.value;" style="background: none; -webkit-appearance: menulist-button; color: #ffc; border-color: rgba(255, 255, 204, 0.63);">
         <option value="">No schema. Please select...</option>
         {% for schema in schemata %}
-          <option value="{{ schema.pk }}" {% if schema.pk|lower == selected_schema %}selected="selected"{% endif %}>
+          <option value="{{ schema.schema }}" {% if schema.schema|lower == selected_schema %}selected="selected"{% endif %}>
             {{ schema.name }}
           </option>
+        {% endfor %}
+        {% for s_type, s_schemata in extra_schemata %}
+          <optgroup label="{{ s_type }}">
+            {% for schema in s_schemata %}
+              <option value="{{ schema.schema }}" {% if schema.schema|lower == selected_schema %}selected="selected"{% endif %}>
+                {{ schema.name }}
+              </option>
+            {% endfor %}
+          </optgroup>
         {% endfor %}
       </select>
 
@@ -41,4 +50,5 @@
 
   {% endif %}
 </script>
+
 {% endif %}

@@ -32,7 +32,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'boardinghouse',
-    # 'boardinghouse.contrib.template',
+    'boardinghouse.contrib.template',
     # 'boardinghouse.contrib.demo',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -127,4 +127,4 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 # Swappable model is not currently working.
-# BOARDINGHOUSE_SCHEMA_MODEL = 'school.School'
+BOARDINGHOUSE_SCHEMA_MODEL = 'school.School'

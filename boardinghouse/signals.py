@@ -35,6 +35,7 @@ Signals that are fired as part of the django-boardinghouse project.
     This is also used by the ``contrib.template`` app to ensure that operations
     are applied to :class:`boardinghouse.contrib.template.models.SchemaTemplate`
     instances.
+
 """
 
 import logging
@@ -44,12 +45,8 @@ from django.db import connection
 from django.dispatch import Signal
 
 from .schema import (
-    activate_template_schema,
-    get_active_schema_name,
-    get_schema_model,
-    is_shared_model,
-    _schema_exists,
-    _schema_table_exists,
+    _schema_exists, _schema_table_exists, activate_template_schema,
+    get_active_schema_name, get_schema_model, is_shared_model,
 )
 
 LOGGER = logging.getLogger(__name__)

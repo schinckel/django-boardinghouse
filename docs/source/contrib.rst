@@ -18,7 +18,7 @@ The general pattern of interaction is:
 
 * User with required permission (invite.create_invitation) is able to generate an invitation. This results in an email being sent to the included email address (and, if a matching email in this system, an entry in the pending_acceptance_invitations view), with the provided message.
 
-.. note:: Permission-User relations should really be per-schema, as it is very likely that the same user will not have the same permission set within different schemata. This can be enabled by using :ref:`roles`, for instance.
+.. note:: Permission-User relations should really be per-schema, as it is very likely that the same user will not have the same permission set within different schemata. This can be enabled by using :ref:`groups`, for instance.
 
 * Recipient is provided with a single-use redemption code, which is part of a link in the email, or embedded in the view detailed above. When they visit this URL, they get the option to accept or decline the invitation.
 
@@ -41,9 +41,7 @@ It is possible for a logged in user to see the following things (dependent upon 
 boardinghouse.contrib.template
 ------------------------------
 
-.. note:: This app has not been developed.
-
-Introduces the concept of "Template" schemata, which can be used to create a schema that contains initial data.
+Introduces the concept of "SchemaTemplate" objects, which can be used to create a schema that contains initial data.
 
 Actions:
 
@@ -53,30 +51,26 @@ Actions:
 Template schema have schema names like: `__template_<id>`, and can only be activated by users who have the relevant permission.
 
 
-.. _roles:
+.. _groups:
 
-boardinghouse.contrib.roles
----------------------------
+boardinghouse.contrib.groups
+----------------------------
 
-.. note:: This app has not been developed.
+This app has two options: the standard form is to make the model `auth.Group` a private/per-schema model.
 
-This app enables per-schema roles, which are a basically the same as the normal django groups, except they are not a SharedSchemaModel.
+This cascades onto the relationships between `settings.AUTH_USER_MODEL` (which will always be a shared model), and `auth.Permission` (also always a shared model), and the group model. This is required, because a shared model may never contain a reference to a private model, but a private model may contain a reference to a shared model.
 
-They are intended for end-user access and configuration.
+When using the `boardinghouse.contrib.groups.apps.SharedGroupsConfig` form, only the join tables between `User` and `Group`, and between `User` and `Permission` are private. `Group` objects are shared between all schemata.
 
+Thus, when this app is installed, the following objects are always per-schema:
 
-.. _shared_roles:
+* `User` ⟷ `Permission`
+* `User` ⟷ `Group`
 
-boardinghouse.contrib.shared_roles
-----------------------------------
+When installed using the default `GroupsConfig`, the following objects are also per-schema:
 
-.. note:: This app has not been developed.
-
-This app alters the `django.contrib.auth` application, so that, whilst the `Group` model remains a `SharedSchemaModel`, the relationships between `User` and `Group`, and the relationship between `User` and `Permission` are actually schema-aware.
-
-This basically requires us just to move the `auth_group_permissions` table into the various schemata.
-
-Can we just do this by having a
+* `Group`
+* `Group` ⟷ `Permission`
 
 .. _demo:
 

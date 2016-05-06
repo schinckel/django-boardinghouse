@@ -113,7 +113,7 @@ BEGIN
     -- Ensure any default values that refer to the old schema now refer to the new schema.
     FOR column_, default_ IN
       SELECT column_name::text,
-             replace(column_default::text, source_schema, dest_schema)
+             replace(column_default::text, source_schema || '.', dest_schema || '.')
         FROM information_schema.columns
        WHERE table_schema = dest_schema
          AND table_name = object
@@ -129,7 +129,7 @@ BEGIN
     -- across...
     FOR trigger_ IN
       SELECT replace(pg_catalog.pg_get_triggerdef(oid, false)::text,
-                     source_schema, dest_schema)
+                     source_schema || '.', dest_schema || '.')
         FROM pg_catalog.pg_trigger
        WHERE tgrelid = (source_schema || '.' || object)::regclass::pg_catalog.oid
      AND NOT tgisinternal
@@ -151,7 +151,7 @@ BEGIN
   )
     SELECT conname AS name,
            replace(pg_catalog.pg_get_constraintdef(r.oid, true),
-                   source_schema, dest_schema) AS definition,
+                   source_schema || '.', dest_schema || '.') AS definition,
            t.table_name
       FROM source_tables t
 INNER JOIN pg_catalog.pg_constraint r
@@ -189,8 +189,8 @@ INNER JOIN pg_catalog.pg_constraint r
   FOR function_ IN
     SELECT replace(
              pg_get_functiondef(oid),
-             source_schema,
-             dest_schema
+             source_schema || '.',
+             dest_schema || '.'
            )
       FROM pg_proc
      WHERE pronamespace = source_schema_oid

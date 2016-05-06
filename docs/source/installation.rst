@@ -44,6 +44,11 @@ It's probably much easier to start using ``django-boardinghouse`` right from the
 Usage
 =====
 
+Schema Model
+------------
+
+By default, the model :class:`boardinghouse.models.Schema` will be used for the object representing the schemata, however you may override this by using the setting ``settings.BOARDINGHOUSE_SCHEMA_MODEL``. You'll probably want to subclass :class:`boardinghouse.models.AbstractSchema`.
+
 Shared Models
 -------------
 

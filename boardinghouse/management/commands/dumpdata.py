@@ -10,16 +10,17 @@ schema will be used (which will not contain any data).
 If any models are supplied as arguments (using the ``app_label.model_name``
 notation) that are not shared models, it is an error to fail to pass a schema.
 """
-import django
-from django.apps import apps
-from django.core.management.commands import dumpdata
-from django.core.management.base import CommandError
-
 from optparse import make_option
 
+import django
+from django.apps import apps
+from django.core.management.base import CommandError
+from django.core.management.commands import dumpdata
+
 from ...schema import (
-    is_shared_model, activate_template_schema, deactivate_schema,
-    get_schema_model,)
+    activate_template_schema, deactivate_schema, get_schema_model,
+    is_shared_model,
+)
 
 
 class Command(dumpdata.Command):

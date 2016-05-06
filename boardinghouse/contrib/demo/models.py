@@ -23,7 +23,10 @@ class ExpiringObjectsQuerySet(models.query.QuerySet):
 
 
 class DemoSchema(SharedSchemaMixin, models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, primary_key=True, related_name='demo_schema')
+    user = models.OneToOneField(settings.AUTH_USER_MODEL,
+                                on_delete=models.CASCADE,
+                                primary_key=True,
+                                related_name='demo_schema')
     expiry_date = models.DateTimeField()
 
     objects = ExpiringObjectsQuerySet.as_manager()

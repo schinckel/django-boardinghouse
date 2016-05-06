@@ -43,29 +43,29 @@ class TestLoadData(TestCase):
             call_command('loaddata', 'foo', schema='foo')
 
     def test_loading_schemata_creates_pg_schemata(self):
-        self.assertEquals(0, Schema.objects.count())
+        self.assertEqual(0, Schema.objects.count())
         # Need to use commit=False, else the data will be in a different transaction.
         with capture(call_command, 'loaddata', 'tests/fixtures/schemata.json', commit=False) as output:
-            self.assertEquals('Installed 2 object(s) from 1 fixture(s)\n', output)
-        self.assertEquals(2, Schema.objects.count())
+            self.assertEqual('Installed 2 object(s) from 1 fixture(s)\n', output)
+        self.assertEqual(2, Schema.objects.count())
         Schema.objects.all()[0].activate()
         self.assertTrue(get_active_schema())
         cursor = connection.cursor()
         for schema in Schema.objects.all():
             cursor.execute(SCHEMA_QUERY, [schema.schema])
             data = cursor.fetchone()
-            self.assertEquals((schema.schema,), data)
+            self.assertEqual((schema.schema,), data)
         cursor.close()
 
     def test_loading_naive_data_does_not_require_schema_arg(self):
         with capture(call_command, 'loaddata', 'tests/fixtures/naive.json', commit=False) as output:
-            self.assertEquals('Installed 2 object(s) from 1 fixture(s)\n', output)
+            self.assertEqual('Installed 2 object(s) from 1 fixture(s)\n', output)
         NaiveModel.objects.get(name="naive1")
 
     def test_loading_naive_data_works_with_schema_passed_in(self):
         Schema.objects.create(name='a', schema='a')
         with capture(call_command, 'loaddata', 'tests/fixtures/naive.json', schema='a', commit=False) as output:
-            self.assertEquals('Installed 2 object(s) from 1 fixture(s)\n', output)
+            self.assertEqual('Installed 2 object(s) from 1 fixture(s)\n', output)
         NaiveModel.objects.get(name="naive1")
 
     def test_loading_aware_data_without_a_schema_fails(self):
@@ -81,7 +81,7 @@ class TestLoadData(TestCase):
     def test_loading_aware_data_works(self):
         Schema.objects.mass_create('a', 'b')
         with capture(call_command, 'loaddata', 'tests/fixtures/aware.json', schema='a', commit=False) as output:
-            self.assertEquals('Installed 2 object(s) from 1 fixture(s)\n', output)
+            self.assertEqual('Installed 2 object(s) from 1 fixture(s)\n', output)
 
         Schema.objects.get(schema='a').activate()
         AwareModel.objects.get(name='aware1')
@@ -106,7 +106,7 @@ class TestDumpData(TestCase):
 
     def test_dumpdata_on_naive_models_does_not_require_schema(self):
         with capture(call_command, 'dumpdata', 'boardinghouse') as output:
-            self.assertEquals('[]', output)
+            self.assertEqual('[]', output)
 
     def test_dumpdata_on_aware_model(self):
         Schema.objects.mass_create('a', 'b')
@@ -116,13 +116,13 @@ class TestDumpData(TestCase):
         with capture(call_command, 'dumpdata', 'tests.AwareModel', schema='a') as output:
             data = sorted(json.loads(output))
 
-        self.assertEquals(1, len(data))
-        self.assertEquals({"factor": 7, "status": False, "name": "foo"}, data[0]['fields'])
+        self.assertEqual(1, len(data))
+        self.assertEqual({"factor": 7, "status": False, "name": "foo"}, data[0]['fields'])
 
         with capture(call_command, 'dumpdata', 'tests.AwareModel', schema='b') as output:
             data = sorted(json.loads(output))
 
-        self.assertEquals(0, len(data))
+        self.assertEqual(0, len(data))
 
     def test_dumpdata_on_aware_model_requires_schema(self):
         with self.assertRaises(CommandError):

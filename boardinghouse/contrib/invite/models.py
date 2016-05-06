@@ -3,12 +3,13 @@ import uuid
 
 from django.conf import settings
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
 from django.utils.timezone import now
+from django.utils.translation import ugettext_lazy as _
+
+from boardinghouse.base import SharedSchemaModel
 
 # Can't import into the class namespace: we need to do it at the module.
 
-from boardinghouse.base import SharedSchemaModel
 
 INVITATION_EXPIRY = getattr(settings, 'INVITATION_EXPIRY', datetime.timedelta(7))
 

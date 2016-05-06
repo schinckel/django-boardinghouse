@@ -25,10 +25,10 @@ class TestMultiSchemaManager(TestCase):
         b.deactivate()
 
         objects = list(AwareModel.objects.from_schemata(a))
-        self.assertEquals(3, len(objects))
+        self.assertEqual(3, len(objects))
 
         objects = list(AwareModel.objects.from_schemata(a, b))
-        self.assertEquals(6, len(objects))
+        self.assertEqual(6, len(objects))
 
     def test_ensure_multi_schema_fetched_objects_with_same_pk_differ(self):
         a = Schema.objects.create(name='a', schema='a')
@@ -42,7 +42,7 @@ class TestMultiSchemaManager(TestCase):
         b.deactivate()
 
         objects = list(AwareModel.objects.from_schemata(a, b))
-        self.assertEquals(2, len(objects))
-        self.assertEquals(objects[0], objects[0])
-        self.assertNotEquals(objects[0]._schema, None)
-        self.assertNotEquals(objects[0]._schema, objects[1]._schema, 'MultiSchemaManager should tag _schema attribute on models.')
+        self.assertEqual(2, len(objects))
+        self.assertEqual(objects[0], objects[0])
+        self.assertNotEqual(objects[0]._schema, None)
+        self.assertNotEqual(objects[0]._schema, objects[1]._schema, 'MultiSchemaManager should tag _schema attribute on models.')

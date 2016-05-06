@@ -135,7 +135,7 @@ class MigrationTestBase(TransactionTestCase):
                 'Rider',
                 [
                     ('rider_id', models.AutoField(primary_key=True)),
-                    ('pony', models.ForeignKey('Pony'))
+                    ('pony', models.ForeignKey('Pony', on_delete=models.CASCADE))
                 ],
             ),
         ]
@@ -511,8 +511,8 @@ class TestMigrations(MigrationTestBase):
         Pony = project_state.apps.get_model('tests', 'Pony')
 
         remove_all_schemata = getattr(
-            __import__('boardinghouse.migrations.0001_initial').migrations,
-            '0001_initial').remove_all_schemata
+            __import__('boardinghouse.migrations.0002_patch_admin').migrations,
+            '0002_patch_admin').remove_all_schemata
 
         with connection.schema_editor() as editor:
             remove_all_schemata(apps, editor)

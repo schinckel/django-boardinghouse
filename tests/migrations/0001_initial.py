@@ -32,7 +32,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('name', models.CharField(unique=True, max_length=10)),
-                ('other', models.ForeignKey(related_name='model_b', blank=True, to='tests.CoReferentialModelA', null=True)),
+                ('other', models.ForeignKey(on_delete=models.CASCADE, related_name='model_b', blank=True, to='tests.CoReferentialModelA', null=True)),
             ],
         ),
         migrations.CreateModel(
@@ -49,13 +49,13 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('name', models.CharField(unique=True, max_length=10)),
-                ('parent', models.ForeignKey(related_name='children', blank=True, to='tests.SelfReferentialModel', null=True)),
+                ('parent', models.ForeignKey(on_delete=models.CASCADE, related_name='children', blank=True, to='tests.SelfReferentialModel', null=True)),
             ],
         ),
         migrations.AddField(
             model_name='coreferentialmodela',
             name='other',
-            field=models.ForeignKey(related_name='model_a', blank=True, to='tests.CoReferentialModelB', null=True),
+            field=models.ForeignKey(on_delete=models.CASCADE, related_name='model_a', blank=True, to='tests.CoReferentialModelB', null=True),
         ),
         migrations.CreateModel(
             name='ModelA',
@@ -81,7 +81,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='modelbprefix',
             name='a',
-            field=models.ForeignKey(related_name='model_b', blank=True, to='tests.ModelA', null=True),
+            field=models.ForeignKey(on_delete=models.CASCADE, related_name='model_b', blank=True, to='tests.ModelA', null=True),
         ),
         migrations.CreateModel(
             name='SettingsSharedModel',

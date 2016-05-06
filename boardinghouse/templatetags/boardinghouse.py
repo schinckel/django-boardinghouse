@@ -1,7 +1,6 @@
 from django import template
 
-from ..schema import is_shared_model as _is_shared_model
-from ..schema import _get_schema
+from ..schema import _get_schema, is_shared_model as _is_shared_model
 
 register = template.Library()
 

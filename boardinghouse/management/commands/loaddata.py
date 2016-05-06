@@ -6,11 +6,11 @@ option: ``--schema``. This is required when non-shared-models are
 included in the file(s) to be loaded, and the schema with this name
 will be used as a target.
 """
-import django
-from django.core.management.commands import loaddata
-from django.core.management.base import CommandError
-
 from optparse import make_option
+
+import django
+from django.core.management.base import CommandError
+from django.core.management.commands import loaddata
 
 from ...schema import get_schema_model
 

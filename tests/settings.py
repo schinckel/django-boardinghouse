@@ -18,9 +18,6 @@ DATABASES = {
         'NAME': 'boardinghouse-{DB_NAME}'.format(**os.environ),
         'USER': os.environ.get('DB_USER', None),
         'PORT': os.environ.get('DB_PORT', 5432),
-        'TEST': {
-            'SERIALIZE': False
-        }
     }
 }
 
@@ -28,10 +25,12 @@ ROOT_URLCONF = 'tests.urls'
 STATIC_URL = '/static/'
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'boardinghouse.middleware.SchemaMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
 )
 PASSWORD_HASHERS = (
     'django.contrib.auth.hashers.MD5PasswordHasher',

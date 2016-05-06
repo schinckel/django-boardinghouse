@@ -1,10 +1,12 @@
-import logging
 import inspect
+import logging
 import threading
 
+import django
 from django.apps import apps
 from django.conf import settings
 from django.core.cache import cache
+from django.core.exceptions import ImproperlyConfigured
 from django.db import connection
 from django.db.migrations.operations.base import Operation
 from django.utils.translation import lazy
@@ -13,6 +15,12 @@ LOGGER = logging.getLogger(__name__)
 LOGGER.addHandler(logging.NullHandler())
 
 _thread_locals = threading.local()
+
+
+def remote_field(field):
+    if django.VERSION < (1, 9):
+        return field.rel and field.rel.get_related_field()
+    return field.remote_field
 
 
 class Forbidden(Exception):
@@ -37,7 +45,12 @@ def get_schema_model():
     """
     Return the class that is currently set as the schema model.
     """
-    return apps.get_model(settings.BOARDINGHOUSE_SCHEMA_MODEL)
+    try:
+        return apps.get_model(settings.BOARDINGHOUSE_SCHEMA_MODEL)
+    except ValueError:
+        raise ImproperlyConfigured("BOARDINGHOUSE_SCHEMA_MODEL must be of the form 'app_label.model_name'")
+    except LookupError:
+        raise ImproperlyConfigured("BOARDINGHOUSE_SCHEMA_MODEL refers to model '%s' that has not been installed" % settings.BOARDINGHOUSE_SCHEMA_MODEL)
 
 
 def _get_search_path():
@@ -160,6 +173,8 @@ def activate_template_schema():
     schema_pre_activate.send(sender=None, schema_name=schema_name)
     _set_search_path(schema_name)
     schema_post_activate.send(sender=None, schema_name=schema_name)
+    if _get_search_path() != [schema_name]:
+        raise ValueError("Template schema was not activated.")
 
 
 def get_template_schema():
@@ -191,10 +206,9 @@ REQUIRED_SHARED_MODELS = [
     'contenttypes.contenttype',
     'admin.logentry',
     'migrations.migration',
-    # Maybe lazy() these? They only apply if the values for the settings.*
-    # are not the defaults.
-    lazy(lambda: settings.BOARDINGHOUSE_SCHEMA_MODEL.lower()),
-    lazy(lambda: settings.AUTH_USER_MODEL.lower()),
+    # In the case these are not the default values.
+    lazy(lambda: settings.BOARDINGHOUSE_SCHEMA_MODEL.lower())(),
+    lazy(lambda: settings.AUTH_USER_MODEL.lower())(),
 ]
 
 REQUIRED_SHARED_TABLES = [
@@ -213,7 +227,7 @@ def _is_join_model(model):
     and all automatic join models will have just (pk, from, to).
     """
     return all([
-        (field.primary_key or field.rel)
+        (field.primary_key or remote_field(field))
         for field in model._meta.fields
     ]) and len(model._meta.fields) > 1
 
@@ -245,8 +259,8 @@ def is_shared_model(model):
     # above.
     if _is_join_model(model):
         return all([
-            is_shared_model(field.rel.get_related_field().model)
-            for field in model._meta.fields if field.rel
+            is_shared_model(remote_field(field).model)
+            for field in model._meta.fields if remote_field(field)
         ])
 
     return False
@@ -293,26 +307,15 @@ def is_shared_table(table, apps=apps):
         return is_shared_model(table_map[table])
 
     # It may be a join table.
-    prefixes = [
-        (db_table, model, model._meta.get_field(
-            table.replace(db_table, '').lstrip('_')
-        ).rel.get_related_field().model)
-        for db_table, model in table_map.items()
-        if table.startswith(db_table)
-    ]
+    for db_table, model in table_map.items():
+        if table.startswith(db_table):
+            for field in model._meta.local_many_to_many:
+                through = (field.remote_field if hasattr(field, 'remote_field') else field.rel).through
+                if through._meta.db_table == table:
+                    return is_shared_model(through)
 
-    # If we didn't find any candidate matches for this being a join
-    # table, assume that means it is not a shared table.
-    if not prefixes:
-        return False
-
-    # Only if all of the candidate matches are shared models (and the
-    # relevant join model is a shared model) does that make this table
-    # a shared table/model.
-    return all(
-        is_shared_model(model) and is_shared_model(rel_model)
-        for db_table, model, rel_model in prefixes
-    )
+    # Not a join table: just assume that it's not shared.
+    return False
 
 
 # Internal helper functions.
