@@ -9,6 +9,7 @@ will be used as a target.
 from optparse import make_option
 
 import django
+from django.conf import settings
 from django.core.management.base import CommandError
 from django.core.management.commands import loaddata
 
@@ -31,7 +32,7 @@ class Command(loaddata.Command):
         Schema = get_schema_model()
 
         schema_name = options.get('schema')
-        if schema_name == '__template__':
+        if schema_name == settings.TEMPLATE_SCHEMA:
             # Hmm, we don't want to accidentally write data to this, so
             # we should raise an exception if we are going to be
             # writing any schema-aware objects.
