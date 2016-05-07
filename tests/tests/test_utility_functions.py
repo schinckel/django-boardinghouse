@@ -1,6 +1,15 @@
-from django.test import TestCase, override_settings
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
 
-from boardinghouse.schema import is_shared_model, is_shared_table, activate_template_schema
+from django.test import TestCase, override_settings
+from django.db import connection
+
+from boardinghouse.schema import (
+    is_shared_model, is_shared_table,
+    activate_template_schema, deactivate_schema,
+)
 
 from ..models import (
     AwareModel,
@@ -67,3 +76,9 @@ class TestTemplateSchemaActivation(TestCase):
     def test_exception_when_no_template_schema_found(self):
         with self.assertRaises(Exception):
             activate_template_schema()
+
+    def test_deserialize_from_string_activates_template_schema(self):
+        with patch('boardinghouse.schema.activate_template_schema') as activate_template_schema:
+            deactivate_schema()
+            connection.creation.deserialize_db_from_string('[]')
+            activate_template_schema.assert_called_once_with()

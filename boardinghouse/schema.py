@@ -58,7 +58,7 @@ def _get_search_path():
     cursor.execute('SELECT current_schema()')
     search_path = cursor.fetchone()[0]
     cursor.close()
-    return search_path.split(',')
+    return search_path
 
 
 def _set_search_path(search_path):
@@ -155,6 +155,9 @@ def activate_schema(schema_name):
 
     schema_pre_activate.send(sender=None, schema_name=schema_name)
     _set_search_path(schema_name)
+    assert _get_search_path() == schema_name, 'Schema activation failed. Expected "{}", saw "{}"'.format(
+        schema_name, _get_search_path()
+    )
     schema_post_activate.send(sender=None, schema_name=schema_name)
     _thread_locals.schema = schema_name
 
@@ -172,9 +175,9 @@ def activate_template_schema():
     schema_name = settings.TEMPLATE_SCHEMA
     schema_pre_activate.send(sender=None, schema_name=schema_name)
     _set_search_path(schema_name)
+    if _get_search_path() != schema_name:
+        raise Exception('Template schema was not activated. It seems "{}" is active.'.format(_get_search_path()))
     schema_post_activate.send(sender=None, schema_name=schema_name)
-    if _get_search_path() != [schema_name]:
-        raise Exception("Template schema was not activated.")
 
 
 def get_template_schema():

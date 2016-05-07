@@ -507,8 +507,7 @@ class TestMigrations(MigrationTestBase):
         pony_count(0)
 
     def test_zero_migration_function(self):
-        project_state = self.set_up_test_model()
-        Pony = project_state.apps.get_model('tests', 'Pony')
+        self.set_up_test_model()
 
         remove_all_schemata = getattr(
             __import__('boardinghouse.migrations.0002_patch_admin').migrations,
@@ -517,8 +516,8 @@ class TestMigrations(MigrationTestBase):
         with connection.schema_editor() as editor:
             remove_all_schemata(apps, editor)
 
-        Schema.objects.get(schema='a').activate()
-        Pony.objects.all()
+        with self.assertRaises(AssertionError):
+            Schema.objects.get(schema='a').activate()
 
     def test_custom_migration_operation(self):
         project_state = self.set_up_test_model()
