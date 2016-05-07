@@ -1,6 +1,6 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
-from boardinghouse.schema import is_shared_model, is_shared_table
+from boardinghouse.schema import is_shared_model, is_shared_table, activate_template_schema
 
 from ..models import (
     AwareModel,
@@ -60,3 +60,10 @@ class TestIsSharedTable(TestCase):
 
     def test_prefix_clash(self):
         self.assertFalse(is_shared_table('tests_modelb'))
+
+
+class TestTemplateSchemaActivation(TestCase):
+    @override_settings(TEMPLATE_SCHEMA='__template_schema__')
+    def test_exception_when_no_template_schema_found(self):
+        with self.assertRaises(Exception):
+            activate_template_schema()

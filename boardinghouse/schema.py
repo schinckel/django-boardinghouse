@@ -174,7 +174,7 @@ def activate_template_schema():
     _set_search_path(schema_name)
     schema_post_activate.send(sender=None, schema_name=schema_name)
     if _get_search_path() != [schema_name]:
-        raise ValueError("Template schema was not activated.")
+        raise Exception("Template schema was not activated.")
 
 
 def get_template_schema():
