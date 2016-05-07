@@ -168,7 +168,7 @@ class TestGetSetSearchPath(TestCase):
         self.assertEqual(schema.schema, get_active_schema_name())
 
         activate_template_schema()
-        self.assertEqual('__template__', _get_search_path()[0])
+        self.assertEqual('__template__', _get_search_path())
 
     def test_deactivate_schema_resets_search_path(self):
         schema = Schema.objects.create(name='a', schema='a')

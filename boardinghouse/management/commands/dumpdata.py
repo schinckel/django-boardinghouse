@@ -14,6 +14,7 @@ from optparse import make_option
 
 import django
 from django.apps import apps
+from django.conf import settings
 from django.core.management.base import CommandError
 from django.core.management.commands import dumpdata
 
@@ -28,14 +29,14 @@ class Command(dumpdata.Command):
         option_list = dumpdata.Command.option_list + (
             make_option('--schema', action='store', dest='schema',
                 help='Specify which schema to dump schema-aware models from',
-                default='__template__',),
+                default=settings.TEMPLATE_SCHEMA,),
         )
 
     def add_arguments(self, parser):
         super(Command, self).add_arguments(parser)
         parser.add_argument('--schema', action='store', dest='schema',
              help='Specify which schema to dump schema-aware models from',
-             default='__template__',)
+             default=settings.TEMPLATE_SCHEMA,)
 
     def handle(self, *app_labels, **options):
         schema_name = options.get('schema')
@@ -49,7 +50,7 @@ class Command(dumpdata.Command):
             for label in app_labels if '.' in label and get_model(*label.split('.'))
         ])
 
-        if schema_name == '__template__':
+        if schema_name == settings.TEMPLATE_SCHEMA:
             if aware_required:
                 raise CommandError('You must pass a schema when an explicit model is aware.')
             activate_template_schema()

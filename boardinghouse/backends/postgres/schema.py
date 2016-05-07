@@ -12,7 +12,7 @@ from ...schema import deactivate_schema, is_shared_table
 from ...signals import schema_aware_operation
 
 
-def get_constraints(cursor, table_name, schema_name='__template__'):
+def get_constraints(cursor, table_name, schema_name=None):
     """Return all constraints for a given table
 
     This function looks in the `settings.PUBLIC_SCHEMA`, and the supplied schema
@@ -26,6 +26,9 @@ def get_constraints(cursor, table_name, schema_name='__template__'):
     it runs in a single query, rather than three. It also allows for
     a different schema than `public`, which is hardcoded.
     """
+    if schema_name is None:
+        schema_name = settings.TEMPLATE_SCHEMA
+
     cursor.execute(''
 """WITH constraints AS (
 
@@ -98,7 +101,7 @@ def get_index_data(cursor, index_name):
                          AND n.oid = c.relnamespace
                          AND n.nspname IN (%s, %s)
                          AND c2.relname = %s
-    ''', [settings.PUBLIC_SCHEMA, '__template__', index_name])
+    ''', [settings.PUBLIC_SCHEMA, settings.TEMPLATE_SCHEMA, index_name])
 
     return [table_name for (table_name, schema_name) in cursor.fetchall()]
 

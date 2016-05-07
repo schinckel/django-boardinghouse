@@ -26,6 +26,12 @@ The name of the public schema. The default should work for all cases,
 other than where you know you need to change it.
 """
 
+TEMPLATE_SCHEMA = '__template__'
+"""
+The name of the template schema. The default should probably be okay, but
+if you really know that it needs to change, then you may.
+"""
+
 BOARDINGHOUSE_SCHEMA_MODEL = 'boardinghouse.Schema'
 """
 The model that will store the actual schema objects. This should be a
