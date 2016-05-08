@@ -82,6 +82,8 @@ def change_schema(request, schema):
                 })
             break
     else:
+        # If no receivers stepped forwards to say they could handle it, that means
+        # this user/session is not permitted to change to that schema.
         raise Forbidden()
     # Allow 3rd-party applications to listen for a change, and act upon
     # it accordingly.
