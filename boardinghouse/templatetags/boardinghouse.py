@@ -17,6 +17,7 @@ def is_shared_model(obj):
 
 @register.filter
 def schema_name(schema):
+    # TODO: fire a signal that allows someone else to inject the name.
     try:
         return _get_schema(schema).name
     except AttributeError:

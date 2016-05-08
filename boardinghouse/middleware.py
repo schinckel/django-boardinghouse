@@ -14,7 +14,6 @@ from django.utils.translation import ugettext_lazy as _
 
 from .schema import (
     Forbidden, TemplateSchemaActivation, activate_schema, deactivate_schema,
-    get_schema_model,
 )
 from .signals import session_requesting_schema_change, session_schema_changed
 
@@ -42,70 +41,55 @@ def change_schema(request, schema):
         session.pop('schema', None)
         raise Forbidden()
 
+    # Make sure we have a schema name, not a model representing a schema.
+    # This allows us to use a relation for User.visible_schemata, that contains
+    # a relationship to schema objects, rather than a queryset of actual schema
+    # objects.
+    if hasattr(schema, 'schema'):
+        schema = schema.schema
+
     # Don't allow anyone, even superusers, to select the template schema.
     if schema == settings.TEMPLATE_SCHEMA:
         raise TemplateSchemaActivation()
 
     # If the schema is already set to this name for this session, then
-    # we can just exit early, saving some db access.
+    # we can just exit early, potentially saving some db access.
     if schema == session.get('schema', None):
         return
 
-    if schema.startswith('__template_'):
-        # We have some special-casing here for template schemata, I'd like to
-        # resolve that, and allow hooks for any type of extra schemata model to
-        # go here.
-        if (
-            'boardinghouse.contrib.template' in settings.INSTALLED_APPS and
-            user.has_perm('template.activate_schematemplate')
-        ):
-
-            from boardinghouse.contrib.template.models import SchemaTemplate
-            try:
-                SchemaTemplate.objects.get(pk=schema.split('__template_')[1])
-            except SchemaTemplate.DoesNotExist:
-                raise Forbidden()
-        else:
-            raise Forbidden()
-
-    elif user.is_superuser or user.is_staff:
-        # Just a sanity check: that the schema actually
-        # exists at all, when the superuser attempts to set
-        # the schema.
-        Schema = get_schema_model()
-
-        try:
-            Schema.objects.get(schema=schema)
-        except Schema.DoesNotExist:
-            raise Forbidden()
-
-    else:
-        # Ensure that this user has access to this schema,
-        # and that this schema is active. We can do this using the
-        # cache, which prevents hitting the database.
-        visible_schemata = [s.schema for s in user.visible_schemata]
-        if schema not in visible_schemata:
-            raise Forbidden()
-
-    # Allow 3rd-party applications to listen for an attempt to change
-    # the schema for a user/session, and prevent it from occurring by
-    # raising an exception. We will just pass that exception up the
-    # call stack.
-    session_requesting_schema_change.send(
+    # Valid schema providers should listen for this signal, and do one of three
+    # things: return an object that has a 'schema' attribute, return None, or
+    # raise an exception. Returning an object with an attribute of 'schema' will
+    # cause no further handlers to run. Returning None will cause the next
+    # handler to attempt to find a valid schema, and raising an exception will
+    # bubble up the call stack.
+    for handler, response in session_requesting_schema_change.send(
         sender=request,
         schema=schema,
-        user=request.user,
-        session=request.session,
-    )
-    # Actually set the schema on the session.
-    session['schema'] = schema
+        user=user,
+        session=session
+    ):
+        if response:
+            if hasattr(response, 'schema'):
+                session.update({
+                    'schema': response.schema,
+                    'schema_name': getattr(response, 'name', None),
+                })
+            if isinstance(response, dict) and 'schema' in response:
+                session.update({
+                    'schema': response['schema'],
+                    'schema_name': response.get('name', None),
+                })
+            break
+    else:
+        raise Forbidden()
     # Allow 3rd-party applications to listen for a change, and act upon
     # it accordingly.
     session_schema_changed.send(
         sender=request,
         schema=schema,
-        user=request.user,
-        session=request.session,
+        user=user,
+        session=session,
     )
 
 
@@ -205,7 +189,6 @@ class SchemaMiddleware:
                 return FORBIDDEN
 
         elif 'schema' not in request.session and len(request.user.visible_schemata) == 1:
-            # Can we not require a db hit each request here?
             change_schema(request, request.user.visible_schemata[0].schema)
 
         if 'schema' in request.session:

@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 from django.apps import AppConfig
 from django.core.checks import Error, Warning, register
+from django.test.client import Client
 
 CONTEXT = 'boardinghouse.context_processors.schemata'
 MIDDLEWARE = 'boardinghouse.middleware.SchemaMiddleware'
@@ -15,9 +16,38 @@ class BoardingHouseConfig(AppConfig):
     name = 'boardinghouse'
 
     def ready(self):
-        load_app_settings()
-        monkey_patch_user()
-        register_signals()
+        # Make sure that all default settings have been applied (if not overwritten).
+        from boardinghouse import settings as app_settings
+        from django.conf import settings, global_settings
+        for key in dir(app_settings):
+            if key.isupper():
+                value = getattr(app_settings, key)
+                setattr(global_settings, key, value)
+                if not hasattr(settings, key):
+                    setattr(settings, key, value)
+
+        # Make non-logged-in users unable to view any schemata.
+        from django.contrib.auth import get_user_model, models
+        from boardinghouse.schema import get_schema_model
+        from boardinghouse.models import visible_schemata
+
+        User = get_user_model()
+
+        models.AnonymousUser.visible_schemata = get_schema_model().objects.none()
+
+        if not hasattr(User, 'visible_schemata'):
+            User.visible_schemata = property(visible_schemata)
+
+        if hasattr(User, 'schemata'):
+            models.AnonymousUser.schemata = get_schema_model().objects.none()
+
+        from boardinghouse import receivers  # NOQA
+
+
+def activate_schema(client, schema):
+    client.session['schema'] = schema
+
+Client.activate_schema = activate_schema
 
 
 @register('settings')
@@ -57,23 +87,6 @@ def check_session_middleware_installed(app_configs=None, **kwargs):
         hint="Add 'django.contrib.sessions.middleware.SessionMiddleware' to your MIDDLEWARE_CLASSES",
         id='boardinghouse.E002',
     )]
-
-
-def load_app_settings():
-    """
-    Load up the app settings defaults.
-
-    See :mod:`boardinghouse.settings`
-    """
-    from boardinghouse import settings as app_settings
-    from django.conf import settings, global_settings
-
-    for key in dir(app_settings):
-        if key.isupper():
-            value = getattr(app_settings, key)
-            setattr(global_settings, key, value)
-            if not hasattr(settings, key):
-                setattr(settings, key, value)
 
 
 @register('settings')
@@ -147,52 +160,3 @@ def check_installed_before_admin(app_configs=None, **kwargs):
             ))
 
     return errors
-
-
-def monkey_patch_user():
-    """
-    Add a property to the defined user model that gives us the visible schemata.
-
-    Add properties to :class:`django.contrib.auth.models.AnonymousUser` that
-    return empty querysets for visible and all schemata.
-    """
-    from django.contrib.auth import get_user_model, models
-    from .schema import get_schema_model
-    from .models import visible_schemata
-    Schema = get_schema_model()
-    User = get_user_model()
-    if not getattr(User, 'visible_schemata', None):
-        User.visible_schemata = property(visible_schemata)
-
-    models.AnonymousUser.schemata = Schema.objects.none()
-    models.AnonymousUser.visible_schemata = Schema.objects.none()
-
-
-def register_signals():
-    from django.db import models
-    from boardinghouse import signals
-    from .schema import get_schema_model
-
-    Schema = get_schema_model()
-
-    # How do we identify that this schema should be created from a different
-    # template? Where can we get that information?
-    models.signals.post_save.connect(signals.create_schema,
-                                     sender=Schema,
-                                     weak=False,
-                                     dispatch_uid='create-schema')
-
-    models.signals.post_delete.connect(signals.drop_schema, sender=Schema, weak=False)
-
-    models.signals.post_init.connect(signals.inject_schema_attribute, sender=None)
-
-    if hasattr(Schema, 'users'):
-        models.signals.m2m_changed.connect(signals.invalidate_cache,
-                                           sender=Schema.users.through)
-
-        models.signals.post_save.connect(signals.invalidate_all_user_caches, sender=Schema, weak=False)
-
-    models.signals.pre_migrate.connect(signals.invalidate_all_caches, weak=False)
-
-    signals.schema_aware_operation.connect(signals.execute_on_all_schemata, weak=False)
-    signals.schema_aware_operation.connect(signals.execute_on_template_schema, weak=False)

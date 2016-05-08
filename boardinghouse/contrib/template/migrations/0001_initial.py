@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
 
     dependencies = []
     run_before = [
-        migrations.swappable_dependency(settings.BOARDINGHOUSE_SCHEMA_MODEL),
+        # migrations.swappable_dependency(settings.BOARDINGHOUSE_SCHEMA_MODEL),
     ]
 
     operations = [

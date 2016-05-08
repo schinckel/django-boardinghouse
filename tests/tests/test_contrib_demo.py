@@ -1,10 +1,9 @@
-import datetime
-
 from django.test import TestCase
 
 from django.contrib.auth.models import User
 from django.db import migrations, models, connection
 from django.db.migrations.state import ProjectState
+from django.utils import timezone
 
 from .utils import get_table_list
 
@@ -28,7 +27,7 @@ class TestContribDemo(TestCase):
 
     def test_activation_of_expired_demo_raises(self):
         user = User.objects.create_user(**CREDENTIALS)
-        schema = DemoSchema.objects.create(user=user, expiry_date=datetime.datetime.utcnow())
+        schema = DemoSchema.objects.create(user=user, expiry_date=timezone.now())
         with self.assertRaises(DemoSchemaExpired):
             schema.activate()
 

@@ -1,4 +1,5 @@
-{% if not selected_schema or schemata.count > 1 %}
+{% if not selected_schema or schema_choices|length > 1 %}
+
   <form style="display: inline-block;">
 
     <label style="font-size: small; color: #ffc">
@@ -12,19 +13,10 @@
 
       <select {% if disabled %}disabled="disabled"{% endif %} name="__schema" id="__schemalist" onchange="window.location.search = '?__schema=' + this.value;" style="background: none; -webkit-appearance: menulist-button; color: #ffc; border-color: rgba(255, 255, 204, 0.63);">
         <option value="">No schema. Please select...</option>
-        {% for schema in schemata %}
-          <option value="{{ schema.schema }}" {% if schema.schema|lower == selected_schema %}selected="selected"{% endif %}>
-            {{ schema.name }}
+        {% for schema in schema_choices %}
+          <option value="{{ schema.0 }}" {% if schema.0|lower == selected_schema %}selected="selected"{% endif %}>
+            {{ schema.1 }}
           </option>
-        {% endfor %}
-        {% for s_type, s_schemata in extra_schemata %}
-          <optgroup label="{{ s_type }}">
-            {% for schema in s_schemata %}
-              <option value="{{ schema.schema }}" {% if schema.schema|lower == selected_schema %}selected="selected"{% endif %}>
-                {{ schema.name }}
-              </option>
-            {% endfor %}
-          </optgroup>
         {% endfor %}
       </select>
 
