@@ -18,7 +18,7 @@ This is alpha quality software. You use it at your own risk in production code.
 .. |deps| image:: https://requires.io/bitbucket/schinckel/django-boardinghouse/requirements.svg?branch=default
    :target: https://requires.io/bitbucket/schinckel/django-boardinghouse/requirements.svg/?branch=default
    :alt: Dependencies status
-.. |docs| image:: http://django-boardinghouse.readthedocs.io/badge/
+.. |docs| image:: http://django-boardinghouse.readthedocs.io/en/latest/?badge=latest
    :target: http://django-boardinghouse.readthedocs.io/
    :alt: Documentation Status
 .. |pypi| image:: https://img.shields.io/pypi/v/django-boardinghouse.svg
