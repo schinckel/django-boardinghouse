@@ -54,10 +54,10 @@ class TestMultipleClients(TestCase):
         AwareModel.objects.create(name='bar')
 
         client_a = Client()
-        client_a.activate('schema_a')
+        client_a.activate_schema('schema_a')
 
         client_b = Client()
-        client_b.activate('schema_b')
+        client_b.activate_schema('schema_b')
 
         resp = client_a.get('/aware/')
         self.assertEqual(b'foo', resp.content)
