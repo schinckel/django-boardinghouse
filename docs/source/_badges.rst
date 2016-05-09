@@ -7,8 +7,8 @@
 .. image:: https://requires.io/bitbucket/schinckel/django-boardinghouse/requirements.svg?branch=default
    :target: https://requires.io/bitbucket/schinckel/django-boardinghouse/requirements.svg/?branch=default
    :alt: Dependencies status
-.. image:: https://readthedocs.io/projects/django-boardinghouse/badge/
-   :target: https://readthedocs.io/projects/django-boardinghouse/
+.. image:: http://django-boardinghouse.readthedocs.io/badge/
+   :target: http://django-boardinghouse.readthedocs.io/
    :alt: Documentation Status
 
 PyPI
