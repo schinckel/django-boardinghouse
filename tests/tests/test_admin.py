@@ -162,6 +162,11 @@ class TestAdminAdditions(TestCase):
             {'action': 'create_template_from_schema', '_selected_action': ['a', 'c']})
         self.assertEqual(2, SchemaTemplate.objects.count())
 
+        self.client.post(
+            reverse('admin:boardinghouse_schema_changelist'),
+            {'action': 'create_template_from_schema', '_selected_action': ['b']})
+        self.assertEqual(3, SchemaTemplate.objects.count())
+
     def test_admin_template_renders_switcher(self):
         user = User.objects.create_user(
             username='admin',

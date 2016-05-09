@@ -1,6 +1,7 @@
 from django.test import TestCase
 
 from django.contrib.auth.models import User
+from django.core.management import call_command
 from django.db import migrations, models, connection
 from django.db.migrations.state import ProjectState
 from django.utils import timezone
@@ -16,6 +17,11 @@ CREDENTIALS = {
 
 
 class TestContribDemo(TestCase):
+    def test_demo_schema_name(self):
+        user = User.objects.create_user(**CREDENTIALS)
+        schema = DemoSchema.objects.create(user=user)
+        self.assertEqual('Demo schema', str(schema.name))
+
     def test_demo_can_be_created_and_activated(self):
         user = User.objects.create_user(**CREDENTIALS)
         schema = DemoSchema.objects.create(user=user)
@@ -32,7 +38,12 @@ class TestContribDemo(TestCase):
             schema.activate()
 
     def test_cleanup_expired_removes_expired(self):
-        pass
+        user = User.objects.create_user(**CREDENTIALS)
+        DemoSchema.objects.create(user=user, expiry_date='1970-01-01')
+
+        call_command('cleanup_expired_demos')
+
+        self.assertEqual(0, DemoSchema.objects.count())
 
     def test_demo_schemata_get_migrated(self):
         user = User.objects.create_user(**CREDENTIALS)
