@@ -43,3 +43,23 @@ class TestMultipleClients(TestCase):
 
         resp = client_a.get('/aware/')
         self.assertEqual(b'foo', resp.content)
+
+    def test_direct_client_session_changes(self):
+        schema_a, schema_b = Schema.objects.mass_create('a', 'b')
+
+        schema_a.activate()
+        AwareModel.objects.create(name='foo')
+
+        schema_b.activate()
+        AwareModel.objects.create(name='bar')
+
+        client_a = Client()
+        client_a.activate('schema_a')
+
+        client_b = Client()
+        client_b.activate('schema_b')
+
+        resp = client_a.get('/aware/')
+        self.assertEqual(b'foo', resp.content)
+
+        self.assertEqual(b'bar', client_b.get('/aware/'))

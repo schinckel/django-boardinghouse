@@ -2,9 +2,10 @@ from copy import deepcopy
 
 from django.conf import settings
 from django.test import TestCase, modify_settings, override_settings
-from django.core import checks
+from django.core import checks, exceptions
 
 from boardinghouse import apps
+from boardinghouse.schema import get_schema_model
 
 
 class TestSettings(TestCase):
@@ -89,3 +90,9 @@ class TestSettings(TestCase):
     def test_context_processor_installed_in_TEMPLATE_CONTEXT_PROCESSORS(self):
         del settings.TEMPLATES
         self.assertEqual([], apps.check_context_processor_installed())
+
+    @modify_settings()
+    def test_no_BOARDINGHOUSE_SCHEMA_MODEL(self):
+        del settings.BOARDINGHOUSE_SCHEMA_MODEL
+        with self.assertRaises(exceptions.ImproperlyConfigured):
+            get_schema_model()
