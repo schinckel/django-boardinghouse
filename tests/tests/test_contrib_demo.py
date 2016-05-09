@@ -1,3 +1,5 @@
+import datetime
+
 from django.test import TestCase
 
 from django.contrib.auth.models import User
@@ -21,6 +23,12 @@ class TestContribDemo(TestCase):
         user = User.objects.create_user(**CREDENTIALS)
         schema = DemoSchema.objects.create(user=user)
         self.assertEqual('Demo schema', str(schema.name))
+
+    def test_demo_schema_str(self):
+        demo = DemoSchema(user=User(username='user'), expiry_date=datetime.datetime.now() + datetime.timedelta(1))
+        self.assertTrue(str(demo).startswith('Demo for user: expires at'))
+        demo.expiry_date = datetime.datetime(1970, 1, 1)
+        self.assertTrue(str(demo).startswith('Expired demo for user (expired'))
 
     def test_demo_can_be_created_and_activated(self):
         user = User.objects.create_user(**CREDENTIALS)
