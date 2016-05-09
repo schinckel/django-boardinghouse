@@ -1,8 +1,8 @@
-from django.core.management import NoArgsCommand
+from django.core.management import BaseCommand
 
-from ..models import DemoSchema
+from ...models import DemoSchema
 
 
-class Command(NoArgsCommand):
-    def handle_noargs(self, **options):
+class Command(BaseCommand):
+    def handle(self, **options):
         DemoSchema.objects.expired().delete()
