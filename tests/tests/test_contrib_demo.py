@@ -29,7 +29,13 @@ class TestContribDemo(TestCase):
         schema.deactivate()
 
     def test_demo_can_only_be_activated_by_user(self):
-        pass
+        User.objects.create_user(**CREDENTIALS)
+        other = User.objects.create_user(username='other', password='password')
+        DemoSchema.objects.create(user=other)
+
+        self.client.login(**CREDENTIALS)
+        response = self.client.get('/aware/?__schema=__demo_{}'.format(other.pk))
+        self.assertEqual(403, response.status_code)
 
     def test_activation_of_expired_demo_raises(self):
         user = User.objects.create_user(**CREDENTIALS)
