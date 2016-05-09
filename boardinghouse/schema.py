@@ -47,6 +47,8 @@ def get_schema_model():
     """
     try:
         return apps.get_model(settings.BOARDINGHOUSE_SCHEMA_MODEL)
+    except AttributeError:
+        raise ImproperlyConfigured("BOARDINGHOUSE_SCHEMA_MODEL is not set: is 'boardinghouse' in your INSTALLED_APPS?")
     except ValueError:
         raise ImproperlyConfigured("BOARDINGHOUSE_SCHEMA_MODEL must be of the form 'app_label.model_name'")
     except LookupError:
@@ -323,8 +325,11 @@ def is_shared_table(table, apps=apps):
 
 # Internal helper functions.
 
-def _schema_table_exists():
-    table_name = get_schema_model()._meta.db_table
+def _table_exists(table_name):
     cursor = connection.cursor()
     cursor.execute("SELECT * FROM information_schema.tables WHERE table_name = %s", [table_name])
     return bool(cursor.fetchone())
+
+
+def _schema_table_exists():
+    return _table_exists(get_schema_model()._meta.db_table)

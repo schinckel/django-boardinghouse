@@ -6,6 +6,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'boardinghouse',
     'boardinghouse.contrib.template',
+    'boardinghouse.contrib.demo',
     'django.contrib.admin',
     # 'boardinghouse.contrib.invite',
     'tests',

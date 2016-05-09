@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.utils import six
 from django.utils.functional import lazy
@@ -37,7 +38,7 @@ class SchemaTemplate(SharedSchemaMixin, models.Model):
 
     @property
     def schema(self):
-        return '__template_{}'.format(self.pk)
+        return '{}{}'.format(settings.BOARDINGHOUSE_TEMPLATE_PREFIX, self.pk)
 
     def activate(self):
         activate_schema(self.schema)
