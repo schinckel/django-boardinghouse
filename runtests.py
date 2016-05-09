@@ -15,7 +15,7 @@ except ImportError:
 
 
 def runtests():
-    argv = sys.argv[:1] + ['test', '--settings=tests.settings', '--noinput']
+    argv = sys.argv[:1] + ['test', '--settings=tests.settings', '--noinput', '--failfast']
     execute_from_command_line(argv)
 
 

@@ -59,6 +59,19 @@ class TestContribDemo(TestCase):
 
         self.assertEqual(0, DemoSchema.objects.count())
 
+    def test_demo_admin(self):
+        User.objects.create_superuser(email='email@example.com', **CREDENTIALS)
+        DemoSchema.objects.create(user=User.objects.create_user(username='a', password='a'),
+                                  expiry_date='1970-01-01')
+        DemoSchema.objects.create(user=User.objects.create_user(username='b', password='b'),
+                                  expiry_date='9999-01-01')
+
+        self.client.login(**CREDENTIALS)
+
+        response = self.client.get('/admin/demo/demoschema/')
+        self.assertContains(response, '"/static/admin/img/icon-no.svg"', count=1, status_code=200)
+        self.assertContains(response, '"/static/admin/img/icon-yes.svg"', count=1, status_code=200)
+
     def test_demo_schemata_get_migrated(self):
         user = User.objects.create_user(**CREDENTIALS)
         schema = DemoSchema.objects.create(user=user)
