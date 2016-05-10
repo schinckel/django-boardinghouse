@@ -69,8 +69,8 @@ class TestContribDemo(TestCase):
         self.client.login(**CREDENTIALS)
 
         response = self.client.get('/admin/demo/demoschema/')
-        self.assertContains(response, '"/static/admin/img/icon-no.svg"', count=1, status_code=200)
-        self.assertContains(response, '"/static/admin/img/icon-yes.svg"', count=1, status_code=200)
+        self.assertContains(response, '/static/admin/img/icon-no', count=1, status_code=200)
+        self.assertContains(response, '/static/admin/img/icon-yes', count=1, status_code=200)
 
     def test_demo_schemata_get_migrated(self):
         user = User.objects.create_user(**CREDENTIALS)
