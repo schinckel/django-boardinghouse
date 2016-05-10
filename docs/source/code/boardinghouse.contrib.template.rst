@@ -16,6 +16,7 @@ Submodules
    boardinghouse.contrib.template.admin
    boardinghouse.contrib.template.apps
    boardinghouse.contrib.template.models
+   boardinghouse.contrib.template.receivers
 
 Module contents
 ---------------

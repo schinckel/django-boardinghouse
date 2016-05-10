@@ -24,6 +24,7 @@ Submodules
    boardinghouse.middleware
    boardinghouse.models
    boardinghouse.operations
+   boardinghouse.receivers
    boardinghouse.schema
    boardinghouse.settings
    boardinghouse.signals
