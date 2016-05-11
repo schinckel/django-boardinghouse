@@ -41,9 +41,9 @@ class DemoSchema(SharedSchemaMixin, models.Model):
 
     def __str__(self):
         if self.expired:
-            return 'Expired demo for {} (expired {} ago)'.format(self.user, timesince(self.expiry_date))
+            return u'Expired demo for {} (expired {} ago)'.format(self.user, timesince(self.expiry_date))
 
-        return 'Demo for {}: expires at {} ({} from now)'.format(self.user, self.expiry_date, timeuntil(self.expiry_date))
+        return u'Demo for {}: expires at {} ({} from now)'.format(self.user, self.expiry_date, timeuntil(self.expiry_date))
 
     @property
     def schema(self):
