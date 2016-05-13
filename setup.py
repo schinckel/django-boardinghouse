@@ -5,7 +5,7 @@ setup(
     name="django-boardinghouse",
     version=boardinghouse.__version__,
     description="Postgres schema support in django.",
-    url="http://hg.schinckel.net/django-boardinghouse",
+    url="https://bitbucket.org/schinckel/django-boardinghouse",
     author="Matthew Schinckel",
     author_email="matt@schinckel.net",
     packages=find_packages(),
