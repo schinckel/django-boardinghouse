@@ -45,6 +45,9 @@ class TestContribDemo(TestCase):
         response = self.client.get('/aware/?__schema=__demo_{}'.format(other.pk))
         self.assertEqual(403, response.status_code)
 
+    def test_demo_can_be_activated_by_user(self):
+        User.objects.create_user(**CREDENTIALS)
+
     def test_activation_of_expired_demo_raises(self):
         user = User.objects.create_user(**CREDENTIALS)
         schema = DemoSchema.objects.create(user=user, expiry_date=timezone.now())

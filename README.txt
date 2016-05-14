@@ -5,7 +5,6 @@ Multi-tenancy for Django applications, using Postgres Schemata.
 
 See full documentation at: http://django-boardinghouse.readthedocs.io
 
-This is alpha quality software. You use it at your own risk in production code.
 
 |status| |coverage| |deps| |docs| |pypi| |versions| |downloads| |wheel|
 
