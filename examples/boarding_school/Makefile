@@ -1,6 +1,7 @@
 BINDIR=.boarding-school/bin
 PIP=${BINDIR}/pip
 PYTHON=${BINDIR}/python
+PYTHON=${BINDIR}/coverage run -a
 
 database:
 	createdb school-demo

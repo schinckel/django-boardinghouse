@@ -5,7 +5,7 @@ import unittest
 from django.db import ProgrammingError
 from django.conf import settings
 
-from hypothesis import given
+from hypothesis import given, settings as hsettings
 from hypothesis.strategies import text
 from hypothesis.extra.django import TestCase
 
@@ -40,6 +40,7 @@ class TestMiddleware(TestCase):
         resp = self.client.get('/', HTTP_X_CHANGE_SCHEMA='first')
         self.assertEqual(403, resp.status_code)
 
+    @hsettings(timeout=5)
     @given(text(min_size=1, alphabet='abcdefghijklmnopqrstuvwxyz_0123456789'))
     def test_invalid_schema(self, invalid):
         first, second = Schema.objects.mass_create('first', 'second')
