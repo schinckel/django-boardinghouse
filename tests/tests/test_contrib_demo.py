@@ -46,7 +46,11 @@ class TestContribDemo(TestCase):
         self.assertEqual(403, response.status_code)
 
     def test_demo_can_be_activated_by_user(self):
-        User.objects.create_user(**CREDENTIALS)
+        user = User.objects.create_user(**CREDENTIALS)
+        DemoSchema.objects.create(user=user)
+        self.client.login(**CREDENTIALS)
+        response = self.client.get('/__change_schema__/__demo_{}/'.format(user.pk))
+        self.assertEqual(200, response.status_code)
 
     def test_activation_of_expired_demo_raises(self):
         user = User.objects.create_user(**CREDENTIALS)
