@@ -40,7 +40,7 @@ class TestMiddleware(TestCase):
         resp = self.client.get('/', HTTP_X_CHANGE_SCHEMA='first')
         self.assertEqual(403, resp.status_code)
 
-    @hsettings(timeout=5)
+    @hsettings(max_examples=25)
     @given(text(min_size=1, alphabet='abcdefghijklmnopqrstuvwxyz_0123456789'))
     def test_invalid_schema(self, invalid):
         first, second = Schema.objects.mass_create('first', 'second')

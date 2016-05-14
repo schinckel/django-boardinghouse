@@ -53,5 +53,5 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunSQL(sql=FORWARDS, reverse_sql=REVERSE),
-        migrations.RunPython(change_existing_sequence_owners, migrations.RunPython.noop),
+        migrations.RunPython(change_existing_sequence_owners, lambda apps, schema: None),
     ]
