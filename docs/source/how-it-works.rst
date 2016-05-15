@@ -31,7 +31,13 @@ It is not permissable for a shared model to have a foreign key to a private mode
 Middleware
 ----------
 
-When a request comes in, the supplied middleware determines which schema should be activated, and activates it. This involves setting the Postgres search path to (`schema-name`, public). Part of the middleware is also involved in determining if the given user/session may activate the requested schema.
+When a request comes in, the supplied middleware determines which schema should be activated, and activates it. This involves setting the Postgres search path to (`schema-name`, public).
+
+The system for determining if the current request should be allowed to change to the desired schema uses an extensible signals-based approach. After some basic checks have occurred, the signal :meth:`boardinghouse.signals.session_requesting_schema_change` is sent to all receivers. If a receiver needs to indicate that this user _may_ activate this schema, then it MUST return an object with a `schema` attribute (which is the in-database schema name), or a dict with a similar key-value pair. It SHOULD also return an attribute/key of `name`, which will be used if the user-friendly name of the schema being activated.
+
+If the receiver does not have anything to say about this user-schema pair, then it MUST return `None`.
+
+If the receiver needs to indicate that this user may _not_ activate this schema, then it MUST raise a `Forbidden` exception. However, it is worth noting that as soon as a receiver has indicated that this change is permitted, then no more receivers will be executed.
 
 Migrations
 ----------
@@ -46,7 +52,7 @@ The signal is sent with the database table, the (execute) function that needs to
 
 The default schema handling is then to iterate through all known schemata, and call the function with the supplied arguments, but it is possible to deregister the default handler, and implement your own logic.
 
-It's also possible to have other listeners: for instance `boardinghouse.contrib.template` also listens for this signal, and applies the changes to it's :class:`SchemaTemplate` objects.
+It's also possible to have other listeners: for instance the same signal is handled by the template schema migration handling, and regular schema migration handling.
 
 It is worth noting that this logic works for all django migration operations, with the exception of the `RunPython` operation. Because of the way this works, the `execute` method is not called (unless the operation itself calls it).
 
