@@ -6,7 +6,7 @@ Multi-tenancy for Django applications, using Postgres Schemata.
 See full documentation at: http://django-boardinghouse.readthedocs.io
 
 
-|status| |coverage| |deps| |docs| |pypi| |versions| |downloads| |wheel|
+|status| |coverage| |deps| |docs| |pypi| |versions| |django| |downloads| |wheel|
 
 .. |status| image:: https://img.shields.io/codeship/1bb05180-f1e5-0131-7f50-2a3c58ccd78c/default.svg
    :target: https://codeship.com/projects/27653
@@ -17,6 +17,8 @@ See full documentation at: http://django-boardinghouse.readthedocs.io
 .. |deps| image:: https://requires.io/bitbucket/schinckel/django-boardinghouse/requirements.svg?branch=default
    :target: https://requires.io/bitbucket/schinckel/django-boardinghouse/requirements.svg/?branch=default
    :alt: Dependencies status
+.. |django| image::https://img.shields.io/badge/Django-1.7,1.8,1.9-44b78b.svg
+   :alt: Django supported versions
 .. |docs| image:: https://img.shields.io/badge/docs-online-blue.svg?maxAge=2592000
    :target: http://django-boardinghouse.readthedocs.io/
    :alt: Documentation Status
