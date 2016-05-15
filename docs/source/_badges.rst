@@ -7,7 +7,7 @@
 .. image:: https://requires.io/bitbucket/schinckel/django-boardinghouse/requirements.svg?branch=default
    :target: https://requires.io/bitbucket/schinckel/django-boardinghouse/requirements.svg/?branch=default
    :alt: Dependencies status
-.. image:: http://django-boardinghouse.readthedocs.io/en/latest/?badge=latest
+.. image:: https://img.shields.io/badge/docs-online-blue.svg?maxAge=2592000
    :target: http://django-boardinghouse.readthedocs.io/
    :alt: Documentation Status
 
