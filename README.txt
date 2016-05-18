@@ -17,7 +17,7 @@ See full documentation at: http://django-boardinghouse.readthedocs.io
 .. |deps| image:: https://requires.io/bitbucket/schinckel/django-boardinghouse/requirements.svg?branch=default
    :target: https://requires.io/bitbucket/schinckel/django-boardinghouse/requirements.svg/?branch=default
    :alt: Dependencies status
-.. |django| image::https://img.shields.io/badge/Django-1.7,1.8,1.9-44b78b.svg
+.. |django| image:: https://img.shields.io/badge/Django-1.7,1.8,1.9-44b78b.svg
    :alt: Django supported versions
 .. |docs| image:: https://img.shields.io/badge/docs-online-blue.svg?maxAge=2592000
    :target: http://django-boardinghouse.readthedocs.io/

@@ -10,7 +10,7 @@
 .. image:: https://img.shields.io/badge/docs-online-blue.svg?maxAge=2592000
    :target: http://django-boardinghouse.readthedocs.io/
    :alt: Documentation Status
-.. image::https://img.shields.io/badge/Django-1.7,1.8,1.9-44b78b.svg
+.. image:: https://img.shields.io/badge/Django-1.7,1.8,1.9-44b78b.svg
    :alt: Django supported versions
 
 PyPI
