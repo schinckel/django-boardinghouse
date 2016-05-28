@@ -7,6 +7,7 @@ INSTALLED_APPS = [
     'boardinghouse',
     'boardinghouse.contrib.template',
     'boardinghouse.contrib.demo',
+    # 'boardinghouse.contrib.groups.apps.SharedGroupsConfig',
     'django.contrib.admin',
     # 'boardinghouse.contrib.invite',
     'tests',
