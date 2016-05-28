@@ -1,4 +1,5 @@
 import os
+import django
 
 INSTALLED_APPS = [
     'django.contrib.auth',
@@ -24,7 +25,8 @@ DATABASES = {
 
 ROOT_URLCONF = 'tests.urls'
 STATIC_URL = '/static/'
-MIDDLEWARE_CLASSES = (
+
+MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -33,6 +35,9 @@ MIDDLEWARE_CLASSES = (
     'boardinghouse.middleware.SchemaMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
 )
+if django.VERSION < (1, 10):
+    MIDDLEWARE_CLASSES = MIDDLEWARE
+
 PASSWORD_HASHERS = (
     'django.contrib.auth.hashers.MD5PasswordHasher',
 )

@@ -4,7 +4,10 @@ from django.contrib import admin
 from django.contrib.admin.models import LogEntry, ADDITION
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 from django.test import TestCase, modify_settings
 from django.utils import six
 

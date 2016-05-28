@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import logging
 import re
 
+import django
 from django.conf import settings
 from django.contrib import messages
 from django.db import ProgrammingError
@@ -37,7 +38,11 @@ def change_schema(request, schema):
 
     # Anonymous users may not select a schema.
     # Should this be selectable?
-    if user.is_anonymous():
+    if django.VERSION < (1, 10):
+        if user.is_anonymous():
+            session.pop('schema', None)
+            raise Forbidden
+    elif user.is_anonymous:
         session.pop('schema', None)
         raise Forbidden()
 
@@ -95,7 +100,7 @@ def change_schema(request, schema):
     )
 
 
-class SchemaMiddleware:
+class SchemaMiddleware(object):
     """
     Middleware to set the postgres schema for the current request's session.
 
@@ -140,6 +145,16 @@ class SchemaMiddleware:
     You could also come up with other methods.
 
     """
+    def __init__(self, get_response=None):
+        # We should remove ourself if... when?
+        self.get_response = get_response
+
+    def __call__(self, request):
+        try:
+            return self.process_request(request) or self.get_response(request)
+        except (TemplateSchemaActivation, ProgrammingError) as exception:
+            return self.process_exception(request, exception)
+
     def process_request(self, request):
         FORBIDDEN = HttpResponseForbidden(_('You may not select that schema'))
         # Ways of changing the schema.
@@ -231,3 +246,5 @@ class SchemaMiddleware:
         if isinstance(exception, TemplateSchemaActivation):
             request.session.pop('schema', None)
             return HttpResponseForbidden(_('You may not select that schema'))
+
+        raise exception
