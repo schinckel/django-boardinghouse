@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 import django
 
+
 def schemata(request):
     """
     A Django context_processor that provides access to the
