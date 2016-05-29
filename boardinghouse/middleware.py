@@ -65,7 +65,7 @@ def change_schema(request, schema):
     # Valid schema providers should listen for this signal, and do one of three
     # things: return an object that has a 'schema' attribute, return None, or
     # raise an exception. Returning an object with an attribute of 'schema' will
-    # cause no further handlers to run. Returning None will cause the next
+    # cause no further handlers to run. Returning None or False will cause the next
     # handler to attempt to find a valid schema, and raising an exception will
     # bubble up the call stack.
     for handler, response in session_requesting_schema_change.send(

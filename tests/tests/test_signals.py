@@ -3,11 +3,14 @@ try:
 except ImportError:
     from mock import Mock, call
 
+from django.contrib.auth.models import User
+from django.http import HttpRequest
 from django.test import TestCase
 
+from boardinghouse.middleware import change_schema
 from boardinghouse.models import Schema
 from boardinghouse.schema import TemplateSchemaActivation
-from boardinghouse.signals import session_requesting_schema_change, schema_aware_operation
+from boardinghouse.signals import session_requesting_schema_change, schema_aware_operation, session_schema_changed
 
 
 class TestSignalsDirectly(TestCase):
@@ -31,3 +34,31 @@ class TestSignalsDirectly(TestCase):
                                     kwargs={'kwarg': 1})
         function.assert_has_calls(calls)
         self.assertEqual(4, function.call_count)
+
+    def test_session_requesting_schema_change_may_return_dict(self):
+        DATA = {
+            'schema': '_spam',
+            'name': 'eggs'
+        }
+
+        def pre_handler(**kwargs):
+            return DATA
+
+        post_handler = Mock()
+        request = Mock(spec=HttpRequest,
+                       user=Mock(wraps=User(), schemata=Mock()),
+                       session={})
+
+        session_requesting_schema_change.connect(pre_handler, sender=None)
+        session_schema_changed.connect(post_handler, sender=None)
+
+        change_schema(request, schema=Mock(**DATA))
+
+        session_requesting_schema_change.disconnect(pre_handler, sender=None)
+        session_schema_changed.disconnect(post_handler, sender=None)
+
+        self.assertEqual(request.session, {
+            'schema': '_spam',
+            'schema_name': 'eggs'
+        })
+        self.assertEqual(1, post_handler.call_count)
