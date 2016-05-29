@@ -29,15 +29,14 @@ class ProtectSchemaColumn(migrations.RunSQL):
 
 
 def remove_all_schemata(apps, schema_editor):
-    Schema = apps.get_model(*settings.BOARDINGHOUSE_SCHEMA_MODEL.split('.'))
+    from boardinghouse.receivers import drop_schemata
     db_alias = schema_editor.connection.alias
-    sql = ';'.join([
-        'DROP SCHEMA {} CASCADE'.format(schema.schema)
-        for schema in Schema.objects.using(db_alias).all()
-    ])
-    if sql:
-        schema_editor.connection.cursor().execute(sql)
-    Schema.objects.all().delete()
+    Schema = apps.get_model(*settings.BOARDINGHOUSE_SCHEMA_MODEL.split('.'))
+    # We can't rely on queryset methods being available in migrations.
+    schemata = list(Schema.objects.using(db_alias).all().values_list('schema', flat=True))
+    schema_editor.connection.cursor().execute('DELETE FROM {}'.format(Schema._meta.db_table))
+    # Or this signal, since it would have come from the queryset.delete() anyway.
+    drop_schemata(sender=Schema, schemata=schemata, connection=schema_editor.connection)
 
 
 class Migration(migrations.Migration):

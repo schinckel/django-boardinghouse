@@ -41,6 +41,7 @@ Signals that are fired as part of the django-boardinghouse project.
 from django.dispatch import Signal
 
 schema_created = Signal(providing_args=["schema"])
+schemata_deleted = Signal(providing_args=["schemata"])
 
 schema_pre_activate = Signal(providing_args=["schema"])
 schema_post_activate = Signal(providing_args=["schema"])

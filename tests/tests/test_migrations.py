@@ -1,3 +1,4 @@
+from importlib import import_module
 import unittest
 
 from django.apps import apps
@@ -6,7 +7,7 @@ from django.db.migrations.migration import Migration
 from django.db.migrations.state import ProjectState
 from django.db.transaction import atomic
 from django.db.utils import IntegrityError
-from django.test import TransactionTestCase
+from django.test import TransactionTestCase, TestCase
 from django.utils import six
 
 from boardinghouse.schema import get_schema_model, get_template_schema
@@ -506,19 +507,6 @@ class TestMigrations(MigrationTestBase):
 
         pony_count(0)
 
-    def test_zero_migration_function(self):
-        self.set_up_test_model()
-
-        remove_all_schemata = getattr(
-            __import__('boardinghouse.migrations.0002_patch_admin').migrations,
-            '0002_patch_admin').remove_all_schemata
-
-        with connection.schema_editor() as editor:
-            remove_all_schemata(apps, editor)
-
-        with self.assertRaises(AssertionError):
-            Schema.objects.get(schema='a').activate()
-
     def test_custom_migration_operation(self):
         project_state = self.set_up_test_model()
         operation = AddField(
@@ -569,3 +557,17 @@ class TestMigrations(MigrationTestBase):
         with connection.schema_editor() as editor:
             # These constraint names appear to change between different versions of django or python?
             self.assertEqual(1, len(editor._constraint_names(SelfReferentialModel, foreign_key=True)))
+
+
+class TestBoardinghouseMigrations(TestCase):
+    def test_0002_patch_admin_reverse(self):
+        Schema.objects.mass_create('a', 'b', 'c')
+        remove_all_schemata = import_module('boardinghouse.migrations.0002_patch_admin').remove_all_schemata
+        remove_all_schemata(apps, connection.schema_editor())
+        self.assertEqual(0, Schema.objects.count())
+
+    def test_0004_change_sequence_owners(self):
+        Schema.objects.mass_create('a', 'b', 'c')
+        module = import_module('boardinghouse.migrations.0004_change_sequence_owners')
+        module.change_existing_sequence_owners(apps, connection.schema_editor())
+        # How can I assert that this was executed?

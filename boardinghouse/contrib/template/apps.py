@@ -1,3 +1,5 @@
+from importlib import import_module
+
 from django.apps import AppConfig
 from django.conf import settings
 
@@ -19,8 +21,8 @@ class BoardingHouseTemplateConfig(AppConfig):
             # in which case the action would be applied to all models.
             from .admin import create_template_from_schema
             Schema = get_schema_model()
-            module = __import__(Schema.__module__.rsplit('.', 1)[0] + '.admin')
-            BaseSchemaAdmin = module.admin.admin.site._registry[Schema].__class__
+            module = import_module(Schema.__module__.rsplit('.', 1)[0] + '.admin')
+            BaseSchemaAdmin = module.admin.site._registry[Schema].__class__
 
             from django.contrib import admin
             from django import forms

@@ -11,6 +11,7 @@ virtualenv:
 
 install-packages:
 	${PIP} install pip --upgrade
+	${PIP} install --pre django
 	${PIP} install -e ../..
 	${PIP} install psycopg2
 	${PIP} install coverage

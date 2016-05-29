@@ -69,10 +69,19 @@ def check_session_middleware_installed(app_configs=None, **kwargs):
     Without it, we would be unable to store which schema should
     be active for a given request.
     """
-    import django
     from django.conf import settings
 
-    if django.VERSION < (1, 10):
+    if getattr(settings, 'MIDDLEWARE', None):
+        for middleware in settings.MIDDLEWARE:
+            if middleware.endswith('.SessionMiddleware'):
+                return []
+
+        return [Error(
+            'It appears that no session middleware is installed.',
+            hint="Add 'django.contrib.sessions.middleware.SessionMiddleware' to your MIDDLEWARE",
+            id='boardinghouse.E002',
+        )]
+    elif hasattr(settings, 'MIDDLEWARE_CLASSES'):
         for middleware in settings.MIDDLEWARE_CLASSES:
             if middleware.endswith('.SessionMiddleware'):
                 return []
@@ -83,27 +92,16 @@ def check_session_middleware_installed(app_configs=None, **kwargs):
             id='boardinghouse.E002',
         )]
 
-    for middleware in settings.MIDDLEWARE:
-        if middleware.endswith('.SessionMiddleware'):
-            return []
-
-    return [Error(
-        'It appears that no session middleware is installed.',
-        hint="Add 'django.contrib.sessions.middleware.SessionMiddleware' to your MIDDLEWARE",
-        id='boardinghouse.E002',
-    )]
-
 
 @register('settings')
 def check_middleware_installed(app_configs=None, **kwargs):
     "Ensure that _our_ middleware is installed."
-    import django
     from django.conf import settings
 
-    if django.VERSION < (1, 10):
-        MIDDLEWARE_CLASSES = settings.MIDDLEWARE_CLASSES
-    else:
+    if getattr(settings, 'MIDDLEWARE', None):
         MIDDLEWARE_CLASSES = settings.MIDDLEWARE
+    else:
+        MIDDLEWARE_CLASSES = settings.MIDDLEWARE_CLASSES
 
     errors = []
 

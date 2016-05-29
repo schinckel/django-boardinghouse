@@ -57,10 +57,20 @@ def create_schema(sender, instance, created, **kwargs):
 
 @receiver(models.signals.post_delete, sender=Schema, weak=False)
 def drop_schema(sender, instance, **kwargs):
-    cursor = connection.cursor()
+    signals.schemata_deleted.send(sender=sender, schemata=[instance.schema])
+
+
+@receiver(signals.schemata_deleted, sender=Schema, weak=False)
+def drop_schemata(sender, schemata, connection=None, **kwargs):
+    from django import db
+    cursor = (connection or db.connection).cursor()
     # Is there a way to do this without opening up an SQL injection hole?
-    cursor.execute("DROP SCHEMA IF EXISTS {} CASCADE".format(instance.schema))
-    LOGGER.info('Schema dropped: %s', instance.schema)
+    # I guess we have to rely on the fact that schema.schema is always a valid name...?
+    sql = ';'.join(['DROP SCHEMA IF EXISTS {} CASCADE'.format(schema) for schema in schemata])
+    if sql:
+        cursor.execute(sql)
+        for schema in schemata:
+            LOGGER.info('Schema dropped: %s', schema)
 
 
 @receiver(models.signals.post_init, sender=None)

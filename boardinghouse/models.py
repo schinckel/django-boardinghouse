@@ -12,6 +12,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from .base import SharedSchemaMixin
 from .schema import _schema_exists, activate_schema, deactivate_schema
+from . import signals
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.addHandler(logging.NullHandler())
@@ -55,9 +56,11 @@ class SchemaQuerySet(models.query.QuerySet):
     def inactive(self):
         return self.filter(is_active=False)
 
-    def delete(self, drop=False):
+    def delete(self, drop=False, connection=None):
         if drop:
+            schemata = list(self.values_list('schema', flat=True))
             super(SchemaQuerySet, self).delete()
+            signals.schemata_deleted.send(sender=self.model, schemata=schemata, connection=connection)
         else:
             self.update(is_active=False)
 

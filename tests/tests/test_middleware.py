@@ -251,6 +251,7 @@ class TestContextProcessor(TestCase):
         response = self.client.get('/change/')
         self.assertNotIn('schemata', response.context)
         self.assertNotIn('selected_schema', response.context)
+        self.assertNotIn('schema_choices', response.context)
 
     def test_schemata_in_context(self):
         user = User.objects.create_user(**CREDENTIALS)
@@ -274,3 +275,4 @@ class TestContextProcessor(TestCase):
         self.client.login(**CREDENTIALS)
         resp = self.client.get('/change/')
         self.assertEqual([], list(resp.context['schemata']))
+        self.assertEqual([], list(resp.context['schema_choices']))
