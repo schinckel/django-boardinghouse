@@ -37,6 +37,7 @@ MIDDLEWARE = (
 )
 if django.VERSION < (1, 10):
     MIDDLEWARE_CLASSES = MIDDLEWARE
+    del MIDDLEWARE
 
 PASSWORD_HASHERS = (
     'django.contrib.auth.hashers.MD5PasswordHasher',
