@@ -36,13 +36,13 @@ def change_schema(request, schema):
         session.pop('schema', None)
         return
 
-    # Anonymous users may not select a schema.
+    # Unauthenticated users may not select a schema.
     # Should this be selectable?
     if django.VERSION < (1, 10):
-        if user.is_anonymous():
+        if not user.is_authenticated():
             session.pop('schema', None)
             raise Forbidden
-    elif user.is_anonymous:
+    elif not user.is_authenticated:
         session.pop('schema', None)
         raise Forbidden()
 

@@ -52,7 +52,7 @@ class TestSignalsDirectly(TestCase):
         session_requesting_schema_change.connect(pre_handler, sender=None)
         session_schema_changed.connect(post_handler, sender=None)
 
-        change_schema(request, schema=Mock(**DATA))
+        change_schema(request, schema=Schema(**DATA))
 
         session_requesting_schema_change.disconnect(pre_handler, sender=None)
         session_schema_changed.disconnect(post_handler, sender=None)
