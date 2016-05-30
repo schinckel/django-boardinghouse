@@ -251,9 +251,6 @@ class TestMiddleware(TestCase):
         user.groups.add(Group.objects.create(name='Group'))
         user.user_permissions.add(Permission.objects.all()[0])
         user.get_all_permissions()
-        user._perm_cache
-        user._user_perm_cache
-        user._group_perm_cache
 
         class Request(object):
             pass
