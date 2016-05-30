@@ -18,6 +18,12 @@ class TestSettings(TestCase):
         self.assertEqual([], apps.check_installed_before_admin())
         self.assertEqual([], apps.check_context_processor_installed())
 
+    def test_app_config_is_idempotent(self):
+        from django.apps import apps
+        private_models = settings.PRIVATE_MODELS
+        apps.get_app_config('boardinghouse').ready()
+        self.assertEqual(private_models, settings.PRIVATE_MODELS)
+
     @modify_settings()
     def test_database_engine_not_valid(self):
         original = settings.DATABASES['default']['ENGINE']

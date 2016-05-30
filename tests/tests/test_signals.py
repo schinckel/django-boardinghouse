@@ -3,7 +3,7 @@ try:
 except ImportError:
     from mock import Mock, call
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group, Permission
 from django.http import HttpRequest
 from django.test import TestCase
 
@@ -62,3 +62,23 @@ class TestSignalsDirectly(TestCase):
             'schema_name': 'eggs'
         })
         self.assertEqual(1, post_handler.call_count)
+
+    def test_session_schema_change_clears_permissions_caches(self):
+        schema = Schema.objects.mass_create('a')[0]
+        user = User.objects.create_user(username='username', password='password')
+        schema.activate()
+        user.groups.add(Group.objects.create(name='Group'))
+        user.user_permissions.add(Permission.objects.all()[0])
+        user.get_all_permissions()
+        user._perm_cache
+        user._user_perm_cache
+        user._group_perm_cache
+
+        session_schema_changed.send(user=user, session=None, sender=None)
+
+        with self.assertRaises(AttributeError):
+            user._perm_cache
+        with self.assertRaises(AttributeError):
+            user._user_perm_cache
+        with self.assertRaises(AttributeError):
+            user._group_perm_cache

@@ -4,6 +4,7 @@ import unittest
 
 from django.db import ProgrammingError
 from django.conf import settings
+from django.contrib.auth.models import User, Group, Permission
 
 from hypothesis import given, settings as hsettings
 from hypothesis.strategies import text
@@ -12,7 +13,7 @@ from hypothesis.extra.django import TestCase
 from boardinghouse.schema import get_schema_model, Forbidden
 from boardinghouse.middleware import change_schema
 
-from ..models import AwareModel, User
+from ..models import AwareModel
 
 Schema = get_schema_model()
 SessionStore = import_module(settings.SESSION_ENGINE).SessionStore
@@ -241,6 +242,33 @@ class TestMiddleware(TestCase):
     def test_view_changes_to_template_schema(self):
         response = self.client.get('/bad/activate/schema/__template__/')
         self.assertEqual(403, response.status_code)
+
+    def test_session_schema_change_clears_permissions_caches(self):
+        schema = Schema.objects.mass_create('a')[0]
+        user = User.objects.create_user(username='username', password='password')
+        schema.activate()
+        user.groups.add(Group.objects.create(name='Group'))
+        user.user_permissions.add(Permission.objects.all()[0])
+        user.get_all_permissions()
+        user._perm_cache
+        user._user_perm_cache
+        user._group_perm_cache
+
+        class Request(object):
+            pass
+
+        request = Request()
+        request.user = user
+        request.session = SessionStore()
+
+        change_schema(request=request, schema='a')
+
+        with self.assertRaises(AttributeError):
+            user._perm_cache
+        with self.assertRaises(AttributeError):
+            user._user_perm_cache
+        with self.assertRaises(AttributeError):
+            user._group_perm_cache
 
 
 class TestContextProcessor(TestCase):
