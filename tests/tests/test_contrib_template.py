@@ -1,7 +1,7 @@
 import uuid
 
 from django.test import TestCase
-from django.contrib.auth.models import User, Permission
+from django.contrib.auth.models import User
 from django.db import connection, migrations, models
 from django.db.migrations.state import ProjectState
 from django.utils import six
@@ -41,19 +41,16 @@ class TestContribTemplate(TestCase):
         response = self.client.get('/__change_schema__/{}/'.format(template.schema))
         self.assertEqual(403, response.status_code)
 
-    def test_templates_can_be_activated_with_permission(self):
-        # How does this work with per-schema permissions?
+    def test_templates_can_be_activated_by_superuser(self):
         template = SchemaTemplate.objects.create(name='Foo')
-        user = User.objects.create_user(**CREDENTIALS)
-        user.user_permissions.add(Permission.objects.get(codename='activate_schematemplate'))
+        User.objects.create_superuser(email='superuser@example.com', **CREDENTIALS)
         self.client.login(**CREDENTIALS)
         response = self.client.get('/__change_schema__/{}/'.format(template.schema))
         self.assertEqual(200, response.status_code)
 
     def test_invalid_template_raises_forbidden(self):
         template = SchemaTemplate.objects.create(name='Foo')
-        user = User.objects.create_user(**CREDENTIALS)
-        user.user_permissions.add(Permission.objects.get(codename='activate_schematemplate'))
+        User.objects.create_superuser(email='superuser@example.com', **CREDENTIALS)
         self.client.login(**CREDENTIALS)
         response = self.client.get('/__change_schema__/{}1/'.format(template.schema))
         self.assertEqual(403, response.status_code)

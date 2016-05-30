@@ -56,21 +56,12 @@ Template schema have schema names like: `__template_<id>`, and can only be activ
 boardinghouse.contrib.groups
 ----------------------------
 
-This app has two options: the standard form is to make the model `auth.Group` a private/per-schema model.
+By default, django-boardinghouse puts all of the `django.contrib.auth` models into the "shared" category, but maintains the relationships between `User` ⟷ `Permission`, and between `User` ⟷ `Group` as private/per-schema relationships. This actually makes lots of sense, as authorisation to perform an action belongs to the schema.
 
-This cascades onto the relationships between `settings.AUTH_USER_MODEL` (which will always be a shared model), and `auth.Permission` (also always a shared model), and the group model. This is required, because a shared model may never contain a reference to a private model, but a private model may contain a reference to a shared model.
+The relationship between `Group` ⟷ `Permission` is also shared: the philosophy here is that everything except group *allocation* (and per-user permission) should be maintained by the system administrator, not by schema owners.
 
-When using the `boardinghouse.contrib.groups.apps.SharedGroupsConfig` form, only the join tables between `User` and `Group`, and between `User` and `Permission` are private. `Group` objects are shared between all schemata.
+However, if you desire the `Group` instances to be per-schema (and by inference, the `Group` ⟷ `Permission` relations), then installing this package makes this possible.
 
-Thus, when this app is installed, the following objects are always per-schema:
-
-* `User` ⟷ `Permission`
-* `User` ⟷ `Group`
-
-When installed using the default `GroupsConfig`, the following objects are also per-schema:
-
-* `Group`
-* `Group` ⟷ `Permission`
 
 .. _demo:
 

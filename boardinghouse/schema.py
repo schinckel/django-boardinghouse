@@ -251,11 +251,11 @@ def is_shared_model(model):
     if app_model in REQUIRED_SHARED_MODELS:
         return True
 
-    if app_model in map(str.lower, settings.SHARED_MODELS):
+    if app_model in [x.lower() for x in settings.SHARED_MODELS]:
         return True
 
     # Sometimes, we want a join table to be private.
-    if app_model in map(str.lower, settings.PRIVATE_MODELS):
+    if app_model in [x.lower() for x in settings.PRIVATE_MODELS]:
         return False
 
     # if all fields are auto or fk, then we are a join model,

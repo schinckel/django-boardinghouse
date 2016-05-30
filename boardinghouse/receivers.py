@@ -151,3 +151,13 @@ def invalidate_all_caches(sender, **kwargs):
     """
     if sender.name == 'boardinghouse':
         cache.delete('active-schemata')
+
+
+@receiver(signals.session_schema_changed, weak=False)
+def flush_user_perms_cache(sender, user, **kwargs):
+    if hasattr(user, '_perm_cache'):
+        del user._perm_cache
+    if hasattr(user, '_user_perm_cache'):
+        del user._user_perm_cache
+    if hasattr(user, '_group_perm_cache'):
+        del user._group_perm_cache

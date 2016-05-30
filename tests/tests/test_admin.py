@@ -181,7 +181,9 @@ class TestAdminAdditions(TestCase):
         self.client.login(username='admin', password='password')
 
         Schema.objects.mass_create('a', 'b')
-        user.schemata.add(Schema.objects.get(pk='a'))
+        a = Schema.objects.get(pk='a')
+        user.schemata.add(a)
+        a.activate()
         user.user_permissions.add(Permission.objects.get(codename='change_awaremodel'))
 
         self.client.get('/?__schema=a')

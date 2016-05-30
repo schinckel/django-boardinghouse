@@ -13,11 +13,16 @@ class BoardingHouseConfig(AppConfig):
     Default AppConfig for django-boardinghouse.
     """
     name = 'boardinghouse'
+    _ready_has_run = False
 
     def ready(self):
+        if self._ready_has_run:
+            return
+
         # Make sure that all default settings have been applied (if not overwritten).
         from boardinghouse import settings as app_settings
         from django.conf import settings, global_settings
+
         for key in dir(app_settings):
             if key.isupper():
                 value = getattr(app_settings, key)
@@ -40,7 +45,16 @@ class BoardingHouseConfig(AppConfig):
         if hasattr(User, 'schemata'):
             models.AnonymousUser.schemata = get_schema_model().objects.none()
 
+        # Make sure User <--> Group and User <--> Permission are per-schema.
+        # If this is not desired, then it needs to be overriden.
+        settings.PRIVATE_MODELS.extend([
+            '{m.app_label}.{m.model_name}'.format(m=User.groups.through._meta).lower(),
+            '{m.app_label}.{m.model_name}'.format(m=User.user_permissions.through._meta).lower()
+        ])
+
         from boardinghouse import receivers  # NOQA
+
+        self._ready_has_run = True
 
 
 @register('settings')

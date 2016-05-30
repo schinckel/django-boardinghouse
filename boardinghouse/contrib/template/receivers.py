@@ -26,7 +26,7 @@ def execute_on_all_templates(sender, db_table, function, **kwargs):
 @receiver(signals.session_requesting_schema_change, weak=False, dispatch_uid='change-to-schema-template')
 def change_to_schema_template(sender, schema, user, session, **kwargs):
     if schema.startswith(settings.BOARDINGHOUSE_TEMPLATE_PREFIX):
-        if not user.has_perm('template.activate_schematemplate'):
+        if not user.is_superuser:
             raise Forbidden()
 
         try:
