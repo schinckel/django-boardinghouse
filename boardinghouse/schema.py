@@ -271,23 +271,14 @@ def is_shared_model(model):
     return False
 
 
-def is_shared_table(table, apps=apps):
+def _get_models(apps, stack):
     """
-    Is the model from the provided database table name shared?
-
-    We may need to look and see if we can work out which models
-    this table joins.
+    If we are in a migration operation, we need to look in that for models.
+    We really only should be injecting ourselves if we find a frame that contains
+    a database_(forwards|backwards) function.
+    Otherwise, we can look in the `apps` object passed in.
     """
-    if table in REQUIRED_SHARED_TABLES:
-        return True
-
-    # Get a mapping of all table names to models.
-    models = apps.get_models()
-
-    # If we are in a migration operation, we need to look in that for models.
-    # We really only should be injecting ourselves if we find a frame that contains
-    # a database_(forwards|backwards) function.
-    for frame in inspect.stack():
+    for frame in stack:
         frame_locals = frame[0].f_locals
         if frame[3] == 'database_forwards' and all([
             local in frame_locals for local in ('from_state', 'to_state', 'schema_editor', 'self')
@@ -300,7 +291,38 @@ def is_shared_table(table, apps=apps):
                 models = models.union(to_state.apps.get_models())
             if from_state.apps:
                 models = models.union(from_state.apps.get_models())
-            break
+            return models
+
+    return apps.get_models()
+
+
+def _get_join_model(table, table_map):
+    """
+    Given a database table, and a mapping of tables to models, look for a many-to-many field on models
+    that uses that database table.
+
+    Currently, it only looks within models that have a matching prefix.
+    """
+    for db_table, model in table_map.items():
+        if table.startswith(db_table):
+            for field in model._meta.local_many_to_many:
+                through = (field.remote_field if hasattr(field, 'remote_field') else field.rel).through
+                if through._meta.db_table == table:
+                    return through
+
+
+def is_shared_table(table, apps=apps):
+    """
+    Is the model from the provided database table name shared?
+
+    We may need to look and see if we can work out which models
+    this table joins.
+    """
+    if table in REQUIRED_SHARED_TABLES:
+        return True
+
+    # Get a mapping of all table names to models.
+    models = _get_models(apps, inspect.stack())
 
     table_map = dict([
         (x._meta.db_table, x) for x in models
@@ -312,12 +334,9 @@ def is_shared_table(table, apps=apps):
         return is_shared_model(table_map[table])
 
     # It may be a join table.
-    for db_table, model in table_map.items():
-        if table.startswith(db_table):
-            for field in model._meta.local_many_to_many:
-                through = (field.remote_field if hasattr(field, 'remote_field') else field.rel).through
-                if through._meta.db_table == table:
-                    return is_shared_model(through)
+    through = _get_join_model(table, table_map)
+    if through:
+        return is_shared_model(through)
 
     # Not a join table: just assume that it's not shared.
     return False
