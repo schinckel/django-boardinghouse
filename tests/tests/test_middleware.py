@@ -246,6 +246,7 @@ class TestMiddleware(TestCase):
     def test_session_schema_change_clears_permissions_caches(self):
         schema = Schema.objects.mass_create('a')[0]
         user = User.objects.create_user(username='username', password='password')
+        user.schemata.add(schema)
         schema.activate()
         user.groups.add(Group.objects.create(name='Group'))
         user.user_permissions.add(Permission.objects.all()[0])
