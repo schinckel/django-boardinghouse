@@ -84,7 +84,7 @@ class Migration(migrations.Migration):
         # but in the public schema. If we do, then we need to drop them, and create empty versions in all
         # schemata (template and otherwise). The reverse of this is a noop, because we don't support the erroneous
         # state that existed before.
-        migrations.RunPython(move_existing_to_schemata, migrations.RunPython.noop),
+        migrations.RunPython(move_existing_to_schemata, lambda *args: None),
         # Then we need to create the views, to prevent exceptions when querying for permissions without an active
         # schema.
         migrations.RunPython(create_views, drop_views),
