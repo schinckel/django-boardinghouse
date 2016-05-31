@@ -344,9 +344,12 @@ def is_shared_table(table, apps=apps):
 
 # Internal helper functions.
 
-def _table_exists(table_name):
+def _table_exists(table_name, schema=None):
     cursor = connection.cursor()
-    cursor.execute("SELECT * FROM information_schema.tables WHERE table_name = %s", [table_name])
+    cursor.execute("""SELECT *
+                        FROM information_schema.tables
+                       WHERE table_name = %s
+                         AND table_schema = %s""", [table_name, schema or settings.PUBLIC_SCHEMA])
     return bool(cursor.fetchone())
 
 
