@@ -7,8 +7,6 @@ TODO
 
 * Use the ``schema`` attribute on serialised objects to load them into the correct schema. I think this is possible. It will likely require a separate insert per model-schema.
 
-* Trap exceptions on fetching relationships between `Permission` and other objects (`User`, and `Group`), when the table is not found, and return an empty set. Alternatively, we could listen for new instantiations of `User`, and if no schema is activated, then we could set empty values on the cache keys.
-
 Tests to write
 --------------
 

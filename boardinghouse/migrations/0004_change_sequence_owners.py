@@ -8,6 +8,7 @@ from django.db import migrations
 
 with open(os.path.join(os.path.dirname(__file__), '..', 'sql', 'clone_schema.003.sql')) as fp:
     FORWARDS = fp.read()
+
 with open(os.path.join(os.path.dirname(__file__), '..', 'sql', 'clone_schema.002.sql')) as fp:
     REVERSE = fp.read()
 
@@ -45,6 +46,10 @@ def change_existing_sequence_owners(apps, schema_editor):
             cursor.execute(statement[0])
 
 
+def noop(apps, schema_editor):
+    pass
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -53,5 +58,5 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunSQL(sql=FORWARDS, reverse_sql=REVERSE),
-        migrations.RunPython(change_existing_sequence_owners, lambda apps, schema: None),
+        migrations.RunPython(change_existing_sequence_owners, noop),
     ]

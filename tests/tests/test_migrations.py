@@ -6,8 +6,9 @@ from django.db import connection, models, migrations
 from django.db.migrations.migration import Migration
 from django.db.migrations.state import ProjectState
 from django.db.transaction import atomic
-from django.db.utils import IntegrityError, ProgrammingError
-from django.test import TransactionTestCase, TestCase
+from django.db.utils import IntegrityError
+from django.contrib.auth.models import Group, User
+from django.test import TransactionTestCase, TestCase, modify_settings
 from django.utils import six
 
 from boardinghouse.schema import get_schema_model, get_template_schema
@@ -18,13 +19,11 @@ from boardinghouse.operations import AddField
 Schema = get_schema_model()
 template_schema = get_template_schema()
 
-COLUMN_SQL = """
-SELECT column_name, data_type
-FROM information_schema.columns
-WHERE table_name = '%(table_name)s'
-AND table_schema = '%(table_schema)s'
-AND column_name = '%(column_name)s';
-"""
+COLUMN_SQL = """SELECT column_name, data_type
+                  FROM information_schema.columns
+                 WHERE table_name = '%(table_name)s'
+                   AND table_schema = '%(table_schema)s'
+                   AND column_name = '%(column_name)s'"""
 
 
 def all_schemata(test):
@@ -397,14 +396,13 @@ class TestMigrations(MigrationTestBase):
 
     def test_run_sql(self):
         project_state = self.set_up_test_model()
-        operation = migrations.RunSQL("""
-            CREATE TABLE i_love_ponies (id int, special_thing int);
+        operation = migrations.RunSQL(
+            """CREATE TABLE i_love_ponies (id int, special_thing int);
             CREATE INDEX i_love_ponies_special_idx ON i_love_ponies (special_thing);
             INSERT INTO i_love_ponies (id, special_thing) VALUES (1, 42);
             INSERT INTO i_love_ponies (id, special_thing) VALUES (2, 51), (3, 60);
             DELETE FROM i_love_ponies WHERE special_thing = 42;
-            UPDATE i_love_ponies SET special_thing = 42 WHERE id = 2;
-            """,
+            UPDATE i_love_ponies SET special_thing = 42 WHERE id = 2;""",
             " DROP TABLE i_love_ponies")
         new_state = project_state.clone()
         operation.state_forwards('tests', new_state)
@@ -570,24 +568,51 @@ class TestBoardinghouseMigrations(TestCase):
         Schema.objects.mass_create('a', 'b', 'c')
         module = import_module('boardinghouse.migrations.0004_change_sequence_owners')
         module.change_existing_sequence_owners(apps, connection.schema_editor())
-        # How can I assert that this was executed?
+        # How can I assert that this was executed, and did what it says on the box?
+
+        module.noop(apps, connection.schema_editor())
 
     def test_0005_group_views(self):
         module = import_module('boardinghouse.migrations.0005_group_views')
-        # Start by testing that the backwards migration will actually remove the views from public.
-        module.drop_views(apps, connection.schema_editor())
-        # How to assert this worked? Or do we just rely on the fact it will throw an exception if it
-        # can't drop the views?
-
-        # We need to test that we will move an existing table in public.X_X to <all-schemata>.X-X
-        with connection.cursor() as cursor:
-            User = apps.get_model('auth', 'User')
-            for model in [User.groups.through, User.user_permissions.through]:
-                cursor.execute('CREATE TABLE {} (foo SERIAL)'.format(model._meta.db_table))
-
-        # Attempting to perform this operation should result in an exception.
-        with self.assertRaises(ProgrammingError):
-            module.move_existing_to_schemata(apps, connection.schema_editor())
+        # Performing this migration operation when preconditions for table move are not met
+        # should be idempotent, and should not throw an exception.
+        module.move_existing_to_schemata(apps, connection.schema_editor())
 
         # Test for coverage purposes
         module.noop(apps, connection.schema_editor())
+
+        # Test that we get the expected values from the helper method, including when the contrib.groups
+        # app has been installed.
+        self.assertEqual([User.groups.through, User.user_permissions.through], module.private_auth_models(apps))
+
+        with modify_settings(PRIVATE_MODELS={'append': ['auth.groups']}):
+            self.assertEqual([
+                User.groups.through, User.user_permissions.through, Group
+            ], module.private_auth_models(apps))
+
+        self.assertEqual([User.groups.through, User.user_permissions.through], module.private_auth_models(apps))
+
+        # We need to test that we will move an existing table in public.X_X to <all-schemata>.X-X
+        # Lets get rid of the views that normally get created:
+        module.drop_views(apps, connection.schema_editor())
+        # And move the template tables into public.
+        with connection.cursor() as cursor:
+            for model in module.private_auth_models(apps):
+                db_table = model._meta.db_table
+                cursor.execute('ALTER TABLE __template__.{0} SET SCHEMA public'.format(db_table))
+
+        module.move_existing_to_schemata(apps, connection.schema_editor())
+        # Now re-create the views.
+        module.create_views(apps, connection.schema_editor())
+
+        # Now test that user-group relationships are not stored unless a schema is active.
+        user = User.objects.create_user(username='username', password='password')
+        group = Group.objects.create(name='Group')
+
+        user.groups.add(group)
+
+        self.assertEqual(0, user.groups.count())
+
+        Schema.objects.create(schema='a', name='a').activate()
+        user.groups.add(group)
+        self.assertEqual(1, user.groups.count())
