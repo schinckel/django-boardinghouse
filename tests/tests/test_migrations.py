@@ -584,6 +584,10 @@ class TestBoardinghouseMigrations(TestCase):
             User = apps.get_model('auth', 'User')
             for model in [User.groups.through, User.user_permissions.through]:
                 cursor.execute('CREATE TABLE {} (foo SERIAL)'.format(model._meta.db_table))
+
         # Attempting to perform this operation should result in an exception.
         with self.assertRaises(ProgrammingError):
             module.move_existing_to_schemata(apps, connection.schema_editor())
+
+        # Test for coverage purposes
+        module.noop(apps, connection.schema_editor())
