@@ -55,7 +55,7 @@ def move_existing_to_schemata(apps, schema_editor):
     User = apps.get_model(*settings.AUTH_USER_MODEL.split('.'))
 
     def move_table(table_name):
-        schema_editor.execute('CREATE TABLE "{table}" LIKE "{public}"."{table}" INCLUDING ALL'.format(
+        schema_editor.execute('CREATE TABLE "{table}" (LIKE "{public}"."{table}" INCLUDING ALL)'.format(
             public=settings.PUBLIC_SCHEMA,
             table=table_name
         ))
@@ -68,8 +68,12 @@ def move_existing_to_schemata(apps, schema_editor):
                 schema_editor,
                 db_table=table_name,
                 function=move_table,
-                args=(table_name)
+                args=(table_name,)
             )
+
+
+def noop(apps, schema_editor):
+    pass
 
 
 class Migration(migrations.Migration):
@@ -84,7 +88,7 @@ class Migration(migrations.Migration):
         # but in the public schema. If we do, then we need to drop them, and create empty versions in all
         # schemata (template and otherwise). The reverse of this is a noop, because we don't support the erroneous
         # state that existed before.
-        migrations.RunPython(move_existing_to_schemata, lambda *args: None),
+        migrations.RunPython(move_existing_to_schemata, noop),
         # Then we need to create the views, to prevent exceptions when querying for permissions without an active
         # schema.
         migrations.RunPython(create_views, drop_views),

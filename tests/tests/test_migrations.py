@@ -6,7 +6,7 @@ from django.db import connection, models, migrations
 from django.db.migrations.migration import Migration
 from django.db.migrations.state import ProjectState
 from django.db.transaction import atomic
-from django.db.utils import IntegrityError
+from django.db.utils import IntegrityError, ProgrammingError
 from django.test import TransactionTestCase, TestCase
 from django.utils import six
 
@@ -571,3 +571,19 @@ class TestBoardinghouseMigrations(TestCase):
         module = import_module('boardinghouse.migrations.0004_change_sequence_owners')
         module.change_existing_sequence_owners(apps, connection.schema_editor())
         # How can I assert that this was executed?
+
+    def test_0005_group_views(self):
+        module = import_module('boardinghouse.migrations.0005_group_views')
+        # Start by testing that the backwards migration will actually remove the views from public.
+        module.drop_views(apps, connection.schema_editor())
+        # How to assert this worked? Or do we just rely on the fact it will throw an exception if it
+        # can't drop the views?
+
+        # We need to test that we will move an existing table in public.X_X to <all-schemata>.X-X
+        with connection.cursor() as cursor:
+            User = apps.get_model('auth', 'User')
+            for model in [User.groups.through, User.user_permissions.through]:
+                cursor.execute('CREATE TABLE {} (foo SERIAL)'.format(model._meta.db_table))
+        # Attempting to perform this operation should result in an exception.
+        with self.assertRaises(ProgrammingError):
+            module.move_existing_to_schemata(apps, connection.schema_editor())
