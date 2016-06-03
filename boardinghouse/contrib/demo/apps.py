@@ -27,6 +27,8 @@ def check_demo_prefix_stats_with_underscore(app_configs=None, **kwargs):
         return [Error('BOARDINGHOUSE_DEMO_PREFIX must start with an underscore',
                       id='boardinghouse.contrib.demo.E001')]
 
+    return []
+
 
 @register('settings')
 def check_demo_expiry_is_timedelta(app_configs=None, **kwargs):
@@ -35,3 +37,5 @@ def check_demo_expiry_is_timedelta(app_configs=None, **kwargs):
     if not isinstance(settings.BOARDINGHOUSE_DEMO_PERIOD, datetime.timedelta):
         return [Error('BOARDINGHOUSE_DEMO_PERIOD must be a datetime.timedelta() instance',
                       id='boardinghouse.contrib.demo.E002')]
+
+    return []
