@@ -1,6 +1,6 @@
 import datetime
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from django.contrib.auth.models import User
 from django.core.management import call_command
@@ -10,6 +10,7 @@ from django.utils import timezone, six
 
 from .utils import get_table_list
 
+from boardinghouse.contrib.demo import apps
 from boardinghouse.contrib.demo.models import DemoSchema, DemoSchemaExpired
 
 CREDENTIALS = {
@@ -104,8 +105,21 @@ class TestContribDemo(TestCase):
         schema.activate()
         self.assertFalse('tests_pony' in get_table_list())
 
+    @override_settings(BOARDINGHOUSE_DEMO_PERIOD=datetime.timedelta(7))
     def test_default_expiry_period_from_settings(self):
-        pass
+        user = User.objects.create_user(**CREDENTIALS)
+        schema = DemoSchema.objects.create(user=user)
 
-    def test_custom_expiry_period(self):
-        pass
+        self.assertEqual(datetime.date.today() + datetime.timedelta(7), schema.expiry_date.date())
+
+    @override_settings(BOARDINGHOUSE_DEMO_PERIOD='not-a-valid-timedelta')
+    def test_invalid_expiry(self):
+        errors = apps.check_demo_expiry_is_timedelta()
+        self.assertEqual(1, len(errors))
+        self.assertEqual('boardinghouse.contrib.demo.E002', errors[0].id)
+
+    @override_settings(BOARDINGHOUSE_DEMO_PREFIX='demo_')
+    def test_invalid_prefix(self):
+        errors = apps.check_demo_prefix_stats_with_underscore()
+        self.assertEqual(1, len(errors))
+        self.assertEqual('boardinghouse.contrib.demo.E001', errors[0].id)

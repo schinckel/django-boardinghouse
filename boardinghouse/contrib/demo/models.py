@@ -20,8 +20,7 @@ class ExpiringObjectsQuerySet(models.query.QuerySet):
 
     def create(self, **kwargs):
         if 'expiry_date' not in kwargs:
-            kwargs['expiry_date'] = datetime.datetime.utcnow() + datetime.timedelta(31)
-            # kwargs['expiry_date'] = datetime.datetime.utcnow() + settings.BOARDINGHOUSE_DEMO_PERIOD
+            kwargs['expiry_date'] = datetime.datetime.utcnow() + settings.BOARDINGHOUSE_DEMO_PERIOD
         return super(ExpiringObjectsQuerySet, self).create(**kwargs)
 
 
