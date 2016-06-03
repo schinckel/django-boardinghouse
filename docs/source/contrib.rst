@@ -68,7 +68,7 @@ However, if you desire the `Group` instances to be per-schema (and by inference,
 boardinghouse.contrib.demo
 --------------------------
 
-.. note:: This app has not been developed.
+.. note:: This app has not been completed.
 
 Borrowing again from `Xero`_, we have the ability to create a demo schema: there can be at most one per user, and it expires after a certain period of time, can be reset at any time by the user, and can have several template demos to be based upon.
 
@@ -79,6 +79,11 @@ Actions:
 Automated tasks:
 
 * Delete any demo schemata that have expired.
+
+Settings:
+
+* `BOARDINGHOUSE_DEMO_PERIOD`
+* `BOARDINGHOUSE_DEMO_PREFIX`
 
 
 .. _access:
