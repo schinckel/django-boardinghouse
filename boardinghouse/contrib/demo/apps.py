@@ -48,3 +48,5 @@ def ensure_contrib_template_installed(app_configs=None, **kwargs):
     if not apps.is_installed('boardinghouse.contrib.template'):
         return [Error('"boardinghouse.contrib.template" must be installed for "boardinghouse.contrib.demo"',
                       id='boardinghouse.contrib.demo.E003')]
+
+    return []
