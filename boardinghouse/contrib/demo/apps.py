@@ -39,3 +39,12 @@ def check_demo_expiry_is_timedelta(app_configs=None, **kwargs):
                       id='boardinghouse.contrib.demo.E002')]
 
     return []
+
+
+@register('settings')
+def ensure_contrib_template_installed(app_configs=None, **kwargs):
+    from django.apps import apps
+
+    if not apps.is_installed('boardinghouse.contrib.template'):
+        return [Error('"boardinghouse.contrib.template" must be installed for "boardinghouse.contrib.demo"',
+                      id='boardinghouse.contrib.demo.E003')]
