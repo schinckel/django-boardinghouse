@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
             name='DemoSchema',
             fields=[
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, related_name='demo_schema', serialize=False, to=settings.AUTH_USER_MODEL)),
-                ('expiry_date', models.DateTimeField()),
+                ('expires_at', models.DateTimeField()),
             ],
             bases=(boardinghouse.base.SharedSchemaMixin, models.Model),
         ),

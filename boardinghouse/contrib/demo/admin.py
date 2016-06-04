@@ -8,7 +8,7 @@ from .models import DemoSchema
 class DemoSchemaAdmin(admin.ModelAdmin):
     list_display = [
         'user',
-        'expiry_date',
+        'expires_at',
         'valid',
         'expires_in',
         'expired_ago',
@@ -20,8 +20,8 @@ class DemoSchemaAdmin(admin.ModelAdmin):
 
     def expires_in(self, obj):
         if not obj.expired:
-            return timeuntil(obj.expiry_date)
+            return timeuntil(obj.expires_at)
 
     def expired_ago(self, obj):
         if obj.expired:
-            return timesince(obj.expiry_date)
+            return timesince(obj.expires_at)

@@ -13,14 +13,14 @@ from boardinghouse.schema import Forbidden
 
 class ExpiringObjectsQuerySet(models.query.QuerySet):
     def expired(self):
-        return self.filter(expiry_date__lt=timezone.now())
+        return self.filter(expires_at__lt=timezone.now())
 
     def active(self):
-        return self.filter(expiry_date__gte=timezone.now())
+        return self.filter(expires_at__gte=timezone.now())
 
     def create(self, **kwargs):
-        if 'expiry_date' not in kwargs:
-            kwargs['expiry_date'] = datetime.datetime.utcnow() + settings.BOARDINGHOUSE_DEMO_PERIOD
+        if 'expires_at' not in kwargs:
+            kwargs['expires_at'] = datetime.datetime.utcnow() + settings.BOARDINGHOUSE_DEMO_PERIOD
         return super(ExpiringObjectsQuerySet, self).create(**kwargs)
 
 
@@ -30,7 +30,7 @@ class DemoSchema(SharedSchemaMixin, models.Model):
                                 on_delete=models.CASCADE,
                                 primary_key=True,
                                 related_name='demo_schema')
-    expiry_date = models.DateTimeField()
+    expires_at = models.DateTimeField()
 
     objects = ExpiringObjectsQuerySet.as_manager()
 
@@ -40,9 +40,9 @@ class DemoSchema(SharedSchemaMixin, models.Model):
 
     def __str__(self):
         if self.expired:
-            return u'Expired demo for {} (expired {} ago)'.format(self.user, timesince(self.expiry_date))
+            return u'Expired demo for {} (expired {} ago)'.format(self.user, timesince(self.expires_at))
 
-        return u'Demo for {}: expires at {} ({} from now)'.format(self.user, self.expiry_date, timeuntil(self.expiry_date))
+        return u'Demo for {}: expires at {} ({} from now)'.format(self.user, self.expires_at, timeuntil(self.expires_at))
 
     @property
     def schema(self):
@@ -50,7 +50,7 @@ class DemoSchema(SharedSchemaMixin, models.Model):
 
     @property
     def expired(self):
-        return self.expiry_date < timezone.now()
+        return self.expires_at < timezone.now()
 
     @property
     def name(self):

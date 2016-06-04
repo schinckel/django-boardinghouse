@@ -17,7 +17,7 @@ status.boolean = True
 def expiration(obj):
     if obj.redeemed:
         return ''
-    return obj.expiry_date
+    return obj.expires_at
 
 
 def redemption_code(obj):

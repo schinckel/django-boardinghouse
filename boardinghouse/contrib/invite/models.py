@@ -104,5 +104,5 @@ class Invitation(SharedSchemaModel):
         return _('PENDING')
 
     @property
-    def expiry_date(self):
+    def expires_at(self):
         return self.created_at + INVITATION_EXPIRY
