@@ -1,3 +1,5 @@
+import sys
+
 from django.conf import settings
 from django.db import models
 from django.utils import six
@@ -10,10 +12,14 @@ from boardinghouse.schema import (
 
 
 def verbose_name_plural():
+    if 'makemigrations' in sys.argv:
+        return u'template schemata'
     return u'template {}'.format(get_schema_model()._meta.verbose_name_plural)
 
 
 def verbose_name():
+    if 'makemigrations' in sys.argv:
+        return u'template schema'
     return u'template {}'.format(get_schema_model()._meta.verbose_name)
 
 

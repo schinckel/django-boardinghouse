@@ -14,15 +14,32 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        ('template', '0001_initial'),
     ]
 
     operations = [
         migrations.CreateModel(
             name='DemoSchema',
             fields=[
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, related_name='demo_schema', serialize=False, to=settings.AUTH_USER_MODEL)),
+                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE,
+                                              primary_key=True,
+                                              related_name='demo_schema',
+                                              serialize=False,
+                                              to=settings.AUTH_USER_MODEL)),
                 ('expires_at', models.DateTimeField()),
             ],
             bases=(boardinghouse.base.SharedSchemaMixin, models.Model),
+            options={
+                'verbose_name': 'user demo',
+                'verbose_name_plural': 'user demos'
+            },
+        ),
+        migrations.CreateModel(
+            name='ValidDemoTemplate',
+            fields=[
+                ('template_schema_id', models.OneToOneField(primary_key=True,
+                                                            on_delete=django.db.models.deletion.CASCADE,
+                                                            to='template.SchemaTemplate')),
+            ],
         ),
     ]

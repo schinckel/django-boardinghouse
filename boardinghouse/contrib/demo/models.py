@@ -67,3 +67,9 @@ class DemoSchema(SharedSchemaMixin, models.Model):
 
 class DemoSchemaExpired(Forbidden):
     pass
+
+
+class ValidDemoTemplate(models.Model):
+    template_schema_id = models.OneToOneField('template.SchemaTemplate',
+                                              primary_key=True,
+                                              on_delete=models.CASCADE)

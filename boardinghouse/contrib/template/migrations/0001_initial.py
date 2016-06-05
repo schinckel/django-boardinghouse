@@ -23,6 +23,7 @@ class Migration(migrations.Migration):
                 ('description', models.TextField(blank=True, null=True)),
             ],
             options={
+                'verbose_name': 'template schema',
                 'verbose_name_plural': 'template schemata',
                 'default_permissions': ('add', 'change', 'delete', 'view', 'activate', 'clone'),
             },
