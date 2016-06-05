@@ -13,6 +13,7 @@ setup(
     install_requires=[
         'django',
         'sqlparse',
+        'pytz',
         # 'psycopg2',  # or psycopg2cffi under pypy
     ],
     classifiers=[
