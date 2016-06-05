@@ -6,6 +6,8 @@ from django.utils import six, timezone
 from django.utils.timesince import timesince, timeuntil
 from django.utils.translation import ugettext as _
 
+import pytz
+
 from boardinghouse.base import SharedSchemaMixin
 from boardinghouse.schema import activate_schema, deactivate_schema
 from boardinghouse.schema import Forbidden
@@ -17,11 +19,6 @@ class ExpiringObjectsQuerySet(models.query.QuerySet):
 
     def active(self):
         return self.filter(expires_at__gte=timezone.now())
-
-    def create(self, **kwargs):
-        if 'expires_at' not in kwargs:
-            kwargs['expires_at'] = datetime.datetime.utcnow() + settings.BOARDINGHOUSE_DEMO_PERIOD
-        return super(ExpiringObjectsQuerySet, self).create(**kwargs)
 
 
 @six.python_2_unicode_compatible
@@ -56,6 +53,11 @@ class DemoSchema(SharedSchemaMixin, models.Model):
     def name(self):
         return _('Demo schema')
 
+    def save(self, *args, **kwargs):
+        if not self.expires_at:
+            self.expires_at = datetime.datetime.utcnow().replace(tzinfo=pytz.utc) + settings.BOARDINGHOUSE_DEMO_PERIOD
+        return super(DemoSchema, self).save(*args, **kwargs)
+
     def activate(self):
         if self.expired:
             raise DemoSchemaExpired()
@@ -69,7 +71,18 @@ class DemoSchemaExpired(Forbidden):
     pass
 
 
-class ValidDemoTemplate(models.Model):
-    template_schema_id = models.OneToOneField('template.SchemaTemplate',
-                                              primary_key=True,
-                                              on_delete=models.CASCADE)
+class ValidDemoTemplateManager(models.Manager):
+    def get_queryset(self):
+        return super(ValidDemoTemplateManager, self).get_queryset().filter(template_schema__is_active=True)
+
+
+class ValidDemoTemplate(SharedSchemaMixin, models.Model):
+    template_schema = models.OneToOneField('template.SchemaTemplate',
+                                           primary_key=True,
+                                           on_delete=models.CASCADE,
+                                           related_name='use_for_demo')
+
+    objects = ValidDemoTemplateManager()
+
+    def __str__(self):
+        return '{} is valid as a demo source'.format(self.template_schema)

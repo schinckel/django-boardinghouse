@@ -3,7 +3,13 @@ from django.utils.translation import ugettext as _
 
 from .models import SchemaTemplate
 
-admin.site.register(SchemaTemplate)
+
+@admin.register(SchemaTemplate)
+class SchemaTemplateAdmin(admin.ModelAdmin):
+    list_display = [
+        'name', 'is_active', 'description',
+    ]
+    inlines = []
 
 
 # Inject an action into the registered ModelAdmin for our Schema model.

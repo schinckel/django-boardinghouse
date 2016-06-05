@@ -9,7 +9,9 @@ class BoardingHouseDemoConfig(AppConfig):
 
     def ready(self):
         # Make sure our required setting exists.
+        from django.apps import apps
         from django.conf import settings
+
         if not hasattr(settings, 'BOARDINGHOUSE_DEMO_PREFIX'):
             settings.BOARDINGHOUSE_DEMO_PREFIX = '__demo_'
 

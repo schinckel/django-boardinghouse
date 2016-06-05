@@ -60,7 +60,7 @@ def drop_schema(sender, instance, **kwargs):
     signals.schemata_deleted.send(sender=sender, schemata=[instance.schema])
 
 
-@receiver(signals.schemata_deleted, sender=Schema, weak=False)
+@receiver(signals.schemata_deleted, weak=False)
 def drop_schemata(sender, schemata, connection=None, **kwargs):
     from django import db
     cursor = (connection or db.connection).cursor()

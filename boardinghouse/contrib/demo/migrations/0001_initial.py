@@ -37,9 +37,11 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='ValidDemoTemplate',
             fields=[
-                ('template_schema_id', models.OneToOneField(primary_key=True,
-                                                            on_delete=django.db.models.deletion.CASCADE,
-                                                            to='template.SchemaTemplate')),
+                ('template_schema', models.OneToOneField(primary_key=True,
+                                                         on_delete=django.db.models.deletion.CASCADE,
+                                                         to='template.SchemaTemplate',
+                                                         related_name='use_for_demo')),
             ],
+            bases=(boardinghouse.base.SharedSchemaMixin, models.Model),
         ),
     ]
