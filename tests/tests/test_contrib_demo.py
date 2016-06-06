@@ -12,6 +12,8 @@ from django.db.migrations.state import ProjectState
 from django.test import TestCase, override_settings
 from django.utils import timezone, six
 
+import pytz
+
 from .utils import get_table_list
 
 from boardinghouse.contrib.demo import apps
@@ -30,9 +32,9 @@ class TestContribDemo(TestCase):
         self.assertEqual('Demo schema', six.text_type(schema.name))
 
     def test_demo_schema_str(self):
-        demo = DemoSchema(user=User(username='user'), expires_at=datetime.datetime.now() + datetime.timedelta(1))
+        demo = DemoSchema(user=User(username='user'), expires_at=datetime.datetime.now().replace(tzinfo=pytz.utc) + datetime.timedelta(1))
         self.assertTrue(six.text_type(demo).startswith('Demo for user: expires at'))
-        demo.expires_at = datetime.datetime(1970, 1, 1)
+        demo.expires_at = datetime.datetime(1970, 1, 1, tzinfo=pytz.utc)
         self.assertTrue(six.text_type(demo).startswith('Expired demo for user (expired'))
 
     def test_demo_can_be_created_and_activated(self):
@@ -59,13 +61,13 @@ class TestContribDemo(TestCase):
 
     def test_activation_of_expired_demo_raises(self):
         user = User.objects.create_user(**CREDENTIALS)
-        schema = DemoSchema.objects.create(user=user, expires_at=timezone.now())
+        schema = DemoSchema.objects.create(user=user, expires_at=timezone.now().replace(tzinfo=pytz.utc))
         with self.assertRaises(DemoSchemaExpired):
             schema.activate()
 
     def test_cleanup_expired_removes_expired(self):
         user = User.objects.create_user(**CREDENTIALS)
-        DemoSchema.objects.create(user=user, expires_at='1970-01-01')
+        DemoSchema.objects.create(user=user, expires_at='1970-01-01T00:00:00Z')
 
         call_command('cleanup_expired_demos')
 
@@ -74,9 +76,9 @@ class TestContribDemo(TestCase):
     def test_demo_admin(self):
         User.objects.create_superuser(email='email@example.com', **CREDENTIALS)
         DemoSchema.objects.create(user=User.objects.create_user(username='a', password='a'),
-                                  expires_at='1970-01-01')
+                                  expires_at='1970-01-01T00:00:00Z')
         DemoSchema.objects.create(user=User.objects.create_user(username='b', password='b'),
-                                  expires_at='9999-01-01')
+                                  expires_at='9999-01-01T00:00:00Z')
 
         self.client.login(**CREDENTIALS)
 
@@ -114,7 +116,7 @@ class TestContribDemo(TestCase):
         user = User.objects.create_user(**CREDENTIALS)
         schema = DemoSchema.objects.create(user=user)
 
-        self.assertEqual(datetime.datetime.utcnow().date() + datetime.timedelta(7), schema.expires_at.date())
+        self.assertEqual(timezone.now().date() + datetime.timedelta(7), schema.expires_at.date())
 
     @override_settings(BOARDINGHOUSE_DEMO_PERIOD='not-a-valid-timedelta')
     def test_invalid_expiry(self):

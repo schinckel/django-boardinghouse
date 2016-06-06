@@ -1,3 +1,4 @@
+import django
 from django import forms
 from django.contrib import admin
 from django.utils.timesince import timesince, timeuntil
@@ -85,8 +86,14 @@ def use_for_demo(obj):
 use_for_demo.empty_value_display = False
 use_for_demo.boolean = True
 
-SchemaTemplate = ValidDemoTemplate._meta.pk.rel.to
+if django.VERSION < (1, 9):
+    SchemaTemplate = ValidDemoTemplate._meta.pk.rel.to
+else:
+    SchemaTemplate = ValidDemoTemplate._meta.pk.remote_field.model
 SchemaTemplateAdmin = admin.site._registry[SchemaTemplate].__class__
 SchemaTemplateAdmin.inlines.append(ValidDemoInline)
 
 SchemaTemplateAdmin.list_display.append(use_for_demo)
+
+
+# TODO: Inject an action into the UserAdmin, that creates a demo for selected user(s).

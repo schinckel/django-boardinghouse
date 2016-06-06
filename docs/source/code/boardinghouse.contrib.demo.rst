@@ -16,8 +16,10 @@ Submodules
 
    boardinghouse.contrib.demo.admin
    boardinghouse.contrib.demo.apps
+   boardinghouse.contrib.demo.forms
    boardinghouse.contrib.demo.models
    boardinghouse.contrib.demo.receivers
+   boardinghouse.contrib.demo.views
 
 Module contents
 ---------------

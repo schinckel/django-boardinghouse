@@ -15,10 +15,10 @@ from boardinghouse.schema import Forbidden
 
 class ExpiringObjectsQuerySet(models.query.QuerySet):
     def expired(self):
-        return self.filter(expires_at__lt=timezone.now())
+        return self.filter(expires_at__lt=timezone.now().replace(tzinfo=pytz.utc))
 
     def active(self):
-        return self.filter(expires_at__gte=timezone.now())
+        return self.filter(expires_at__gte=timezone.now().replace(tzinfo=pytz.utc))
 
 
 @six.python_2_unicode_compatible
@@ -47,7 +47,7 @@ class DemoSchema(SharedSchemaMixin, models.Model):
 
     @property
     def expired(self):
-        return self.expires_at < timezone.now()
+        return self.expires_at < timezone.now().replace(tzinfo=pytz.utc)
 
     @property
     def name(self):
