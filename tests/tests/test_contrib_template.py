@@ -27,12 +27,14 @@ class TestContribTemplate(TestCase):
         template = SchemaTemplate(name='Foo')
         self.assertEqual(u'Foo', six.text_type(template))
 
-    def test_templates_can_be_created(self):
+    def test_templates_can_be_created_and_destroyed(self):
         template = SchemaTemplate.objects.create(name='Foo')
         self.assertTrue(_schema_exists(template.schema))
         template.activate()
         self.assertEqual(get_active_schema_name(), template.schema)
         template.deactivate()
+        template.delete()
+        self.assertFalse(_schema_exists(template.schema))
 
     def test_templates_cannot_be_activated_normally(self):
         template = SchemaTemplate.objects.create(name='Foo')

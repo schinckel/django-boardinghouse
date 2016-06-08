@@ -19,6 +19,7 @@ from .utils import get_table_list
 from boardinghouse.contrib.demo import apps
 from boardinghouse.contrib.demo.models import DemoSchema, DemoSchemaExpired, ValidDemoTemplate
 from boardinghouse.contrib.template.models import SchemaTemplate
+from boardinghouse.schema import _schema_exists
 
 CREDENTIALS = {
     'username': 'username',
@@ -73,11 +74,13 @@ class TestContribDemo(TestCase):
 
     def test_cleanup_expired_removes_expired(self):
         user = User.objects.create_user(**CREDENTIALS)
-        DemoSchema.objects.create(user=user, expires_at='1970-01-01T00:00:00Z')
+        demo = DemoSchema.objects.create(user=user, expires_at='1970-01-01T00:00:00Z')
+        self.assertTrue(_schema_exists(demo.schema))
 
         call_command('cleanup_expired_demos')
 
         self.assertEqual(0, DemoSchema.objects.count())
+        self.assertFalse(_schema_exists(demo.schema))
 
     def test_demo_admin(self):
         user = User.objects.create_superuser(email='email@example.com', **CREDENTIALS)
