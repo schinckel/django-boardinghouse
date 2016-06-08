@@ -48,7 +48,7 @@ class DemoSchemaAdmin(admin.ModelAdmin):
                     fields = ('expires_at', )
 
             def save(form, commit=True):
-                if not form.instance.pk:
+                if obj is None:
                     form.instance._clone = form.cleaned_data['from_template'].template_schema.schema
                 return super(DemoForm, form).save(commit)
 
@@ -76,9 +76,12 @@ class ValidDemoInline(admin.StackedInline):
         def save(self, commit=True):
             if self.cleaned_data.get('use_for_demo', False):
                 return super(ValidDemoInline.form, self).save(commit)
-            elif self.instance.pk and commit:
+            elif commit:
+                # There's no visible way I can think of to actually get commit=False from the admin,
+                # but I'm not game to omit the elif clause, in case there is a case I'm not aware of.
+                # Otherwise, it may delete the object when it should not be deleted.
                 self.instance.delete()
-                return self.instance
+            return self.instance
 
 
 def use_for_demo(obj):

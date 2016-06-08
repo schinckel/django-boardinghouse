@@ -80,7 +80,7 @@ class TestContribDemo(TestCase):
         self.assertEqual(0, DemoSchema.objects.count())
 
     def test_demo_admin(self):
-        User.objects.create_superuser(email='email@example.com', **CREDENTIALS)
+        user = User.objects.create_superuser(email='email@example.com', **CREDENTIALS)
         DemoSchema.objects.create(user=User.objects.create_user(username='a', password='a'),
                                   expires_at='1970-01-01T00:00:00Z')
         DemoSchema.objects.create(user=User.objects.create_user(username='b', password='b'),
@@ -92,8 +92,48 @@ class TestContribDemo(TestCase):
         self.assertContains(response, '/static/admin/img/icon-no', count=1, status_code=200)
         self.assertContains(response, '/static/admin/img/icon-yes', count=1, status_code=200)
 
-        self.client.get('/admin/demo/demoschema/{}/'.format(DemoSchema.objects.all()[0]))
-        self.client.get('/admin/demo/demoschema/new/')
+        # Create a template, because we need to.
+        self.client.get('/admin/template/schematemplate/add/')
+        self.client.post('/admin/template/schematemplate/add/', data={
+            'name': 'template',
+            'is_active': 'on',
+            'use_for_demo-TOTAL_FORMS': '0',
+            'use_for_demo-INITIAL_FORMS': '0',
+        })
+        template = SchemaTemplate.objects.get()
+        self.client.get('/admin/template/schematemplate/{}/change/'.format(template.pk))
+        self.client.post('/admin/template/schematemplate/{}/change/'.format(template.pk), data={
+            'name': 'template',
+            'is_active': 'on',
+            'use_for_demo-TOTAL_FORMS': '1',
+            'use_for_demo-INITIAL_FORMS': '0',
+            'use_for_demo-0-use_for_demo': 'on',
+            'use_for_demo-0-template_schema': template.pk,
+        })
+        self.assertTrue(ValidDemoTemplate.objects.get(template_schema=template))
+        self.client.get('/admin/template/schematemplate/{}/change/'.format(template.pk))
+
+        self.client.get('/admin/demo/demoschema/{}/change/'.format(DemoSchema.objects.all()[0].pk))
+        self.client.get('/admin/demo/demoschema/add/')
+        self.client.post('/admin/demo/demoschema/add/', data={
+            'user': user.pk,
+            'from_template': template.pk,
+        })
+        response = self.client.post('/admin/demo/demoschema/{}/change/'.format(DemoSchema.objects.get(user=user).pk), data={
+            'expires_at': '2016-01-01 00:00:00'
+        })
+        self.assertEqual(datetime.date(2016, 1, 1),
+                         DemoSchema.objects.get(user=user).expires_at.date())
+
+        self.client.post('/admin/template/schematemplate/{}/change/'.format(template.pk), data={
+            'name': 'template',
+            'is_active': 'on',
+            'use_for_demo-TOTAL_FORMS': '1',
+            'use_for_demo-INITIAL_FORMS': '1',
+            'use_for_demo-0-template_schema': template.pk,
+        })
+        self.assertFalse(ValidDemoTemplate.objects.exists())
+        self.client.get('/admin/template/schematemplate/')
 
     def test_demo_schemata_get_migrated(self):
         user = User.objects.create_user(**CREDENTIALS)
