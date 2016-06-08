@@ -17,7 +17,8 @@ import pytz
 from .utils import get_table_list
 
 from boardinghouse.contrib.demo import apps
-from boardinghouse.contrib.demo.models import DemoSchema, DemoSchemaExpired
+from boardinghouse.contrib.demo.models import DemoSchema, DemoSchemaExpired, ValidDemoTemplate
+from boardinghouse.contrib.template.models import SchemaTemplate
 
 CREDENTIALS = {
     'username': 'username',
@@ -36,6 +37,11 @@ class TestContribDemo(TestCase):
         self.assertTrue(six.text_type(demo).startswith('Demo for user: expires at'))
         demo.expires_at = datetime.datetime(1970, 1, 1, tzinfo=pytz.utc)
         self.assertTrue(six.text_type(demo).startswith('Expired demo for user (expired'))
+
+    def test_valid_demo_template_str(self):
+        template = SchemaTemplate.objects.create(name='xxx')
+        demo_template = ValidDemoTemplate.objects.create(template_schema=template)
+        self.assertEqual('xxx is valid as a demo source', str(demo_template))
 
     def test_demo_can_be_created_and_activated(self):
         user = User.objects.create_user(**CREDENTIALS)
@@ -85,6 +91,9 @@ class TestContribDemo(TestCase):
         response = self.client.get('/admin/demo/demoschema/')
         self.assertContains(response, '/static/admin/img/icon-no', count=1, status_code=200)
         self.assertContains(response, '/static/admin/img/icon-yes', count=1, status_code=200)
+
+        self.client.get('/admin/demo/demoschema/{}/'.format(DemoSchema.objects.all()[0]))
+        self.client.get('/admin/demo/demoschema/new/')
 
     def test_demo_schemata_get_migrated(self):
         user = User.objects.create_user(**CREDENTIALS)

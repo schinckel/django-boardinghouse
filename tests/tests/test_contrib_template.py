@@ -113,3 +113,12 @@ class TestContribTemplate(TestCase):
             operation.database_backwards('tests', editor, new_state, project_state)
         template.activate()
         self.assertFalse('tests_pony' in get_table_list())
+
+    def test_verbose_name_in_makemigrations(self):
+        import sys
+        from boardinghouse.contrib.template.models import verbose_name, verbose_name_plural
+
+        sys.argv.append('makemigrations')
+        self.assertEqual('template schema', verbose_name())
+        self.assertEqual('template schemata', verbose_name_plural())
+        sys.argv.remove('makemigrations')
