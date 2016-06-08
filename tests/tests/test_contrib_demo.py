@@ -7,7 +7,10 @@ except ImportError:
 
 from django.contrib.auth.models import User
 from django.core.management import call_command
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 from django.db import migrations, models, connection
 from django.db.migrations.state import ProjectState
 from django.test import TestCase, override_settings
