@@ -1,3 +1,4 @@
+import sys
 import uuid
 
 from django.test import TestCase
@@ -7,6 +8,8 @@ from django.db.migrations.state import ProjectState
 from django.utils import six
 
 from boardinghouse.contrib.template.models import SchemaTemplate
+from boardinghouse.contrib.template.models import verbose_name, verbose_name_plural
+
 from boardinghouse.models import Schema
 from boardinghouse.schema import (
     _schema_exists,
@@ -117,9 +120,6 @@ class TestContribTemplate(TestCase):
         self.assertFalse('tests_pony' in get_table_list())
 
     def test_verbose_name_in_makemigrations(self):
-        import sys
-        from boardinghouse.contrib.template.models import verbose_name, verbose_name_plural
-
         sys.argv.append('makemigrations')
         self.assertEqual('template schema', verbose_name())
         self.assertEqual('template schemata', verbose_name_plural())

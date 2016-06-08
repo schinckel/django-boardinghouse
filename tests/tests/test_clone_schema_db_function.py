@@ -53,4 +53,12 @@ class TestCloneSchemaDBFunction(TestCase):
         self.assertEqual(1000, ViewBackedModel.objects.count())
 
     def test_cloning_template_with_function(self):
-        pass
+        with connection.cursor() as cursor:
+            cursor.execute("CREATE FUNCTION __template__.spam_and_eggs() RETURNS BOOLEAN AS 'SELECT true' LANGUAGE SQL")
+
+        schema = Schema.objects.create(name='func', schema='func')
+        schema.activate()
+
+        with connection.cursor() as cursor:
+            cursor.execute('SELECT spam_and_eggs()')
+            self.assertTrue(cursor.fetchone()[0])

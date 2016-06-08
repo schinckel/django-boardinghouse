@@ -7,6 +7,7 @@ except ImportError:
 
 from django.contrib.auth.models import User
 from django.core.management import call_command
+from django.core.urlresolvers import reverse
 from django.db import migrations, models, connection
 from django.db.migrations.state import ProjectState
 from django.test import TestCase, override_settings
@@ -91,21 +92,24 @@ class TestContribDemo(TestCase):
 
         self.client.login(**CREDENTIALS)
 
-        response = self.client.get('/admin/demo/demoschema/')
+        response = self.client.get(reverse('admin:demo_demoschema_changelist'))
         self.assertContains(response, '/static/admin/img/icon-no', count=1, status_code=200)
         self.assertContains(response, '/static/admin/img/icon-yes', count=1, status_code=200)
 
         # Create a template, because we need to.
-        self.client.get('/admin/template/schematemplate/add/')
-        self.client.post('/admin/template/schematemplate/add/', data={
+        response = self.client.get(reverse('admin:template_schematemplate_add'))
+        self.assertEqual(200, response.status_code)
+        response = self.client.post(reverse('admin:template_schematemplate_add'), data={
             'name': 'template',
             'is_active': 'on',
             'use_for_demo-TOTAL_FORMS': '0',
             'use_for_demo-INITIAL_FORMS': '0',
         })
+        self.assertEqual(302, response.status_code)
         template = SchemaTemplate.objects.get()
-        self.client.get('/admin/template/schematemplate/{}/change/'.format(template.pk))
-        self.client.post('/admin/template/schematemplate/{}/change/'.format(template.pk), data={
+        response = self.client.get(reverse('admin:template_schematemplate_change', args=(template.pk,)))
+        self.assertEqual(200, response.status_code)
+        response = self.client.post(reverse('admin:template_schematemplate_change', args=(template.pk,)), data={
             'name': 'template',
             'is_active': 'on',
             'use_for_demo-TOTAL_FORMS': '1',
@@ -113,30 +117,38 @@ class TestContribDemo(TestCase):
             'use_for_demo-0-use_for_demo': 'on',
             'use_for_demo-0-template_schema': template.pk,
         })
-        self.assertTrue(ValidDemoTemplate.objects.get(template_schema=template))
-        self.client.get('/admin/template/schematemplate/{}/change/'.format(template.pk))
+        self.assertEqual(302, response.status_code)
+        ValidDemoTemplate.objects.get(template_schema=template)
+        response = self.client.get(reverse('admin:template_schematemplate_change', args=(template.pk,)))
+        self.assertEqual(200, response.status_code)
 
-        self.client.get('/admin/demo/demoschema/{}/change/'.format(DemoSchema.objects.all()[0].pk))
-        self.client.get('/admin/demo/demoschema/add/')
-        self.client.post('/admin/demo/demoschema/add/', data={
+        response = self.client.get(reverse('admin:demo_demoschema_change', args=(DemoSchema.objects.all()[0].pk,)))
+        self.assertEqual(200, response.status_code)
+        response = self.client.get(reverse('admin:demo_demoschema_add'))
+        self.assertEqual(200, response.status_code)
+        response = self.client.post(reverse('admin:demo_demoschema_add'), data={
             'user': user.pk,
             'from_template': template.pk,
         })
-        response = self.client.post('/admin/demo/demoschema/{}/change/'.format(DemoSchema.objects.get(user=user).pk), data={
+        self.assertEqual(302, response.status_code)
+        response = self.client.post(reverse('admin:demo_demoschema_change', args=(user.pk,)), data={
             'expires_at': '2016-01-01 00:00:00'
         })
+        self.assertEqual(302, response.status_code)
         self.assertEqual(datetime.date(2016, 1, 1),
                          DemoSchema.objects.get(user=user).expires_at.date())
 
-        self.client.post('/admin/template/schematemplate/{}/change/'.format(template.pk), data={
+        response = self.client.post(reverse('admin:template_schematemplate_change', args=(template.pk,)), data={
             'name': 'template',
             'is_active': 'on',
             'use_for_demo-TOTAL_FORMS': '1',
             'use_for_demo-INITIAL_FORMS': '1',
             'use_for_demo-0-template_schema': template.pk,
         })
+        self.assertEqual(302, response.status_code)
         self.assertFalse(ValidDemoTemplate.objects.exists())
-        self.client.get('/admin/template/schematemplate/')
+        response = self.client.get(reverse('admin:template_schematemplate_changelist'))
+        self.assertEqual(200, response.status_code)
 
     def test_demo_schemata_get_migrated(self):
         user = User.objects.create_user(**CREDENTIALS)
