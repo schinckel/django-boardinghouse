@@ -1,3 +1,6 @@
+from django.views.generic import CreateView
+
+from .forms import CreateDemoForm
 
 
 class CreateDemo(CreateView):
@@ -10,3 +13,4 @@ def delete_demo(DeleteView):
 
 def refresh_demo(request):
     # Hmm. Did we store the one we cloned?
+    pass

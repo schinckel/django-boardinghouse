@@ -23,6 +23,8 @@ class BoardingHouseDemoConfig(AppConfig):
         def valid_for_demo(self):
             return self.exclude(use_for_demo=None)
 
+        SchemaTemplateQuerySet.valid_for_demo = valid_for_demo
+
         from boardinghouse.contrib.demo import receivers  # NOQA
 
 
