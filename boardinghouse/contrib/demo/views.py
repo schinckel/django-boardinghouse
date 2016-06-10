@@ -1,12 +1,12 @@
 
 
-def create_demo(request):
-    pass
+class CreateDemo(CreateView):
+    form_class = CreateDemoForm
 
 
-def delete_demo(request):
+def delete_demo(DeleteView):
     pass
 
 
 def refresh_demo(request):
-    pass
+    # Hmm. Did we store the one we cloned?

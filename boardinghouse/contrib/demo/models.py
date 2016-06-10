@@ -28,6 +28,9 @@ class DemoSchema(SharedSchemaMixin, models.Model):
                                 primary_key=True,
                                 related_name='demo_schema')
     expires_at = models.DateTimeField()
+    from_template = models.ForeignKey('template.SchemaTemplate',
+                                      on_delete=models.CASCADE,
+                                      related_name='demo_schemata')
 
     objects = ExpiringObjectsQuerySet.as_manager()
 
@@ -52,6 +55,10 @@ class DemoSchema(SharedSchemaMixin, models.Model):
     @property
     def name(self):
         return _('Demo schema')
+
+    @property
+    def _clone(self):
+        return self.from_template.schema
 
     def save(self, *args, **kwargs):
         if not self.expires_at:

@@ -17,6 +17,12 @@ class BoardingHouseDemoConfig(AppConfig):
         if not hasattr(settings, 'BOARDINGHOUSE_DEMO_PERIOD'):
             settings.BOARDINGHOUSE_DEMO_PERIOD = datetime.timedelta(31)
 
+        # Monkey-patch the TemplateSchema QuerySet
+        from boardinghouse.contrib.template.models import SchemaTemplateQuerySet
+
+        def valid_for_demo(self):
+            return self.exclude(use_for_demo=None)
+
         from boardinghouse.contrib.demo import receivers  # NOQA
 
 

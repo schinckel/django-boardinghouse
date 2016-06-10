@@ -23,6 +23,11 @@ def verbose_name():
     return u'template {}'.format(get_schema_model()._meta.verbose_name)
 
 
+class SchemaTemplateQuerySet(models.query.QuerySet):
+    def active(self):
+        return self.filter(is_active=True)
+
+
 @six.python_2_unicode_compatible
 class SchemaTemplate(SharedSchemaMixin, models.Model):
     """
@@ -33,6 +38,8 @@ class SchemaTemplate(SharedSchemaMixin, models.Model):
     name = models.CharField(max_length=128, unique=True)
     is_active = models.BooleanField(default=True)
     description = models.TextField(null=True, blank=True)
+
+    objects = SchemaTemplateQuerySet.as_manager()
 
     class Meta:
         default_permissions = ('add', 'change', 'delete', 'view', 'activate', 'clone')

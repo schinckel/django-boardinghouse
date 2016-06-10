@@ -14,6 +14,7 @@ class DemoSchemaAdmin(admin.ModelAdmin):
         'valid',
         'expires_in',
         'expired_ago',
+        'from_template',
     ]
 
     def valid(self, obj):
@@ -30,29 +31,14 @@ class DemoSchemaAdmin(admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            return ['user']
+            return ['user', 'from_template']
         return []
 
     def get_form(self, request, obj=None, **kwargs):
-        class DemoForm(forms.ModelForm):
-            expires_at = forms.DateTimeField(required=False)
-
-            if obj is None:
-                from_template = forms.ModelChoiceField(ValidDemoTemplate.objects.all())
-
-            class Meta:
-                model = DemoSchema
-                if obj is None:
-                    fields = ('user', 'expires_at', 'from_template')
-                else:
-                    fields = ('expires_at', )
-
-            def save(form, commit=True):
-                if obj is None:
-                    form.instance._clone = form.cleaned_data['from_template'].template_schema.schema
-                return super(DemoForm, form).save(commit)
-
-        return DemoForm
+        form = super(DemoSchemaAdmin, self).get_form(request, obj, **kwargs)
+        if obj is None:
+            form.base_fields['expires_at'].required = False
+        return form
 
 
 # Inject an inline to allow marking as valid for demo.

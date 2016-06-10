@@ -32,13 +32,19 @@ CREDENTIALS = {
 
 
 class TestContribDemo(TestCase):
+    def setUp(self):
+        self.template = SchemaTemplate.objects.create(name='demo_template')
+        ValidDemoTemplate.objects.create(template_schema=self.template)
+
     def test_demo_schema_name(self):
         user = User.objects.create_user(**CREDENTIALS)
-        schema = DemoSchema.objects.create(user=user)
+        schema = DemoSchema.objects.create(user=user, from_template=self.template)
         self.assertEqual('Demo schema', six.text_type(schema.name))
 
     def test_demo_schema_str(self):
-        demo = DemoSchema(user=User(username='user'), expires_at=datetime.datetime.now().replace(tzinfo=pytz.utc) + datetime.timedelta(1))
+        demo = DemoSchema(user=User(username='user'),
+                          expires_at=datetime.datetime.now().replace(tzinfo=pytz.utc) + datetime.timedelta(1),
+                          from_template=self.template)
         self.assertTrue(six.text_type(demo).startswith('Demo for user: expires at'))
         demo.expires_at = datetime.datetime(1970, 1, 1, tzinfo=pytz.utc)
         self.assertTrue(six.text_type(demo).startswith('Expired demo for user (expired'))
@@ -50,14 +56,14 @@ class TestContribDemo(TestCase):
 
     def test_demo_can_be_created_and_activated(self):
         user = User.objects.create_user(**CREDENTIALS)
-        schema = DemoSchema.objects.create(user=user)
+        schema = DemoSchema.objects.create(user=user, from_template=self.template)
         schema.activate()
         schema.deactivate()
 
     def test_demo_can_only_be_activated_by_user(self):
         User.objects.create_user(**CREDENTIALS)
         other = User.objects.create_user(username='other', password='password')
-        DemoSchema.objects.create(user=other)
+        DemoSchema.objects.create(user=other, from_template=self.template)
 
         self.client.login(**CREDENTIALS)
         response = self.client.get('/aware/?__schema=__demo_{}'.format(other.pk))
@@ -65,20 +71,22 @@ class TestContribDemo(TestCase):
 
     def test_demo_can_be_activated_by_user(self):
         user = User.objects.create_user(**CREDENTIALS)
-        DemoSchema.objects.create(user=user)
+        DemoSchema.objects.create(user=user, from_template=self.template)
         self.client.login(**CREDENTIALS)
         response = self.client.get('/__change_schema__/__demo_{}/'.format(user.pk))
         self.assertEqual(200, response.status_code)
 
     def test_activation_of_expired_demo_raises(self):
         user = User.objects.create_user(**CREDENTIALS)
-        schema = DemoSchema.objects.create(user=user, expires_at=timezone.now().replace(tzinfo=pytz.utc))
+        schema = DemoSchema.objects.create(user=user,
+                                           expires_at=timezone.now().replace(tzinfo=pytz.utc),
+                                           from_template=self.template)
         with self.assertRaises(DemoSchemaExpired):
             schema.activate()
 
     def test_cleanup_expired_removes_expired(self):
         user = User.objects.create_user(**CREDENTIALS)
-        demo = DemoSchema.objects.create(user=user, expires_at='1970-01-01T00:00:00Z')
+        demo = DemoSchema.objects.create(user=user, expires_at='1970-01-01T00:00:00Z', from_template=self.template)
         self.assertTrue(_schema_exists(demo.schema))
 
         call_command('cleanup_expired_demos')
@@ -89,9 +97,11 @@ class TestContribDemo(TestCase):
     def test_demo_admin(self):
         user = User.objects.create_superuser(email='email@example.com', **CREDENTIALS)
         DemoSchema.objects.create(user=User.objects.create_user(username='a', password='a'),
-                                  expires_at='1970-01-01T00:00:00Z')
+                                  expires_at='1970-01-01T00:00:00Z',
+                                  from_template=self.template)
         DemoSchema.objects.create(user=User.objects.create_user(username='b', password='b'),
-                                  expires_at='9999-01-01T00:00:00Z')
+                                  expires_at='9999-01-01T00:00:00Z',
+                                  from_template=self.template)
 
         self.client.login(**CREDENTIALS)
 
@@ -109,7 +119,7 @@ class TestContribDemo(TestCase):
             'use_for_demo-INITIAL_FORMS': '0',
         })
         self.assertEqual(302, response.status_code)
-        template = SchemaTemplate.objects.get()
+        template = SchemaTemplate.objects.get(name='template')
         response = self.client.get(reverse('admin:template_schematemplate_change', args=(template.pk,)))
         self.assertEqual(200, response.status_code)
         response = self.client.post(reverse('admin:template_schematemplate_change', args=(template.pk,)), data={
@@ -135,12 +145,14 @@ class TestContribDemo(TestCase):
         })
         self.assertEqual(302, response.status_code)
         response = self.client.post(reverse('admin:demo_demoschema_change', args=(user.pk,)), data={
-            'expires_at': '2016-01-01 00:00:00'
+            'expires_at_0': '2016-01-01',
+            'expires_at_1': '00:00:00',
         })
         self.assertEqual(302, response.status_code)
         self.assertEqual(datetime.date(2016, 1, 1),
                          DemoSchema.objects.get(user=user).expires_at.date())
 
+        self.assertEqual(2, ValidDemoTemplate.objects.count())
         response = self.client.post(reverse('admin:template_schematemplate_change', args=(template.pk,)), data={
             'name': 'template',
             'is_active': 'on',
@@ -149,13 +161,13 @@ class TestContribDemo(TestCase):
             'use_for_demo-0-template_schema': template.pk,
         })
         self.assertEqual(302, response.status_code)
-        self.assertFalse(ValidDemoTemplate.objects.exists())
+        self.assertEqual(1, ValidDemoTemplate.objects.count())
         response = self.client.get(reverse('admin:template_schematemplate_changelist'))
         self.assertEqual(200, response.status_code)
 
     def test_demo_schemata_get_migrated(self):
         user = User.objects.create_user(**CREDENTIALS)
-        schema = DemoSchema.objects.create(user=user)
+        schema = DemoSchema.objects.create(user=user, from_template=self.template)
 
         operation = migrations.CreateModel("Pony", [
             ('pony_id', models.AutoField(primary_key=True)),
@@ -181,7 +193,7 @@ class TestContribDemo(TestCase):
     @override_settings(BOARDINGHOUSE_DEMO_PERIOD=datetime.timedelta(7))
     def test_default_expiry_period_from_settings(self):
         user = User.objects.create_user(**CREDENTIALS)
-        schema = DemoSchema.objects.create(user=user)
+        schema = DemoSchema.objects.create(user=user, from_template=self.template)
 
         self.assertEqual(timezone.now().date() + datetime.timedelta(7), schema.expires_at.date())
 
