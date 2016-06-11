@@ -30,7 +30,8 @@ class DemoSchema(SharedSchemaMixin, models.Model):
     expires_at = models.DateTimeField()
     from_template = models.ForeignKey('template.SchemaTemplate',
                                       on_delete=models.CASCADE,
-                                      related_name='demo_schemata')
+                                      related_name='demo_schemata',
+                                      limit_choices_to=~models.Q(use_for_demo=None))
 
     objects = ExpiringObjectsQuerySet.as_manager()
 

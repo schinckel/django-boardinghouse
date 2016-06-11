@@ -124,3 +124,11 @@ class TestContribTemplate(TestCase):
         self.assertEqual('template schema', verbose_name())
         self.assertEqual('template schemata', verbose_name_plural())
         sys.argv.remove('makemigrations')
+
+    def test_schema_template_queryset_active(self):
+        SchemaTemplate.objects.create(name='a')
+        SchemaTemplate.objects.create(name='b', is_active=False)
+        SchemaTemplate.objects.create(name='c')
+
+        self.assertEqual({'a', 'c'},
+                         set(SchemaTemplate.objects.active().values_list('name', flat=True)))

@@ -120,8 +120,17 @@ class TestContribDemo(TestCase):
         })
         self.assertEqual(302, response.status_code)
         template = SchemaTemplate.objects.get(name='template')
+        # Ensure cannot select as template for demo when not set.
+        response = self.client.post(reverse('admin:demo_demoschema_add'), data={
+            'user': user.pk,
+            'from_template': template.pk,
+        })
+        self.assertEqual(200, response.status_code)
+        self.assertTrue('from_template' in response.context['adminform'].form.errors)
+        # Exercise some of the admin pages
         response = self.client.get(reverse('admin:template_schematemplate_change', args=(template.pk,)))
         self.assertEqual(200, response.status_code)
+        # Make this template a valid demo source.
         response = self.client.post(reverse('admin:template_schematemplate_change', args=(template.pk,)), data={
             'name': 'template',
             'is_active': 'on',
@@ -131,7 +140,6 @@ class TestContribDemo(TestCase):
             'use_for_demo-0-template_schema': template.pk,
         })
         self.assertEqual(302, response.status_code)
-        ValidDemoTemplate.objects.get(template_schema=template)
         response = self.client.get(reverse('admin:template_schematemplate_change', args=(template.pk,)))
         self.assertEqual(200, response.status_code)
 
