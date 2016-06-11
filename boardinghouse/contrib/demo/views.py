@@ -1,6 +1,9 @@
 import json
 
-from django.contrib.auth.mixins import LoginRequiredMixin
+try:
+    from django.contrib.auth.mixins import LoginRequiredMixin
+except ImportError:
+    from braces.views import LoginRequiredMixin
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext as _

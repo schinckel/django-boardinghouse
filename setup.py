@@ -15,12 +15,14 @@ setup(
         'sqlparse',
         'pytz',
         # 'psycopg2',  # or psycopg2cffi under pypy
+        # 'django-braces', # if you use boardinghouse.contrib.demo under django < 1.9
     ],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Framework :: Django :: 1.7',
         'Framework :: Django :: 1.8',
         'Framework :: Django :: 1.9',
+        'Framework :: Django :: 1.10',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
