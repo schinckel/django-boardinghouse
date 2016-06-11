@@ -9,6 +9,7 @@ from django.shortcuts import render
 import django
 
 from boardinghouse.schema import activate_schema
+import boardinghouse.contrib.demo.urls
 
 admin.autodiscover()
 
@@ -48,6 +49,7 @@ urlpatterns = [
     url(r'^login/$', login, {'template_name': 'admin/login.html'}, name='login'),
     url(r'^logout/$', logout_then_login, name='logout'),
     url(r'^bad/activate/schema/(.*)/$', activate_schema_view, name='bad-view'),
+    url(r'^demo/', include(boardinghouse.contrib.demo.urls.urlpatterns)),
 ]
 
 if django.VERSION < (1, 9):

@@ -3,6 +3,7 @@ import datetime
 from django.conf import settings
 from django.db import models
 from django.utils import six, timezone
+from django.utils.functional import cached_property
 from django.utils.timesince import timesince, timeuntil
 from django.utils.translation import ugettext as _
 
@@ -45,7 +46,7 @@ class DemoSchema(SharedSchemaMixin, models.Model):
 
         return u'Demo for {}: expires at {} ({} from now)'.format(self.user, self.expires_at, timeuntil(self.expires_at))
 
-    @property
+    @cached_property
     def schema(self):
         return '{}{}'.format(settings.BOARDINGHOUSE_DEMO_PREFIX, self.user_id)
 

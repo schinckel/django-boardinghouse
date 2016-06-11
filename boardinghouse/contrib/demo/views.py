@@ -1,16 +1,58 @@
-from django.views.generic import CreateView
+import json
+
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponseRedirect, HttpResponse
+from django.shortcuts import get_object_or_404
+from django.utils.translation import ugettext as _
+from django.views.generic import View
+from django.views.generic.edit import DeleteView, BaseCreateView
+
+from boardinghouse.receivers import create_schema, drop_schema
 
 from .forms import CreateDemoForm
+from .models import DemoSchema
 
 
-class CreateDemo(CreateView):
+class DemoSchemaMixin(LoginRequiredMixin):
+    def get_object(self, queryset=None):
+        return get_object_or_404(DemoSchema, user=self.request.user)
+
+    def get_success_url(self):
+        return (
+            self.request.POST.get('redirect-to', None) or
+            self.request.GET.get('redirect-to', None) or
+            '/__change_schema__/{}/'.format(self.object.schema)
+        )
+
+
+class CreateDemo(DemoSchemaMixin, BaseCreateView):
     form_class = CreateDemoForm
 
+    def form_invalid(self, form):
+        return HttpResponse(json.dumps({'errors': form.errors}), status=409)
 
-def delete_demo(DeleteView):
+    def form_valid(self, form):
+        if DemoSchema.objects.filter(user=self.request.user).exists():
+            form.add_error(None, _('Creating a demo when one already exists is not permitted'))
+            return self.form_invalid(form)
+
+        form.instance.user = self.request.user
+        return super(CreateDemo, self).form_valid(form)
+
+
+class DeleteDemo(DemoSchemaMixin, DeleteView):
     pass
 
 
-def refresh_demo(request):
-    # Hmm. Did we store the one we cloned?
-    pass
+class ResetDemo(DemoSchemaMixin, View):
+    def post(self, request, *args, **kwargs):
+        # Just use the raw drop/create functions? At this stage, it's simpler (and safer?) to
+        # delete the existing DemoSchema object, and create a new one. We reset the demo period,
+        # but use the same template.
+        demo_schema = self.get_object()
+        demo_schema.delete()
+        self.object = DemoSchema.objects.create(
+            user=self.request.user,
+            from_template=demo_schema.from_template
+        )
+        return HttpResponseRedirect(self.get_success_url())

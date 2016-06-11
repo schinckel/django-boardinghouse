@@ -19,6 +19,7 @@ from django.utils import timezone, six
 import pytz
 
 from .utils import get_table_list
+from ..models import AwareModel
 
 from boardinghouse.contrib.demo import apps
 from boardinghouse.contrib.demo.models import DemoSchema, DemoSchemaExpired, ValidDemoTemplate
@@ -92,6 +93,13 @@ class TestContribDemo(TestCase):
         call_command('cleanup_expired_demos')
 
         self.assertEqual(0, DemoSchema.objects.count())
+        self.assertFalse(_schema_exists(demo.schema))
+
+    def test_deletion_of_demo_drops_schema(self):
+        user = User.objects.create_user(**CREDENTIALS)
+        demo = DemoSchema.objects.create(user=user, from_template=self.template)
+        self.assertTrue(_schema_exists(demo.schema))
+        demo.delete()
         self.assertFalse(_schema_exists(demo.schema))
 
     def test_demo_admin(self):
@@ -222,3 +230,48 @@ class TestContribDemo(TestCase):
             errors = apps.ensure_contrib_template_installed()
             self.assertEqual(1, len(errors))
             self.assertEqual('boardinghouse.contrib.demo.E003', errors[0].id)
+
+    def test_demo_lifecycle_views(self):
+        CREATE_DEMO = reverse('demo:create')
+        RESET_DEMO = reverse('demo:reset')
+        DELETE_DEMO = reverse('demo:delete')
+
+        response = self.client.post(CREATE_DEMO)
+        self.assertEqual(302, response.status_code, 'Unauthenticated user should be redirected to login')
+
+        user = User.objects.create_user(**CREDENTIALS)
+        self.client.login(**CREDENTIALS)
+
+        # reset and delete should fail with 404 when no DemoSchema for current user.
+        response = self.client.post(DELETE_DEMO)
+        self.assertEqual(404, response.status_code, 'DELETE when no DemoSchema should return 404')
+        response = self.client.post(RESET_DEMO)
+        self.assertEqual(404, response.status_code, 'RESET when no DemoSchema should return 404')
+
+        # Create without from_template should fail with 409.
+        response = self.client.post(CREATE_DEMO)
+        self.assertEqual(409, response.status_code, 'Missing from_template should result in 409')
+
+        response = self.client.post(CREATE_DEMO, data={'from_template': self.template.pk})
+        self.assertEqual(302, response.status_code, 'Successful creation of demo should redirect')
+        demo_schema = DemoSchema.objects.get(user=user)
+        self.assertTrue('/__change_schema__/{}/'.format(demo_schema.schema))
+
+        # Create should fail: as template already exists.
+        response = self.client.post(CREATE_DEMO, data={'from_template': self.template.pk})
+        self.assertEqual(409, response.status_code, 'Existing DemoSchema should result in 409')
+
+        demo = DemoSchema.objects.get(user=user)
+        demo.activate()
+
+        AwareModel.objects.create(name='foo', status=True)
+
+        self.assertEqual(1, AwareModel.objects.count(), 'One object created before reset')
+        response = self.client.post(RESET_DEMO)
+        demo = DemoSchema.objects.get(user=user)
+        demo.activate()
+        self.assertEqual(0, AwareModel.objects.count(), 'Reset should clear out any objects from schema')
+
+        response = self.client.post(DELETE_DEMO)
+        self.assertFalse(DemoSchema.objects.filter(user=user).exists(), 'Delete should remove schema')
+        self.assertFalse(_schema_exists(demo.schema))
