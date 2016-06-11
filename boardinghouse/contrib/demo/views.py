@@ -7,8 +7,6 @@ from django.utils.translation import ugettext as _
 from django.views.generic import View
 from django.views.generic.edit import DeleteView, BaseCreateView
 
-from boardinghouse.receivers import create_schema, drop_schema
-
 from .forms import CreateDemoForm
 from .models import DemoSchema
 
