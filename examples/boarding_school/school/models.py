@@ -17,7 +17,7 @@ class StaffMember(models.Model):
     staff_id = models.CharField(unique=True, max_length=16)
 
     def __str__(self):
-        return "{} ({})".format(self.name, self.staff_id)
+        return "{0} ({1})".format(self.name, self.staff_id)
 
 
 class Student(models.Model):
@@ -25,7 +25,7 @@ class Student(models.Model):
     student_id = models.CharField(unique=True, max_length=16)
 
     def __str__(self):
-        return "{} ({})".format(self.name, self.student_id)
+        return "{0} ({1})".format(self.name, self.student_id)
 
 
 class Subject(models.Model):
@@ -63,14 +63,14 @@ class Enrolment(models.Model):
 
     def __str__(self):
         if self.grade:
-            return '{} studied {} in {} {}. Grade was {}'.format(
+            return '{0} studied {1} in {2} {3}. Grade was {4}'.format(
                 self.student.name,
                 self.subject.name,
                 self.get_semester_display(),
                 self.year,
                 self.get_grade_display()
             )
-        return u'{} enrolled in {} in {} {}.'.format(
+        return u'{0} enrolled in {1} in {2} {3}.'.format(
             self.student.name,
             self.subject.name,
             self.get_semester_display(),

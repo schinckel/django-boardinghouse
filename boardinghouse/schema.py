@@ -50,7 +50,7 @@ def _get_search_path():
 
 def _set_search_path(search_path):
     cursor = connection.cursor()
-    cursor.execute('SET search_path TO %s,{}'.format(settings.PUBLIC_SCHEMA),
+    cursor.execute('SET search_path TO %s,{0}'.format(settings.PUBLIC_SCHEMA),
                    [search_path])
     cursor.close()
 
@@ -142,7 +142,7 @@ def activate_schema(schema_name):
     _set_search_path(schema_name)
     found_schema = _get_search_path()
     if found_schema != schema_name:
-        raise SchemaNotFound('Schema activation failed. Expected "{}", saw "{}"'.format(
+        raise SchemaNotFound('Schema activation failed. Expected "{0}", saw "{1}"'.format(
             schema_name, found_schema,
         ))
     schema_post_activate.send(sender=None, schema_name=schema_name)
@@ -163,7 +163,7 @@ def activate_template_schema():
     schema_pre_activate.send(sender=None, schema_name=schema_name)
     _set_search_path(schema_name)
     if _get_search_path() != schema_name:
-        raise SchemaNotFound('Template schema was not activated. It seems "{}" is active.'.format(_get_search_path()))
+        raise SchemaNotFound('Template schema was not activated. It seems "{0}" is active.'.format(_get_search_path()))
     schema_post_activate.send(sender=None, schema_name=schema_name)
 
 
@@ -179,7 +179,7 @@ def deactivate_schema(schema=None):
 
     cursor = connection.cursor()
     schema_pre_activate.send(sender=None, schema_name=None)
-    cursor.execute('SET search_path TO "$user",{}'.format(settings.PUBLIC_SCHEMA))
+    cursor.execute('SET search_path TO "$user",{0}'.format(settings.PUBLIC_SCHEMA))
     schema_post_activate.send(sender=None, schema_name=None)
     _thread_locals.schema = None
     cursor.close()

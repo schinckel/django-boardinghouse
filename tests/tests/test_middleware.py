@@ -60,10 +60,10 @@ class TestMiddleware(TestCase):
         resp = self.client.get('/', HTTP_X_CHANGE_SCHEMA='second')
         self.assertEqual(b'second', resp.content)
 
-        resp = self.client.get('/__change_schema__/{}/'.format(invalid))
+        resp = self.client.get('/__change_schema__/{0}/'.format(invalid))
         self.assertEqual(403, resp.status_code)
 
-        resp = self.client.get('/?__schema={}'.format(invalid))
+        resp = self.client.get('/?__schema={0}'.format(invalid))
         self.assertEqual(403, resp.status_code)
 
     def test_only_one_available_schema(self):

@@ -52,13 +52,13 @@ class DemoSchema(SharedSchemaMixin, models.Model):
 
     def __str__(self):
         if self.expired:
-            return u'Expired demo for {} (expired {} ago)'.format(self.user, timesince(self.expires_at))
+            return u'Expired demo for {0} (expired {1} ago)'.format(self.user, timesince(self.expires_at))
 
-        return u'Demo for {}: expires at {} ({} from now)'.format(self.user, self.expires_at, timeuntil(self.expires_at))
+        return u'Demo for {0}: expires at {1} ({2} from now)'.format(self.user, self.expires_at, timeuntil(self.expires_at))
 
     @cached_property
     def schema(self):
-        return '{}{}'.format(settings.BOARDINGHOUSE_DEMO_PREFIX, self.user_id)
+        return '{0}{1}'.format(settings.BOARDINGHOUSE_DEMO_PREFIX, self.user_id)
 
     @property
     def expired(self):
@@ -104,4 +104,4 @@ class ValidDemoTemplate(SharedSchemaMixin, models.Model):
     objects = ValidDemoTemplateManager()
 
     def __str__(self):
-        return '{} is valid as a demo source'.format(self.template_schema)
+        return '{0} is valid as a demo source'.format(self.template_schema)

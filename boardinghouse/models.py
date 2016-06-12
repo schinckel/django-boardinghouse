@@ -103,7 +103,7 @@ class AbstractSchema(SharedSchemaMixin, models.Model):
         self._initial_schema = self.schema
 
     def __str__(self):
-        return '{} ({})'.format(self.name, self.schema)
+        return '{0} ({1})'.format(self.name, self.schema)
 
     def save(self, *args, **kwargs):
         self._meta.get_field('schema').run_validators(self.schema)

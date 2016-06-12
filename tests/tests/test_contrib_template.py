@@ -48,21 +48,21 @@ class TestContribTemplate(TestCase):
         template = SchemaTemplate.objects.create(name='Foo')
         User.objects.create_user(**CREDENTIALS)
         self.client.login(**CREDENTIALS)
-        response = self.client.get('/__change_schema__/{}/'.format(template.schema))
+        response = self.client.get('/__change_schema__/{0}/'.format(template.schema))
         self.assertEqual(403, response.status_code)
 
     def test_templates_can_be_activated_by_superuser(self):
         template = SchemaTemplate.objects.create(name='Foo')
         User.objects.create_superuser(email='superuser@example.com', **CREDENTIALS)
         self.client.login(**CREDENTIALS)
-        response = self.client.get('/__change_schema__/{}/'.format(template.schema))
+        response = self.client.get('/__change_schema__/{0}/'.format(template.schema))
         self.assertEqual(200, response.status_code)
 
     def test_invalid_template_raises_forbidden(self):
         template = SchemaTemplate.objects.create(name='Foo')
         User.objects.create_superuser(email='superuser@example.com', **CREDENTIALS)
         self.client.login(**CREDENTIALS)
-        response = self.client.get('/__change_schema__/{}1/'.format(template.schema))
+        response = self.client.get('/__change_schema__/{0}1/'.format(template.schema))
         self.assertEqual(403, response.status_code)
 
     def test_cloning_templates_clones_data(self):

@@ -67,14 +67,14 @@ class TestContribDemo(TestCase):
         DemoSchema.objects.create(user=other, from_template=self.template)
 
         self.client.login(**CREDENTIALS)
-        response = self.client.get('/aware/?__schema=__demo_{}'.format(other.pk))
+        response = self.client.get('/aware/?__schema=__demo_{0}'.format(other.pk))
         self.assertEqual(403, response.status_code)
 
     def test_demo_can_be_activated_by_user(self):
         user = User.objects.create_user(**CREDENTIALS)
         DemoSchema.objects.create(user=user, from_template=self.template)
         self.client.login(**CREDENTIALS)
-        response = self.client.get('/__change_schema__/__demo_{}/'.format(user.pk))
+        response = self.client.get('/__change_schema__/__demo_{0}/'.format(user.pk))
         self.assertEqual(200, response.status_code)
 
     def test_activation_of_expired_demo_raises(self):
@@ -260,7 +260,7 @@ class TestContribDemo(TestCase):
         response = self.client.post(CREATE_DEMO, data={'from_template': self.template.pk})
         self.assertEqual(302, response.status_code, 'Successful creation of demo should redirect')
         demo_schema = DemoSchema.objects.get(user=user)
-        self.assertTrue('/__change_schema__/{}/'.format(demo_schema.schema))
+        self.assertTrue('/__change_schema__/{0}/'.format(demo_schema.schema))
 
         # Create should fail: as template already exists.
         response = self.client.post(CREATE_DEMO, data={'from_template': self.template.pk})

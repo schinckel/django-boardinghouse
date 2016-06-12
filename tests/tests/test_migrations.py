@@ -156,7 +156,7 @@ class TestMigrations(MigrationTestBase):
     def tearDown(self):
         with connection.cursor() as cursor:
             for schema in Schema.objects.all():
-                cursor.execute('DROP SCHEMA IF EXISTS {} CASCADE'.format(schema.schema))
+                cursor.execute('DROP SCHEMA IF EXISTS {0} CASCADE'.format(schema.schema))
 
             cursor.execute('SET search_path TO __template__,public')
             cursor.execute('DROP TABLE IF EXISTS tests_rider')

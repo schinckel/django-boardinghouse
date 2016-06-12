@@ -59,7 +59,7 @@ class Command(dumpdata.Command):
             if schema_name:
                 activate_schema(schema_name)
             else:
-                raise SchemaRequiredException('You must pass a schema when an explicit model is aware: {}'.format(
+                raise SchemaRequiredException('You must pass a schema when an explicit model is aware: {0}'.format(
                     [x.__name__ for x in schema_required]
                 ))
 

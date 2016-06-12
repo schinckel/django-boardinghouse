@@ -84,7 +84,7 @@ if not getattr(LogEntry, 'object_schema', None):
         url = get_admin_url(self)
 
         if self.object_schema_id and url:
-            return '{}?__schema={}'.format(url, self.object_schema_id)
+            return '{0}?__schema={1}'.format(url, self.object_schema_id)
 
         return url
 

@@ -60,5 +60,5 @@ class TestCloneSchemaDBFunction(TestCase):
         schema.activate()
 
         with connection.cursor() as cursor:
-            cursor.execute('SELECT "{}".spam_and_eggs()'.format(schema.schema))
+            cursor.execute('SELECT "{0}".spam_and_eggs()'.format(schema.schema))
             self.assertTrue(cursor.fetchone()[0])
