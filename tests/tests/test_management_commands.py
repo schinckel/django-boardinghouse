@@ -117,7 +117,7 @@ class TestLoadData(TestCase):
         self.assertEqual('aware1', AwareModel.objects.get().name)
 
         Schema.objects.get(schema='b').activate()
-        self.assertEqual('🌊🌊🌊🌊🌊', AwareModel.objects.get().name)
+        self.assertEqual(u'🌊🌊🌊🌊🌊', AwareModel.objects.get().name)
 
 
 class TestDumpData(TestCase):
