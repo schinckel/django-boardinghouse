@@ -11,6 +11,8 @@ from django.db import connection
 from django.db.migrations.operations.base import Operation
 from django.utils.translation import lazy
 
+from .exceptions import TemplateSchemaActivation, SchemaNotFound
+
 LOGGER = logging.getLogger(__name__)
 LOGGER.addHandler(logging.NullHandler())
 
@@ -21,24 +23,6 @@ def remote_field(field):
     if django.VERSION < (1, 9):
         return field.rel and field.rel.get_related_field()
     return field.remote_field
-
-
-class Forbidden(Exception):
-    """
-    An exception that will be raised when an attempt to activate a non-valid
-    schema is made.
-    """
-
-
-class TemplateSchemaActivation(Forbidden):
-    """
-    An exception that will be raised when a user attempts to activate
-    the settings.TEMPLATE_SCHEMA schema.
-    """
-    def __init__(self, *args, **kwargs):
-        super(TemplateSchemaActivation, self).__init__(
-            'Activating template schema forbidden.', *args, **kwargs
-        )
 
 
 def get_schema_model():
@@ -157,9 +141,11 @@ def activate_schema(schema_name):
 
     schema_pre_activate.send(sender=None, schema_name=schema_name)
     _set_search_path(schema_name)
-    assert _get_search_path() == schema_name, 'Schema activation failed. Expected "{}", saw "{}"'.format(
-        schema_name, _get_search_path()
-    )
+    found_schema = _get_search_path()
+    if found_schema != schema_name:
+        raise SchemaNotFound('Schema activation failed. Expected "{}", saw "{}"'.format(
+            schema_name, found_schema,
+        ))
     schema_post_activate.send(sender=None, schema_name=schema_name)
     _thread_locals.schema = schema_name
 
@@ -178,7 +164,7 @@ def activate_template_schema():
     schema_pre_activate.send(sender=None, schema_name=schema_name)
     _set_search_path(schema_name)
     if _get_search_path() != schema_name:
-        raise Exception('Template schema was not activated. It seems "{}" is active.'.format(_get_search_path()))
+        raise SchemaNotFound('Template schema was not activated. It seems "{}" is active.'.format(_get_search_path()))
     schema_post_activate.send(sender=None, schema_name=schema_name)
 
 

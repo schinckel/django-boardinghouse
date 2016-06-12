@@ -6,10 +6,10 @@ from django.db import connection, models
 from django.dispatch import receiver
 
 from boardinghouse import signals
+from boardinghouse.exceptions import TemplateSchemaActivation, Forbidden
 from boardinghouse.schema import (
     _schema_exists, _schema_table_exists, activate_template_schema,
     get_active_schema_name, get_schema_model, is_shared_model,
-    TemplateSchemaActivation, Forbidden,
 )
 
 LOGGER = logging.getLogger(__name__)

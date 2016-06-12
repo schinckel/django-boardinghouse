@@ -12,13 +12,13 @@ Tests to write
 
 * Test middleware handling of :exc:`boardinghouse.schema.TemplateSchemaActivated`.
 
-* Ensure get_admin_url (non-schema-aware model) still works.
+* Ensure `get_admin_url` (non-schema-aware model) still works.
 
 * Test :meth:`boardinghouse.schema.get_active_schema_name`
 
 * Test saving a schema clears the global active schemata cache
 
-User.visible_schemata property testing:
+`User.visible_schemata` property testing:
 
 * Test adding schemata to a user clears the cache.
 * Test removing schemata from a user clears the cache.

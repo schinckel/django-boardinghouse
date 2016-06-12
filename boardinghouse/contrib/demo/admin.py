@@ -79,10 +79,17 @@ if django.VERSION < (1, 9):
     SchemaTemplate = ValidDemoTemplate._meta.pk.rel.to
 else:
     SchemaTemplate = ValidDemoTemplate._meta.pk.remote_field.model
-SchemaTemplateAdmin = admin.site._registry[SchemaTemplate].__class__
-SchemaTemplateAdmin.inlines.append(ValidDemoInline)
 
-SchemaTemplateAdmin.list_display.append(use_for_demo)
+__patch_applied = False
 
+
+def patch_schema_template_admin():
+    global __patch_applied
+    if __patch_applied:
+        return
+    SchemaTemplateAdmin = admin.site._registry[SchemaTemplate].__class__
+    SchemaTemplateAdmin.inlines.append(ValidDemoInline)
+    SchemaTemplateAdmin.list_display.append(use_for_demo)
+    __patch_applied = True
 
 # TODO: Inject an action into the UserAdmin, that creates a demo for selected user(s).

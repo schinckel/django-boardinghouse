@@ -3,8 +3,9 @@ from django.dispatch import receiver
 from django.db import models
 
 from boardinghouse import signals
+from boardinghouse.exceptions import Forbidden
 from boardinghouse.receivers import create_schema, drop_schema
-from boardinghouse.schema import _table_exists, Forbidden
+from boardinghouse.schema import _table_exists
 
 from .models import SchemaTemplate
 

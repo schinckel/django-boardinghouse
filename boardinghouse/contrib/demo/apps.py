@@ -19,6 +19,9 @@ class BoardingHouseDemoConfig(AppConfig):
 
         from boardinghouse.contrib.demo import receivers  # NOQA
 
+        from .admin import patch_schema_template_admin
+        patch_schema_template_admin()
+
 
 @register('settings')
 def check_demo_prefix_stats_with_underscore(app_configs=None, **kwargs):

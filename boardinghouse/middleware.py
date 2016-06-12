@@ -13,9 +13,8 @@ from django.http import (
 from django.shortcuts import redirect
 from django.utils.translation import ugettext_lazy as _
 
-from .schema import (
-    Forbidden, TemplateSchemaActivation, activate_schema, deactivate_schema,
-)
+from .exceptions import Forbidden, TemplateSchemaActivation
+from .schema import activate_schema, deactivate_schema
 from .signals import session_requesting_schema_change, session_schema_changed
 
 logger = logging.getLogger('boardinghouse.middleware')

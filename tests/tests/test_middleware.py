@@ -10,7 +10,8 @@ from hypothesis import given, settings as hsettings
 from hypothesis.strategies import text
 from hypothesis.extra.django import TestCase
 
-from boardinghouse.schema import get_schema_model, Forbidden
+from boardinghouse.exceptions import Forbidden
+from boardinghouse.schema import get_schema_model
 from boardinghouse.middleware import change_schema
 
 from ..models import AwareModel

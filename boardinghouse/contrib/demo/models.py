@@ -10,8 +10,8 @@ from django.utils.translation import ugettext as _
 import pytz
 
 from boardinghouse.base import SharedSchemaMixin
+from boardinghouse.exceptions import Forbidden
 from boardinghouse.schema import activate_schema, deactivate_schema
-from boardinghouse.schema import Forbidden
 
 
 class ExpiringObjectsQuerySet(models.query.QuerySet):
