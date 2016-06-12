@@ -132,7 +132,7 @@ def check_middleware_installed(app_configs=None, **kwargs):
     if MIDDLEWARE not in MIDDLEWARE_CLASSES:
         errors.append(Error(
             'Missing required middleware',
-            hint="Add '{}' to settings.MIDDLEWARE_CLASSES".format(MIDDLEWARE),
+            hint="Add '{0}' to settings.MIDDLEWARE_CLASSES".format(MIDDLEWARE),
             id='boardinghouse.E003'
         ))
 
@@ -159,13 +159,13 @@ def check_context_processor_installed(app_configs=None, **kwargs):
         if CONTEXT not in settings.TEMPLATE_CONTEXT_PROCESSORS:
             errors.append(Warning(
                 'Missing boardinghouse context processor',
-                hint="Add '{}' to settings.TEMPLATE_CONTEXT_PROCESSORS".format(CONTEXT),
+                hint="Add '{0}' to settings.TEMPLATE_CONTEXT_PROCESSORS".format(CONTEXT),
                 id='boardinghouse.W001'
             ))
     else:
         errors.append(Warning(
             'Missing boardinghouse context processor (no TEMPLATES defined)',
-            hint="Configure settings.TEMPLATES and add '{}'".format(CONTEXT),
+            hint="Configure settings.TEMPLATES and add '{0}'".format(CONTEXT),
             id='boardinghouse.W001',
         ))
 

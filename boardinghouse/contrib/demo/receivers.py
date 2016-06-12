@@ -25,7 +25,7 @@ def execute_on_all_templates(sender, db_table, function, **kwargs):
 
 @receiver(signals.session_requesting_schema_change, weak=False, dispatch_uid='change-to-demo-schema')
 def change_to_demo_schema(sender, schema, user, session, **kwargs):
-    if schema == '{}{}'.format(settings.BOARDINGHOUSE_DEMO_PREFIX, user.pk):
+    if schema == '{0}{1}'.format(settings.BOARDINGHOUSE_DEMO_PREFIX, user.pk):
         return user.demo_schema
 
 

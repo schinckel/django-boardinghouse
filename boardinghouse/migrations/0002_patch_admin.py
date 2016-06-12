@@ -34,7 +34,7 @@ def remove_all_schemata(apps, schema_editor):
     Schema = apps.get_model(*settings.BOARDINGHOUSE_SCHEMA_MODEL.split('.'))
     # We can't rely on queryset methods being available in migrations.
     schemata = list(Schema.objects.using(db_alias).all().values_list('schema', flat=True))
-    schema_editor.connection.cursor().execute('DELETE FROM {}'.format(Schema._meta.db_table))
+    schema_editor.connection.cursor().execute('DELETE FROM {0}'.format(Schema._meta.db_table))
     # Or this signal, since it would have come from the queryset.delete() anyway.
     drop_schemata(sender=Schema, schemata=schemata, connection=schema_editor.connection)
 

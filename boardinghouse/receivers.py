@@ -40,7 +40,7 @@ def create_schema(sender, instance, created, **kwargs):
         cursor = connection.cursor()
 
         if _schema_exists(schema_name):
-            raise ValueError('Attempt to create an existing schema: {}'.format(schema_name))
+            raise ValueError('Attempt to create an existing schema: {0}'.format(schema_name))
 
         cursor.execute("SELECT clone_schema(%s, %s, %s)", [
             template_name,
@@ -66,7 +66,7 @@ def drop_schemata(sender, schemata, connection=None, **kwargs):
     cursor = (connection or db.connection).cursor()
     # Is there a way to do this without opening up an SQL injection hole?
     # I guess we have to rely on the fact that schema.schema is always a valid name...?
-    sql = ';'.join(['DROP SCHEMA IF EXISTS {} CASCADE'.format(schema) for schema in schemata])
+    sql = ';'.join(['DROP SCHEMA IF EXISTS {0} CASCADE'.format(schema) for schema in schemata])
     if sql:
         cursor.execute(sql)
         for schema in schemata:
@@ -131,7 +131,7 @@ if hasattr(Schema, 'users') and hasattr(Schema.users, 'through'):
         else:
             if kwargs['pk_set']:
                 for pk in kwargs['pk_set']:
-                    cache.delete('visible-schemata-{}'.format(pk))
+                    cache.delete('visible-schemata-{0}'.format(pk))
 
     @receiver(models.signals.post_save, sender=Schema)
     def invalidate_all_user_caches(sender, **kwargs):

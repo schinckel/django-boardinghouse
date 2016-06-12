@@ -14,13 +14,13 @@ from boardinghouse.schema import (
 def verbose_name_plural():
     if 'makemigrations' in sys.argv:
         return u'template schemata'
-    return u'template {}'.format(get_schema_model()._meta.verbose_name_plural)
+    return u'template {0}'.format(get_schema_model()._meta.verbose_name_plural)
 
 
 def verbose_name():
     if 'makemigrations' in sys.argv:
         return u'template schema'
-    return u'template {}'.format(get_schema_model()._meta.verbose_name)
+    return u'template {0}'.format(get_schema_model()._meta.verbose_name)
 
 
 class SchemaTemplateQuerySet(models.query.QuerySet):
@@ -51,7 +51,7 @@ class SchemaTemplate(SharedSchemaMixin, models.Model):
 
     @property
     def schema(self):
-        return '{}{}'.format(settings.BOARDINGHOUSE_TEMPLATE_PREFIX, self.pk)
+        return '{0}{1}'.format(settings.BOARDINGHOUSE_TEMPLATE_PREFIX, self.pk)
 
     def activate(self):
         activate_schema(self.schema)

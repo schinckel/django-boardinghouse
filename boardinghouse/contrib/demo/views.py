@@ -24,7 +24,7 @@ class DemoSchemaMixin(LoginRequiredMixin):
         return (
             self.request.POST.get('redirect-to') or
             self.request.GET.get('redirect-to') or
-            '/__change_schema__/{}/'.format(self.object.schema)
+            '/__change_schema__/{0}/'.format(self.object.schema)
         )
 
 
