@@ -13,7 +13,7 @@ from django.http import (
 from django.shortcuts import redirect
 from django.utils.translation import ugettext_lazy as _
 
-from .exceptions import Forbidden, TemplateSchemaActivation
+from .exceptions import Forbidden, TemplateSchemaActivation, SchemaNotFound
 from .schema import activate_schema, deactivate_schema
 from .signals import session_requesting_schema_change, session_schema_changed
 
@@ -208,7 +208,11 @@ class SchemaMiddleware(object):
             change_schema(request, request.user.visible_schemata[0].schema)
 
         if 'schema' in request.session:
-            activate_schema(request.session['schema'])
+            try:
+                activate_schema(request.session['schema'])
+            except SchemaNotFound:
+                deactivate_schema()
+                request.session.pop('schema')
         else:
             deactivate_schema()
 

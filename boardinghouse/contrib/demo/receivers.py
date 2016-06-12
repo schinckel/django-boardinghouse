@@ -31,5 +31,5 @@ def change_to_demo_schema(sender, schema, user, session, **kwargs):
 
 @receiver(signals.find_schema, weak=False, dispatch_uid='search-for-demo-schema')
 def find_demo_schema(sender, schema, **kwargs):
-    if schema.startswith(settings.BOARDINGHOUSE_DEMO_PREFIX):
+    if schema and schema.startswith(settings.BOARDINGHOUSE_DEMO_PREFIX):
         return DemoSchema.objects.get(user=schema.split(settings.BOARDINGHOUSE_DEMO_PREFIX)[1])

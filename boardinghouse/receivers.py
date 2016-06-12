@@ -167,5 +167,8 @@ def flush_user_perms_cache(sender, user, **kwargs):
 def find_schema(sender, schema, **kwargs):
     if schema == settings.TEMPLATE_SCHEMA:
         return Schema(name='Template schema', schema=settings.TEMPLATE_SCHEMA)
-    if not schema.startswith('_'):
-        return Schema.objects.get(schema=schema)
+    if schema and not schema.startswith('_'):
+        try:
+            return Schema.objects.get(schema=schema)
+        except Schema.DoesNotExist:
+            return None

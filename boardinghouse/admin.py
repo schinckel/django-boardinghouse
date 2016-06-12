@@ -3,9 +3,11 @@
 """
 from __future__ import unicode_literals
 
+import django
 from django.contrib import admin
-from django.contrib.admin.models import LogEntry
+from django.contrib.admin.models import LogEntry, LogEntryManager
 from django.db import models
+from django.db.models import expressions, Q
 from django.dispatch import receiver
 
 from .models import Schema
@@ -48,7 +50,7 @@ schemata.allow_tags = True
 def get_inline_instances(self, request, obj=None):
     """
     Prevent the display of non-shared inline objects associated
-    with _every_ model if no schema is currently selected.
+    with private models if no schema is currently selected.
 
     If we don't patch this, then a ``DatabaseError`` will occur because
     the tables could not be found.
@@ -91,7 +93,19 @@ if not getattr(LogEntry, 'object_schema', None):
     SchemaModel = get_schema_model()
 
     def object_schema(self):
-        for handler, response in find_schema(sender=None, schema=self.object_schema_id):
-            return response
+        for handler, response in find_schema.send(sender=None, schema=self.object_schema_id):
+            if response:
+                return response
 
     LogEntry.object_schema = property(object_schema)
+
+    def get_queryset(self):
+        queryset = super(LogEntryManager, self).get_queryset()
+
+        if django.VERSION < (1, 8):
+            return queryset.extra(where=['object_schema_id = current_schema() OR object_schema_id IS NULL'])
+
+        return queryset.filter(Q(object_schema_id=None) |
+                               Q(object_schema_id=expressions.RawSQL('current_schema()', [])))
+
+    LogEntryManager.get_queryset = get_queryset
