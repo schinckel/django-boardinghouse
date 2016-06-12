@@ -309,10 +309,10 @@ def is_shared_table(table, apps=apps):
     # Get a mapping of all table names to models.
     models = _get_models(apps, inspect.stack())
 
-    table_map = dict([
-        (x._meta.db_table, x) for x in models
+    table_map = {
+        x._meta.db_table: x for x in models
         if not x._meta.proxy
-    ])
+    }
 
     # If we have a match, see if that one is shared.
     if table in table_map:
