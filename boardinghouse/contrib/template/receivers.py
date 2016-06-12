@@ -34,3 +34,9 @@ def change_to_schema_template(sender, schema, user, session, **kwargs):
             return SchemaTemplate.objects.get(pk=schema.split(settings.BOARDINGHOUSE_TEMPLATE_PREFIX)[1])
         except SchemaTemplate.DoesNotExist:
             raise Forbidden()
+
+
+@receiver(signals.find_schema, weak=False, dispatch_uid='find-schema-template')
+def find_schema_template(sender, schema, **kwargs):
+    if schema.startswith(settings.BOARDINGHOUSE_TEMPLATE_PREFIX):
+        return SchemaTemplate.objects.get(pk=schema.split(settings.BOARDINGHOUSE_TEMPLATE_PREFIX)[1])

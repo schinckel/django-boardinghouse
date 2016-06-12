@@ -27,3 +27,9 @@ def execute_on_all_templates(sender, db_table, function, **kwargs):
 def change_to_demo_schema(sender, schema, user, session, **kwargs):
     if schema == '{}{}'.format(settings.BOARDINGHOUSE_DEMO_PREFIX, user.pk):
         return user.demo_schema
+
+
+@receiver(signals.find_schema, weak=False, dispatch_uid='search-for-demo-schema')
+def find_demo_schema(sender, schema, **kwargs):
+    if schema.startswith(settings.BOARDINGHOUSE_DEMO_PREFIX):
+        return DemoSchema.objects.get(user=schema.split(settings.BOARDINGHOUSE_DEMO_PREFIX)[1])

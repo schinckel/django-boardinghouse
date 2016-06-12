@@ -9,7 +9,8 @@ from django.db import models
 from django.dispatch import receiver
 
 from .models import Schema
-from .schema import get_active_schema, get_schema_model, is_shared_model
+from .schema import get_active_schema_name, get_schema_model, is_shared_model
+from .signals import find_schema
 
 
 class SchemaAdmin(admin.ModelAdmin):
@@ -52,7 +53,7 @@ def get_inline_instances(self, request, obj=None):
     If we don't patch this, then a ``DatabaseError`` will occur because
     the tables could not be found.
     """
-    schema = get_active_schema()
+    schema = get_active_schema_name()
     return [
         inline(self.model, self.admin_site) for inline in self.inlines
         if schema or is_shared_model(inline.model)
@@ -90,6 +91,7 @@ if not getattr(LogEntry, 'object_schema', None):
     SchemaModel = get_schema_model()
 
     def object_schema(self):
-        return SchemaModel.objects.get(pk=self.object_schema_id)
+        for handler, response in find_schema(sender=None, schema=self.object_schema_id):
+            return response
 
     LogEntry.object_schema = property(object_schema)

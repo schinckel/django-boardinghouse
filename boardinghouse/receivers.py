@@ -161,3 +161,11 @@ def flush_user_perms_cache(sender, user, **kwargs):
         del user._user_perm_cache
     if hasattr(user, '_group_perm_cache'):
         del user._group_perm_cache
+
+
+@receiver(signals.find_schema, weak=False)
+def find_schema(sender, schema, **kwargs):
+    if schema == settings.TEMPLATE_SCHEMA:
+        return Schema(name='Template schema', schema=settings.TEMPLATE_SCHEMA)
+    if not schema.startswith('_'):
+        return Schema.objects.get(schema=schema)

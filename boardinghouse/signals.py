@@ -50,3 +50,5 @@ session_requesting_schema_change = Signal(providing_args=["user", "schema", "ses
 session_schema_changed = Signal(providing_args=["user", "schema", "session"])
 
 schema_aware_operation = Signal(providing_args=['db_table', 'sql', 'params', 'execute'])
+
+find_schema = Signal(providing_args=['schema'])

@@ -1,6 +1,7 @@
 from django import template
 
-from ..schema import _get_schema, is_shared_model as _is_shared_model
+from ..schema import is_shared_model as _is_shared_model
+from ..signals import find_schema
 
 register = template.Library()
 
@@ -17,8 +18,7 @@ def is_shared_model(obj):
 
 @register.filter
 def schema_name(schema):
-    # TODO: fire a signal that allows someone else to inject the name.
-    try:
-        return _get_schema(schema).name
-    except AttributeError:
-        return "no schema"
+    for handler, response in find_schema.send(sender=None, schema=schema):
+        if response:
+            return response.name
+    return 'no schema'
