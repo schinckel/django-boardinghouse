@@ -35,10 +35,10 @@ class BoardingHouseTemplateConfig(AppConfig):
 
                 def get_form(self, request, obj=None, **kwargs):
                     if not obj and 'boardinghouse.contrib.template' in settings.INSTALLED_APPS:
-                        class form(BaseSchemaAdmin.form or forms.ModelForm):
+                        class SchemaAdminForm(BaseSchemaAdmin.form or forms.ModelForm):
                             clone_schema = forms.ModelChoiceField(required=False,
                                                                   queryset=SchemaTemplate.objects.all())
-                        kwargs['form'] = form
+                        kwargs['form'] = SchemaAdminForm
                     return super(SchemaAdmin, self).get_form(request, obj, **kwargs)
 
                 def get_fields(self, request, obj):

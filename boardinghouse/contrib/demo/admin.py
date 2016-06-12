@@ -41,33 +41,35 @@ class DemoSchemaAdmin(admin.ModelAdmin):
         return form
 
 
+class ValidDemoInlineForm(forms.ModelForm):
+    use_for_demo = forms.BooleanField(initial=False, required=False)
+
+    class Meta:
+        model = ValidDemoTemplate
+        fields = ('use_for_demo',)
+
+    def __init__(self, *args, **kwargs):
+        super(ValidDemoInline.form, self).__init__(*args, **kwargs)
+        if self.instance.pk:
+            self.initial['use_for_demo'] = True
+
+    def save(self, commit=True):
+        if self.cleaned_data.get('use_for_demo', False):
+            return super(ValidDemoInline.form, self).save(commit)
+        elif commit:
+            # There's no visible way I can think of to actually get commit=False from the admin,
+            # but I'm not game to omit the elif clause, in case there is a case I'm not aware of.
+            # Otherwise, it may delete the object when it should not be deleted.
+            self.instance.delete()
+        return self.instance
+
+
 # Inject an inline to allow marking as valid for demo.
 class ValidDemoInline(admin.StackedInline):
     model = ValidDemoTemplate
     can_delete = False
     template = 'admin/edit_inline/use-for-demo.html'
-
-    class form(forms.ModelForm):
-        use_for_demo = forms.BooleanField(initial=False, required=False)
-
-        class Meta:
-            model = ValidDemoTemplate
-            fields = ('use_for_demo',)
-
-        def __init__(self, *args, **kwargs):
-            super(ValidDemoInline.form, self).__init__(*args, **kwargs)
-            if self.instance.pk:
-                self.initial['use_for_demo'] = True
-
-        def save(self, commit=True):
-            if self.cleaned_data.get('use_for_demo', False):
-                return super(ValidDemoInline.form, self).save(commit)
-            elif commit:
-                # There's no visible way I can think of to actually get commit=False from the admin,
-                # but I'm not game to omit the elif clause, in case there is a case I'm not aware of.
-                # Otherwise, it may delete the object when it should not be deleted.
-                self.instance.delete()
-            return self.instance
+    form = ValidDemoInlineForm
 
 
 def use_for_demo(obj):
