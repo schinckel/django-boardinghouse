@@ -40,7 +40,7 @@ class TestContribDemo(TestCase):
     def test_demo_schema_name(self):
         user = User.objects.create_user(**CREDENTIALS)
         schema = DemoSchema.objects.create(user=user, from_template=self.template)
-        self.assertEqual('Demo schema', six.text_type(schema.name))
+        self.assertEqual('Demo schema (demo_template)', six.text_type(schema.name))
 
     def test_demo_schema_str(self):
         demo = DemoSchema(user=User(username='user'),

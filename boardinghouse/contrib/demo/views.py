@@ -1,3 +1,5 @@
+"""
+"""
 import json
 
 try:
@@ -27,6 +29,10 @@ class DemoSchemaMixin(LoginRequiredMixin):
 
 
 class CreateDemo(DemoSchemaMixin, BaseCreateView):
+    """Create a new Demo for the logged in user.
+
+    Use the provided template, and the default expiry period.
+    """
     form_class = CreateDemoForm
 
     def form_invalid(self, form):
@@ -42,10 +48,11 @@ class CreateDemo(DemoSchemaMixin, BaseCreateView):
 
 
 class DeleteDemo(DemoSchemaMixin, DeleteView):
-    pass
+    """Delete the Demo for the logged in user."""
 
 
 class ResetDemo(DemoSchemaMixin, View):
+    """Reset the Demo for the logged in user back to the clean template."""
     def post(self, request, *args, **kwargs):
         # Just use the raw drop/create functions? At this stage, it's simpler (and safer?) to
         # delete the existing DemoSchema object, and create a new one. We reset the demo period,

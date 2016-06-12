@@ -22,6 +22,12 @@ class BoardingHouseDemoConfig(AppConfig):
 
 @register('settings')
 def check_demo_prefix_stats_with_underscore(app_configs=None, **kwargs):
+    """Ensure that the prefix for demo schemata internal names starts with underscore.
+
+    This is required because a leading underscore is the trigger that the indicated
+    schema is not a "regular" schema, and should not be activated according to the
+    normal rules.
+    """
     from django.conf import settings
 
     if not settings.BOARDINGHOUSE_DEMO_PREFIX.startswith('_'):
@@ -33,6 +39,9 @@ def check_demo_prefix_stats_with_underscore(app_configs=None, **kwargs):
 
 @register('settings')
 def check_demo_expiry_is_timedelta(app_configs=None, **kwargs):
+    """
+    BOARDINGHOUSE_DEMO_PERIOD should be a timedelta instance.
+    """
     from django.conf import settings
 
     if not isinstance(settings.BOARDINGHOUSE_DEMO_PERIOD, datetime.timedelta):
@@ -44,6 +53,9 @@ def check_demo_expiry_is_timedelta(app_configs=None, **kwargs):
 
 @register('settings')
 def ensure_contrib_template_installed(app_configs=None, **kwargs):
+    """
+    `boardinghouse.contrib.template` must be installed.
+    """
     from django.apps import apps
 
     if not apps.is_installed('boardinghouse.contrib.template'):

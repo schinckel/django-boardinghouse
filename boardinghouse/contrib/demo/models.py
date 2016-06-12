@@ -16,14 +16,24 @@ from boardinghouse.schema import Forbidden
 
 class ExpiringObjectsQuerySet(models.query.QuerySet):
     def expired(self):
+        "Expired demos"
         return self.filter(expires_at__lt=timezone.now().replace(tzinfo=pytz.utc))
 
     def active(self):
+        "Non-expired demos"
         return self.filter(expires_at__gte=timezone.now().replace(tzinfo=pytz.utc))
 
 
 @six.python_2_unicode_compatible
 class DemoSchema(SharedSchemaMixin, models.Model):
+    """A User's demo setup.
+
+    Each user may only have at most one DemoSchema object, which will have an
+    expiry date.
+
+    We retain a reference to the template from which it was cloned, so we can
+    easily reset it.
+    """
     user = models.OneToOneField(settings.AUTH_USER_MODEL,
                                 on_delete=models.CASCADE,
                                 primary_key=True,
@@ -56,7 +66,7 @@ class DemoSchema(SharedSchemaMixin, models.Model):
 
     @property
     def name(self):
-        return _('Demo schema')
+        return _('Demo schema ({template_name})').format(template_name=self.from_template.name)
 
     @property
     def _clone(self):

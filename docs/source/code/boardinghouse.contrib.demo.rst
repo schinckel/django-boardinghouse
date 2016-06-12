@@ -19,6 +19,7 @@ Submodules
    boardinghouse.contrib.demo.forms
    boardinghouse.contrib.demo.models
    boardinghouse.contrib.demo.receivers
+   boardinghouse.contrib.demo.urls
    boardinghouse.contrib.demo.views
 
 Module contents

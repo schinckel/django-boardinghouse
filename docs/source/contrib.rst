@@ -18,8 +18,6 @@ The general pattern of interaction is:
 
 * User with required permission (invite.create_invitation) is able to generate an invitation. This results in an email being sent to the included email address (and, if a matching email in this system, an entry in the pending_acceptance_invitations view), with the provided message.
 
-.. note:: Permission-User relations should really be per-schema, as it is very likely that the same user will not have the same permission set within different schemata. This can be enabled by using :ref:`groups`, for instance.
-
 * Recipient is provided with a single-use redemption code, which is part of a link in the email, or embedded in the view detailed above. When they visit this URL, they get the option to accept or decline the invitation.
 
 * Declining the invitation marks it as declined, provides a timestamp, and prevents this invitation from being used again. It is still possible to re-invite a user who has declined (but should provide a warning to the logged in user that this user has already declined an invitation).
@@ -41,14 +39,16 @@ It is possible for a logged in user to see the following things (dependent upon 
 boardinghouse.contrib.template
 ------------------------------
 
-Introduces the concept of "SchemaTemplate" objects, which can be used to create a schema that contains initial data.
+Introduces the concept of :class:`SchemaTemplate` objects, which can be used to create a schema that contains initial data.
 
-Actions:
+.. note::  A template can only be activated by a superuser or staff member (`User.is_superuser` or `User.is_staff`). We can't use permissions here, because they are stored per-schema, so it would depend on which schema is active.
 
-* Create schema from template
-* Create template from schema
+Settings
+~~~~~~~~
 
-Template schema have schema names like: `__template_<id>`, and can only be activated by users who have the relevant permission.
+* `BOARDINGHOUSE_TEMPLATE_PREFIX` (default `__tmpl_`)
+
+When installed, this app monkey-patches the installed `ModelAdmin` for the schema model, and adds a field to the create form, allowing for selecting a template to clone from. It also adds an admin action that clones an existing schema object (or objects) into a template: a process which clones the source schemata, including their content.
 
 
 .. _groups:
@@ -68,22 +68,22 @@ However, if you desire the `Group` instances to be per-schema (and by inference,
 boardinghouse.contrib.demo
 --------------------------
 
-.. note:: This app has not been completed.
-
-Borrowing again from `Xero`_, we have the ability to create a demo schema: there can be at most one per user, and it expires after a certain period of time, can be reset at any time by the user, and can have several template demos to be based upon.
-
-Actions:
-
-* Create a new demo schema for the logged in user (replacing any existing one), from the provided demo-template.
-
-Automated tasks:
-
-* Delete any demo schemata that have expired.
+Building on the `boardinghouse.contrib.template` app, the `demo` app allows for each user to have at most one current demo. This is a fully operational schema, cloned from a template, but has an expiry date. A demo may be reset by the user, which clears out all of the changes different from the template and resets the expiry period.
 
 Settings:
 
 * `BOARDINGHOUSE_DEMO_PERIOD`
 * `BOARDINGHOUSE_DEMO_PREFIX`
+
+Expired demos may not be activated.
+
+There should be a way to turn an expired demo into a full schema.
+
+There is a supplied management command `cleanup_expired_demos`, which removes all expired demos. (This should only remove those that expired more than X ago, which should be a setting).
+
+There are supplied views for handling the different actions on Demo objects:
+
+.. automodule:: boardinghouse.contrib.demo.views
 
 
 .. _access:

@@ -11,6 +11,16 @@ DB_ENGINES = ['boardinghouse.backends.postgres']
 class BoardingHouseConfig(AppConfig):
     """
     Default AppConfig for django-boardinghouse.
+
+    This class ensures that all settings is `boardinghouse.settings` are present
+    in the settings for the project. Defaults are pulled from that module.
+
+    There are also a couple of monkey-patches that are applied: for instance,
+    :class:`AnonymousUser` gets `visible_schemata` and `schemata` attributes,
+    and the installed `User` model gets a `visible_schemata` if one is not present.
+
+    Some extra models are added to the private models list (which needs to happen
+    here because it relies on `django.contrib.auth` being installed)
     """
     name = 'boardinghouse'
     _ready_has_run = False
