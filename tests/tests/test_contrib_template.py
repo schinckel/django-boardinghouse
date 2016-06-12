@@ -7,7 +7,7 @@ from django.db import connection, migrations, models
 from django.db.migrations.state import ProjectState
 from django.utils import six
 
-from boardinghouse.contrib.apps import check_template_prefix_stats_with_underscore
+from boardinghouse.contrib.template.apps import check_template_prefix_stats_with_underscore
 from boardinghouse.contrib.template.models import SchemaTemplate
 from boardinghouse.contrib.template.models import verbose_name, verbose_name_plural
 
