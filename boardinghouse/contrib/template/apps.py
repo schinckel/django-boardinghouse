@@ -2,6 +2,7 @@ from importlib import import_module
 
 from django.apps import AppConfig
 from django.conf import settings
+from django.core.checks import Error, register
 
 
 class BoardingHouseTemplateConfig(AppConfig):
@@ -53,3 +54,20 @@ class BoardingHouseTemplateConfig(AppConfig):
                     return super(SchemaAdmin, self).save_model(request, obj, form, change)
 
             admin.site.register(Schema, SchemaAdmin)
+
+
+@register('settings')
+def check_template_prefix_stats_with_underscore(app_configs=None, **kwargs):
+    """Ensure that the prefix for schema template internal names starts with underscore.
+
+    This is required because a leading underscore is the trigger that the indicated
+    schema is not a "regular" schema, and should not be activated according to the
+    normal rules.
+    """
+    from django.conf import settings
+
+    if not settings.BOARDINGHOUSE_TEMPLATE_PREFIX.startswith('_'):
+        return [Error('BOARDINGHOUSE_TEMPLATE_PREFIX must start with an underscore',
+                      id='boardinghouse.contrib.template.E001')]
+
+    return []

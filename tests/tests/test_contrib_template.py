@@ -12,7 +12,7 @@ from boardinghouse.contrib.template.models import verbose_name, verbose_name_plu
 
 from boardinghouse.models import Schema
 from boardinghouse.schema import (
-    _schema_exists,
+    _schema_exists, _get_schema,
     get_active_schema_name,
 )
 
@@ -26,6 +26,10 @@ CREDENTIALS = {
 
 
 class TestContribTemplate(TestCase):
+    def test_find_schema_finds_templates(self):
+        template = SchemaTemplate.objects.create(name='Foo')
+        self.assertEqual(template, _get_schema(template.schema))
+
     def test_template_str(self):
         template = SchemaTemplate(name='Foo')
         self.assertEqual(u'Foo', six.text_type(template))
@@ -132,3 +136,9 @@ class TestContribTemplate(TestCase):
 
         self.assertEqual({'a', 'c'},
                          set(SchemaTemplate.objects.active().values_list('name', flat=True)))
+
+    @override_settings(BOARDINGHOUSE_TEMPLATE_PREFIX='template_')
+    def test_invalid_prefix(self):
+        errors = apps.check_template_prefix_stats_with_underscore()
+        self.assertEqual(1, len(errors))
+        self.assertEqual('boardinghouse.contrib.template.E001', errors[0].id)
