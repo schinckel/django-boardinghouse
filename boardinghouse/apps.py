@@ -76,7 +76,7 @@ def check_db_backend(app_configs=None, **kwargs):
     for name, data in settings.DATABASES.items():
         if data['ENGINE'] not in DB_ENGINES:
             errors.append(Error(
-                'DATABASES[%s][ENGINE] of %s is not a known backend.' % (
+                'DATABASES[{0!s}][ENGINE] of {1!s} is not a known backend.'.format(
                     name, data['ENGINE']
                 ),
                 hint="Try boardinghouse.backends.postgres",

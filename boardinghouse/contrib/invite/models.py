@@ -64,7 +64,7 @@ class Invitation(SharedSchemaModel):
         app_label = 'invite'
 
     def __unicode__(self):
-        return '[%s] Invitation to %s from %s to join %s' % (
+        return '[{0!s}] Invitation to {1!s} from {2!s} to join {3!s}'.format(
             unicode(self.status), self.email, self.sender, self.schema.name
         )
 

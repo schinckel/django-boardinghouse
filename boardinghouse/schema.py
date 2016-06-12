@@ -37,7 +37,7 @@ def get_schema_model():
     except ValueError:
         raise ImproperlyConfigured("BOARDINGHOUSE_SCHEMA_MODEL must be of the form 'app_label.model_name'")
     except LookupError:
-        raise ImproperlyConfigured("BOARDINGHOUSE_SCHEMA_MODEL refers to model '%s' that has not been installed" % settings.BOARDINGHOUSE_SCHEMA_MODEL)
+        raise ImproperlyConfigured("BOARDINGHOUSE_SCHEMA_MODEL refers to model '{0!s}' that has not been installed".format(settings.BOARDINGHOUSE_SCHEMA_MODEL))
 
 
 def _get_search_path():
