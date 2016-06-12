@@ -1,6 +1,11 @@
 """
 Signals that are fired as part of the django-boardinghouse project.
 
+.. data:: find_schema
+
+    A mechanism for allowing an arbitrary app to respond with a schema object
+    that satisfies the request (matching the schema value).
+
 .. data:: schema_created
 
     Sent when a new schema object has been created in the database. Accepts a

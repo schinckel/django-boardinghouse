@@ -10,8 +10,8 @@ from hypothesis import given, settings as hsettings
 from hypothesis.strategies import text
 from hypothesis.extra.django import TestCase
 
-from boardinghouse.exceptions import Forbidden
-from boardinghouse.schema import get_schema_model
+from boardinghouse.exceptions import Forbidden, SchemaNotFound
+from boardinghouse.schema import get_schema_model, activate_schema
 from boardinghouse.middleware import change_schema
 
 from ..models import AwareModel
@@ -268,6 +268,24 @@ class TestMiddleware(TestCase):
             user._user_perm_cache
         with self.assertRaises(AttributeError):
             user._group_perm_cache
+
+    def test_deleting_schema_removes_it_from_session(self):
+        schema = Schema.objects.mass_create('a')[0]
+        user = User.objects.create_user(**CREDENTIALS)
+        user.schemata.add(schema)
+
+        self.client.login(**CREDENTIALS)
+        self.client.post('/__change_schema__/a/')
+        self.assertTrue('a', self.client.session['schema'])
+
+        schema.delete(drop=True)
+        self.assertEqual(0, Schema.objects.count())
+
+        with self.assertRaises(SchemaNotFound):
+            activate_schema('a')
+
+        self.client.get('/')
+        self.assertFalse('schema' in self.client.session)
 
 
 class TestContextProcessor(TestCase):

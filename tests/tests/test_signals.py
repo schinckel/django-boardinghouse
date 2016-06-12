@@ -10,7 +10,10 @@ from django.test import TestCase
 from boardinghouse.middleware import change_schema
 from boardinghouse.models import Schema
 from boardinghouse.schema import TemplateSchemaActivation
-from boardinghouse.signals import session_requesting_schema_change, schema_aware_operation, session_schema_changed
+from boardinghouse.signals import (
+    session_requesting_schema_change, schema_aware_operation, session_schema_changed,
+    find_schema,
+)
 
 
 class TestSignalsDirectly(TestCase):
@@ -79,3 +82,9 @@ class TestSignalsDirectly(TestCase):
             user._user_perm_cache
         with self.assertRaises(AttributeError):
             user._group_perm_cache
+
+    def test_find_schema_finds_template(self):
+        self.assertTrue([
+            response for handler, response in find_schema.send(sender=None, schema='__template__')
+            if response
+        ][0])

@@ -1,12 +1,13 @@
 import sys
 import uuid
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.contrib.auth.models import User
 from django.db import connection, migrations, models
 from django.db.migrations.state import ProjectState
 from django.utils import six
 
+from boardinghouse.contrib.apps import check_template_prefix_stats_with_underscore
 from boardinghouse.contrib.template.models import SchemaTemplate
 from boardinghouse.contrib.template.models import verbose_name, verbose_name_plural
 
@@ -139,6 +140,6 @@ class TestContribTemplate(TestCase):
 
     @override_settings(BOARDINGHOUSE_TEMPLATE_PREFIX='template_')
     def test_invalid_prefix(self):
-        errors = apps.check_template_prefix_stats_with_underscore()
+        errors = check_template_prefix_stats_with_underscore()
         self.assertEqual(1, len(errors))
         self.assertEqual('boardinghouse.contrib.template.E001', errors[0].id)

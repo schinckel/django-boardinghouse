@@ -12,6 +12,7 @@ from django.db.migrations.operations.base import Operation
 from django.utils.translation import lazy
 
 from .exceptions import TemplateSchemaActivation, SchemaNotFound
+from .signals import find_schema
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.addHandler(logging.NullHandler())
@@ -113,11 +114,9 @@ def _get_schema(schema_name):
     Get the matching active schema object for the given name,
     if it exists.
     """
-    if not schema_name:
-        return
-    for schema in get_active_schemata():
-        if schema_name == schema.schema or schema_name == schema:
-            return schema
+    for handler, response in find_schema.send(sender=None, schema=schema_name):
+        if response:
+            return response
 
 
 def activate_schema(schema_name):

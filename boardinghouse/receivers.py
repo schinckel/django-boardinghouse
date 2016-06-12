@@ -169,6 +169,6 @@ def find_schema(sender, schema, **kwargs):
         return Schema(name='Template schema', schema=settings.TEMPLATE_SCHEMA)
     if schema and not schema.startswith('_'):
         try:
-            return Schema.objects.get(schema=schema)
+            return Schema.objects.active().get(schema=schema)
         except Schema.DoesNotExist:
             return None

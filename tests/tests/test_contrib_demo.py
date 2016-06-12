@@ -24,7 +24,7 @@ from ..models import AwareModel
 from boardinghouse.contrib.demo import apps
 from boardinghouse.contrib.demo.models import DemoSchema, DemoSchemaExpired, ValidDemoTemplate
 from boardinghouse.contrib.template.models import SchemaTemplate
-from boardinghouse.schema import _schema_exists
+from boardinghouse.schema import _schema_exists, _get_schema
 
 CREDENTIALS = {
     'username': 'username',
@@ -101,6 +101,11 @@ class TestContribDemo(TestCase):
         self.assertTrue(_schema_exists(demo.schema))
         demo.delete()
         self.assertFalse(_schema_exists(demo.schema))
+
+    def test_find_schema_finds_demo(self):
+        user = User.objects.create_user(**CREDENTIALS)
+        demo = DemoSchema.objects.create(user=user, from_template=self.template)
+        self.assertEqual(demo, _get_schema(demo.schema))
 
     def test_demo_admin(self):
         user = User.objects.create_superuser(email='email@example.com', **CREDENTIALS)
