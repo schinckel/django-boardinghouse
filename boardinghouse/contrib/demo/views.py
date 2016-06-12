@@ -22,8 +22,8 @@ class DemoSchemaMixin(LoginRequiredMixin):
 
     def get_success_url(self):
         return (
-            self.request.POST.get('redirect-to', None) or
-            self.request.GET.get('redirect-to', None) or
+            self.request.POST.get('redirect-to') or
+            self.request.GET.get('redirect-to') or
             '/__change_schema__/{}/'.format(self.object.schema)
         )
 

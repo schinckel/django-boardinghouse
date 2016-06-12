@@ -265,9 +265,9 @@ def _get_models(apps, stack):
     """
     for frame in stack:
         frame_locals = frame[0].f_locals
-        if frame[3] == 'database_forwards' and all([
+        if frame[3] == 'database_forwards' and all(
             local in frame_locals for local in ('from_state', 'to_state', 'schema_editor', 'self')
-        ]) and isinstance(frame_locals['self'], Operation):
+        ) and isinstance(frame_locals['self'], Operation):
             # Should this be from_state, or to_state, or should we look in both?
             from_state = frame_locals['from_state']
             to_state = frame_locals['to_state']
