@@ -57,7 +57,7 @@ class ModelB(models.Model):
 
 
 class ModelBPrefix(models.Model):
-    a = models.ManyToManyField(ModelA)
+    model_a = models.ManyToManyField(ModelA)
 
 
 class SettingsSharedModel(models.Model):
