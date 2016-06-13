@@ -83,7 +83,7 @@ WSGI_APPLICATION = 'boarding_school.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'boardinghouse.backends.postgres',
-        'NAME': 'school-demo',
+        'NAME': os.environ.get('DB_NAME'),
     }
 }
 
