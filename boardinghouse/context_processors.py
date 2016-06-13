@@ -24,5 +24,5 @@ def schemata(request):
     return {
         'schemata': request.user.visible_schemata,
         'schema_choices': request.user.visible_schemata.values_list('schema', 'name').distinct(),
-        'selected_schema': request.session.get('schema', None),
+        'selected_schema': request.session.get('schema'),
     }

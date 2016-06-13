@@ -49,7 +49,7 @@ class BoardingHouseTemplateConfig(AppConfig):
                     return fields
 
                 def save_model(self, request, obj, form, change):
-                    if not change and form.cleaned_data.get('clone_schema', None) is not None:
+                    if not change and form.cleaned_data.get('clone_schema') is not None:
                         obj._clone = form.cleaned_data['clone_schema'].schema
                     return super(SchemaAdmin, self).save_model(request, obj, form, change)
 

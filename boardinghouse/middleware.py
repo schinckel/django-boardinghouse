@@ -58,7 +58,7 @@ def change_schema(request, schema):
 
     # If the schema is already set to this name for this session, then
     # we can just exit early, potentially saving some db access.
-    if schema == session.get('schema', None):
+    if schema == session.get('schema'):
         return
 
     # Valid schema providers should listen for this signal, and do one of three
@@ -82,7 +82,7 @@ def change_schema(request, schema):
             if isinstance(response, dict) and 'schema' in response:
                 session.update({
                     'schema': response['schema'],
-                    'schema_name': response.get('name', None),
+                    'schema_name': response.get('name'),
                 })
             break
     else:
@@ -177,7 +177,7 @@ class SchemaMiddleware(object):
         # 2. GET querystring ...?__schema=<name>
         # This will change the query, and then redirect to the page
         # without the schema name included.
-        elif request.GET.get('__schema', None) is not None:
+        elif request.GET.get('__schema') is not None:
             schema = request.GET['__schema']
             try:
                 change_schema(request, schema)
