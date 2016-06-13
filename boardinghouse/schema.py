@@ -216,8 +216,10 @@ def _is_join_model(model):
     which has non-related fields, must have been explicitly declared,
     and all automatic join models will have just (pk, from, to).
     """
-    return all( (field.primary_key or remote_field(field))
-        for field in model._meta.fields) and len(model._meta.fields) > 1
+    return len(model._meta.fields) > 1 and all(
+        (field.primary_key or remote_field(field))
+        for field in model._meta.fields
+    )
 
 
 def is_shared_model(model):
@@ -246,8 +248,11 @@ def is_shared_model(model):
     # also be shared, unless we were explicitly marked as private
     # above.
     if _is_join_model(model):
-        return all( is_shared_model(remote_field(field).model)
-            for field in model._meta.fields if remote_field(field))
+        return all(
+            is_shared_model(remote_field(field).model)
+            for field in model._meta.fields
+            if remote_field(field)
+        )
 
     return False
 
