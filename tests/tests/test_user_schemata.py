@@ -14,10 +14,10 @@ class TestUserSchemataCache(TestCase):
         user = User.objects.get(username='a')
         self.assertEqual(0, len(user.visible_schemata))
 
-        self.assertEqual([], list(cache.get('visible-schemata-%s' % user.pk)))
+        self.assertEqual([], list(cache.get('visible-schemata-{0!s}'.format(user.pk))))
 
         user.schemata.add(Schema.objects.get(schema='a'))
-        self.assertEqual(None, cache.get('visible-schemata-%s' % user.pk))
+        self.assertEqual(None, cache.get('visible-schemata-{0!s}'.format(user.pk)))
 
     def test_removing_schema_from_user_clears_cache(self):
         User.objects.create_user(username='a', email='a@example.com', password='a')
@@ -29,7 +29,7 @@ class TestUserSchemataCache(TestCase):
         self.assertEqual(3, len(user.visible_schemata))
 
         user.schemata.remove(Schema.objects.get(schema='a'))
-        self.assertEqual(None, cache.get('visible-schemata-%s' % user.pk))
+        self.assertEqual(None, cache.get('visible-schemata-{0!s}'.format(user.pk)))
 
     def test_adding_users_to_schema_clears_cache(self):
         User.objects.create_user(username='a', email='a@example.com', password='a')
@@ -38,12 +38,12 @@ class TestUserSchemataCache(TestCase):
         user = User.objects.get(username='a')
 
         self.assertEqual(0, len(user.visible_schemata))
-        self.assertEqual([], list(cache.get('visible-schemata-%s' % user.pk)))
+        self.assertEqual([], list(cache.get('visible-schemata-{0!s}'.format(user.pk))))
 
         schema = Schema.objects.get(schema='a')
         schema.users.add(user)
 
-        self.assertEqual(None, cache.get('visible-schemata-%s' % user.pk))
+        self.assertEqual(None, cache.get('visible-schemata-{0!s}'.format(user.pk)))
 
     def test_removing_users_from_schema_clears_cache(self):
         User.objects.create_user(username='a', email='a@example.com', password='a')
@@ -56,7 +56,7 @@ class TestUserSchemataCache(TestCase):
         schema = Schema.objects.get(schema='a')
         schema.users.remove(user)
 
-        self.assertEqual(None, cache.get('visible-schemata-%s' % user.pk))
+        self.assertEqual(None, cache.get('visible-schemata-{0!s}'.format(user.pk)))
 
     def test_saving_schema_clears_cache_for_related_users(self):
         User.objects.create_user(username='a', email='a@example.com', password='a')
@@ -69,7 +69,7 @@ class TestUserSchemataCache(TestCase):
 
         Schema.objects.get(schema='a').save()
 
-        self.assertEqual(None, cache.get('visible-schemata-%s' % user.pk))
+        self.assertEqual(None, cache.get('visible-schemata-{0!s}'.format(user.pk)))
 
     def test_saving_schema_clears_global_active_schemata_cache(self):
         Schema.objects.mass_create('a', 'b', 'c')

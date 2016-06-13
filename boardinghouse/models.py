@@ -189,9 +189,9 @@ def visible_schemata(user):
     signal listeners that automatically invalidate the cache when conditions
     that are detected that would indicate this value has changed.
     """
-    schemata = cache.get('visible-schemata-%s' % user.pk)
+    schemata = cache.get('visible-schemata-{0!s}'.format(user.pk))
     if schemata is None:
         schemata = user.schemata.active()
-        cache.set('visible-schemata-%s' % user.pk, schemata)
+        cache.set('visible-schemata-{0!s}'.format(user.pk), schemata)
 
     return schemata

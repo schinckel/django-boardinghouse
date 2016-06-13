@@ -17,8 +17,8 @@ admin.autodiscover()
 def echo_schema(request):
     data = ""
     if request.GET:
-        data = "\n" + "\n".join("%s=%s" % x for x in request.GET.items())
-    return HttpResponse('%s' % request.session.get('schema') + data)
+        data = "\n" + "\n".join("{0!s}={1!s}".format(*x) for x in request.GET.items())
+    return HttpResponse('{0!s}'.format(request.session.get('schema')) + data)
 
 
 def change_schema_view(request):

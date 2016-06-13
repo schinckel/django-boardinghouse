@@ -23,7 +23,7 @@ def expiration(obj):
 def redemption_code(obj):
     if obj.redeemed:
         return ''
-    return '<a href="%s" target=_blank>%s</a>' % (
+    return '<a href="{0!s}" target=_blank>{1!s}</a>'.format(
         reverse('invite:view', kwargs={'redemption_code': obj.redemption_code}),
         obj.redemption_code
     )

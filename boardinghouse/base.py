@@ -28,9 +28,9 @@ class MultiSchemaMixin(object):
         # so we can access it later.
         multi_query = [
             query.replace(
-                'SELECT ', "SELECT '%s' as _schema, " % schema.schema
+                'SELECT ', "SELECT '{0!s}' as _schema, ".format(schema.schema)
             ).replace(
-                'FROM "', 'FROM "%s"."' % schema.schema
+                'FROM "', 'FROM "{0!s}"."'.format(schema.schema)
             ) for schema in schemata
         ]
 
