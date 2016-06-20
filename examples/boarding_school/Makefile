@@ -13,7 +13,7 @@ install-packages:
 	${PIP} install pip --upgrade
 	${PIP} install --pre django
 	${PIP} install -e ../..
-	${PIP} install psycopg2
+	${PIP} install psycopg2 --no-cache-dir
 	${PIP} install coverage
 
 load-data:
@@ -29,6 +29,9 @@ clean:
 
 runserver:
 	${PYTHON} manage.py runserver ${PORT}
+
+dbshell:
+	${BINDIR}/python manage.py dbshell
 
 test:
 	${PYTHON} manage.py test
