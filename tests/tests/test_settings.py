@@ -103,6 +103,13 @@ class TestSettings(TestCase):
         self.assertTrue(isinstance(errors[0], checks.Warning))
         self.assertEqual('boardinghouse.W001', errors[0].id)
 
+    @override_settings(TEMPLATES=[{
+        'BACKEND': 'django.template.backends.jinja2.Jinja2',
+    }])
+    def test_context_processor_not_installed_but_using_jinja(self):
+        errors = apps.check_context_processor_installed()
+        self.assertEqual(0, len(errors))
+
     @modify_settings()
     def test_no_context_processors_found(self):
         del settings.TEMPLATES

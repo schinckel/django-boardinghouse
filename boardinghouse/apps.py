@@ -148,6 +148,9 @@ def check_context_processor_installed(app_configs=None, **kwargs):
 
     if hasattr(settings, 'TEMPLATES'):
         for i, engine in enumerate(settings.TEMPLATES):
+            # We only check for the context processor if using the default django backend.
+            if engine['BACKEND'] != 'django.template.backends.django.DjangoTemplates':
+                continue
             if CONTEXT not in engine.get('OPTIONS', {}).get('context_processors', []):
                 errors.append(Warning(
                     'Missing boardinghouse context processor',
