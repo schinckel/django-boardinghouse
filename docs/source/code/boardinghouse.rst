@@ -21,6 +21,7 @@ Submodules
    boardinghouse.apps
    boardinghouse.base
    boardinghouse.context_processors
+   boardinghouse.exceptions
    boardinghouse.middleware
    boardinghouse.models
    boardinghouse.operations
