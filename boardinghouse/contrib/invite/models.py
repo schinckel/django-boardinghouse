@@ -3,6 +3,7 @@ import uuid
 
 from django.conf import settings
 from django.db import models
+from django.utils import six
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
@@ -42,6 +43,7 @@ class InvitationQuerySet(models.query.QuerySet):
         return self.filter(email=email)
 
 
+@six.python_2_unicode_compatible
 class Invitation(SharedSchemaModel):
     email = models.EmailField(verbose_name=_('Email address'))
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='sent_invitations')
@@ -63,9 +65,9 @@ class Invitation(SharedSchemaModel):
         ordering = ('created_at',)
         app_label = 'invite'
 
-    def __unicode__(self):
-        return '[{0!s}] Invitation to {1!s} from {2!s} to join {3!s}'.format(
-            unicode(self.status), self.email, self.sender, self.schema.name
+    def __str__(self):
+        return u'[{0!s}] Invitation to {1!s} from {2!s} to join {3!s}'.format(
+            six.text_type(self.status), self.email, self.sender, self.schema.name
         )
 
     def save(self, *args, **kwargs):
