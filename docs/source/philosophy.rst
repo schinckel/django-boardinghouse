@@ -22,6 +22,8 @@ Firstly, though, some rationalé behind selecting a multi-tenanted over a multi-
 
 * Data aggregation. It's possible (depending upon data storage) to aggregate data across customers. This can be used for comparative purposes, for instance to enable customers to see how they perform against their peers, or purely for determining patterns.
 
+For a slightly more detailed discusson of multi-tenancy, you can peruse `Understanding Database Multitenancy`_.
+
 Data storage type
 -----------------
 
@@ -77,4 +79,5 @@ The other side-effect of table inheritance could be a positive or negative. When
 
 This is the real reason this line of thought was even considered: I still feel that migrations are far too slow when dealing with large numbers of schemata.
 
+.. _Understanding Database Multitenancy: http://www.vinta.com.br/blog/2016/understanding-database-multitenancy/
 .. _Postgres Table Inheritance: http://www.postgresql.org/docs/current/static/tutorial-inheritance.html
