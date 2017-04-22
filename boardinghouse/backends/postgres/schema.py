@@ -119,16 +119,15 @@ def group_tokens(parsed):
     return grouped, identifiers
 
 
-def get_table_and_schema(sql, cursor):
+def get_table_and_schema(statement, cursor):
     """
-    Given an SQL statement, determine what the database object that is being
-    operated upon is.
+    I'm not happy with the following, just yet:
 
-    This logic is quite complex. If you find a case that does not work, please
-    submit a bug report (or even better, pull request!)
+    False means this is something that must be only applied to the public schema.
+
+    None means this statement can be ignored from the perspective of checking.
     """
-    parsed = sqlparse.parse(sql)[0]
-    grouped, identifiers = group_tokens(parsed)
+    grouped, identifiers = group_tokens(statement)
 
     if grouped[DDL] and grouped[DDL][0] in ['CREATE', 'DROP', 'ALTER', 'CREATE OR REPLACE']:
         # We may care about this.
@@ -137,7 +136,10 @@ def get_table_and_schema(sql, cursor):
             # At this point, I'm not convinced that functions belong anywhere
             # other than in the public schema. Perhaps they should, as that
             # could be a nice way to get different behaviour per-tenant.
-            return None, None
+            return False
+        elif 'SCHEMA' in keywords:
+            # We will not be able to execute a CREATE/DROP SCHEMA multiple times.
+            return False
         elif 'INDEX' in keywords and grouped[DDL][0] == 'DROP':
             # DROP INDEX does not have a table associated with it.
             # We will have to hit the database to see what tables have
@@ -153,15 +155,42 @@ def get_table_and_schema(sql, cursor):
             # function or index: identifier 1 is the table it refers to.
             return identifiers[1].get_name(), identifiers[1].get_parent_name()
 
+    if grouped.get(Keyword) == ['SET', 'CONSTRAINTS', 'IMMEDIATE']:
+        # Can we assume that the identifier is sane? That it will be the one used
+        # in the next statement?
+        return None
+
     # We also care about other non-DDL statements, as the implication is that
     # they should apply to every known schema, if we are updating as part of a
     # migration.
-    if grouped[DML] and \
-       grouped[DML][0] in ['INSERT INTO', 'UPDATE', 'DELETE FROM'] and\
-       identifiers:
+    if grouped[DML] and grouped[DML][0] in ['INSERT', 'UPDATE', 'DELETE'] and identifiers:
         return identifiers[0].get_name(), identifiers[0].get_parent_name()
 
-    return None, None
+    return False
+
+
+def can_apply_to_multiple_schemata(sql, cursor):
+    parsed = sqlparse.parse(sql)
+
+    data = [
+        get_table_and_schema(statement, cursor)
+        for statement in parsed
+    ]
+
+    if any(match is False for match in data):
+        return False
+
+    data = [part for part in data if part is not None]
+
+    # If all of our references to tables are shared, or schema-qualified, we
+    # can't apply multiple times.
+    if all(
+        is_shared_table(table_name) or schema_name
+        for (table_name, schema_name) in data
+    ):
+        return False
+
+    return True
 
 
 class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
@@ -195,13 +224,11 @@ class DatabaseSchemaEditor(schema.DatabaseSchemaEditor):
     def execute(self, sql, params=None):
         execute = super(DatabaseSchemaEditor, self).execute
 
-        table_name, schema_name = get_table_and_schema(sql, self.connection.cursor())
-
         # TODO: try to get the apps from current project_state, not global apps.
-        if table_name and not schema_name and not is_shared_table(table_name):
+        if can_apply_to_multiple_schemata(sql, self.connection.cursor()):
             schema_aware_operation.send(
                 self.__class__,
-                db_table=table_name,
+                db_table=None,  # Maybe deprecate this argument?
                 function=execute,
                 args=(sql, params)
             )

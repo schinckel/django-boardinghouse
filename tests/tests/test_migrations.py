@@ -403,12 +403,16 @@ class TestMigrations(MigrationTestBase):
             INSERT INTO i_love_ponies (id, special_thing) VALUES (2, 51), (3, 60);
             DELETE FROM i_love_ponies WHERE special_thing = 42;
             UPDATE i_love_ponies SET special_thing = 42 WHERE id = 2;""",
-            " DROP TABLE i_love_ponies")
+            "DROP TABLE i_love_ponies")
         new_state = project_state.clone()
         operation.state_forwards('tests', new_state)
         self.assertTableNotExists('i_love_ponies')
         with connection.schema_editor() as editor:
             operation.database_forwards('tests', editor, project_state, new_state)
+
+        cursor = connection.cursor()
+        cursor.execute('SELECT * FROM a.i_love_ponies')
+
         self.assertTableExists('i_love_ponies')
         self.assertIndexExists('i_love_ponies', ['special_thing'])
 
