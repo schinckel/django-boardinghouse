@@ -1,5 +1,7 @@
 from copy import deepcopy
+import unittest
 
+import django
 from django.conf import settings
 from django.test import TestCase, modify_settings, override_settings
 from django.core import checks, exceptions
@@ -35,15 +37,23 @@ class TestSettings(TestCase):
         finally:
             settings.DATABASES['default']['ENGINE'] = original
 
-    @modify_settings(MIDDLEWARE_CLASSES={'remove': [apps.MIDDLEWARE]})
+    @unittest.skipIf(django.VERSION >= (1, 10), "settings.MIDDLEWARE_CLASSES")
+    @modify_settings()
     def test_middleware_missing_old(self):
+        settings.MIDDLEWARE_CLASSES = settings.MIDDLEWARE
+        settings.MIDDLEWARE_CLASSES.remove(apps.MIDDLEWARE)
+        del settings.MIDDLEWARE
         errors = apps.check_middleware_installed()
         self.assertEqual(1, len(errors))
         self.assertTrue(isinstance(errors[0], checks.Error))
         self.assertEqual('boardinghouse.E003', errors[0].id)
 
-    @modify_settings(MIDDLEWARE_CLASSES={'remove': ['django.contrib.sessions.middleware.SessionMiddleware']})
+    @unittest.skipIf(django.VERSION >= (1, 10), "settings.MIDDLEWARE_CLASSES")
+    @modify_settings()
     def test_session_middleware_missing_old(self):
+        settings.MIDDLEWARE_CLASSES = settings.MIDDLEWARE
+        settings.MIDDLEWARE_CLASSES.remove('django.contrib.sessions.middleware.SessionMiddleware')
+        del settings.MIDDLEWARE
         errors = apps.check_session_middleware_installed()
         self.assertEqual(1, len(errors))
         self.assertTrue(isinstance(errors[0], checks.Error))
