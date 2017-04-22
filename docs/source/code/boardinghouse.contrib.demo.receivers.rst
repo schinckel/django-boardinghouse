@@ -1,5 +1,5 @@
-boardinghouse.contrib.demo.receivers module
-===========================================
+boardinghouse\.contrib\.demo\.receivers module
+==============================================
 
 .. automodule:: boardinghouse.contrib.demo.receivers
     :members:

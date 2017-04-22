@@ -1,5 +1,5 @@
-boardinghouse.contrib.template.apps module
-==========================================
+boardinghouse\.contrib\.template\.apps module
+=============================================
 
 .. automodule:: boardinghouse.contrib.template.apps
     :members:

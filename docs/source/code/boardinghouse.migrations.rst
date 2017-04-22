@@ -1,5 +1,5 @@
-boardinghouse.migrations package
-================================
+boardinghouse\.migrations package
+=================================
 
 Submodules
 ----------

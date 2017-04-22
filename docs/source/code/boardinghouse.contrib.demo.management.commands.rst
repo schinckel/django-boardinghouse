@@ -1,5 +1,5 @@
-boardinghouse.contrib.demo.management.commands package
-======================================================
+boardinghouse\.contrib\.demo\.management\.commands package
+==========================================================
 
 Submodules
 ----------

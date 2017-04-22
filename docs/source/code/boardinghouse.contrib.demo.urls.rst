@@ -1,5 +1,5 @@
-boardinghouse.contrib.demo.urls module
-======================================
+boardinghouse\.contrib\.demo\.urls module
+=========================================
 
 .. automodule:: boardinghouse.contrib.demo.urls
     :members:

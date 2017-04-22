@@ -1,5 +1,5 @@
-boardinghouse.schema module
-===========================
+boardinghouse\.schema module
+============================
 
 .. automodule:: boardinghouse.schema
     :members:

@@ -1,5 +1,5 @@
-boardinghouse.context_processors module
-=======================================
+boardinghouse\.context\_processors module
+=========================================
 
 .. automodule:: boardinghouse.context_processors
     :members:

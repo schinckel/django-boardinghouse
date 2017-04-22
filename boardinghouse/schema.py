@@ -2,7 +2,6 @@ import inspect
 import logging
 import threading
 
-import django
 from django.apps import apps
 from django.conf import settings
 from django.core.cache import cache
@@ -20,12 +19,6 @@ LOGGER.addHandler(logging.NullHandler())
 _thread_locals = threading.local()
 
 
-def remote_field(field):
-    if django.VERSION < (1, 9):
-        return field.rel and field.rel.get_related_field()
-    return field.remote_field
-
-
 def get_schema_model():
     """
     Return the class that is currently set as the schema model.
@@ -37,7 +30,9 @@ def get_schema_model():
     except ValueError:
         raise ImproperlyConfigured("BOARDINGHOUSE_SCHEMA_MODEL must be of the form 'app_label.model_name'")
     except LookupError:
-        raise ImproperlyConfigured("BOARDINGHOUSE_SCHEMA_MODEL refers to model '{0!s}' that has not been installed".format(settings.BOARDINGHOUSE_SCHEMA_MODEL))
+        raise ImproperlyConfigured(
+            "BOARDINGHOUSE_SCHEMA_MODEL refers to model '{0!s}' that has not been installed".format(
+                settings.BOARDINGHOUSE_SCHEMA_MODEL))
 
 
 def _get_search_path():
@@ -217,7 +212,7 @@ def _is_join_model(model):
     and all automatic join models will have just (pk, from, to).
     """
     return len(model._meta.fields) > 1 and all(
-        (field.primary_key or remote_field(field))
+        (field.primary_key or field.remote_field)
         for field in model._meta.fields
     )
 
@@ -249,9 +244,9 @@ def is_shared_model(model):
     # above.
     if _is_join_model(model):
         return all(
-            is_shared_model(remote_field(field).model)
+            is_shared_model(field.remote_field.model)
             for field in model._meta.fields
-            if remote_field(field)
+            if field.remote_field
         )
 
     return False

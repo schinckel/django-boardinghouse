@@ -1,4 +1,3 @@
-import django
 from django import forms
 from django.contrib import admin
 from django.utils.timesince import timesince, timeuntil
@@ -77,10 +76,7 @@ def use_for_demo(obj):
 use_for_demo.empty_value_display = False
 use_for_demo.boolean = True
 
-if django.VERSION < (1, 9):
-    SchemaTemplate = ValidDemoTemplate._meta.pk.rel.to
-else:
-    SchemaTemplate = ValidDemoTemplate._meta.pk.remote_field.model
+SchemaTemplate = ValidDemoTemplate._meta.pk.remote_field.model
 
 __patch_applied = False
 

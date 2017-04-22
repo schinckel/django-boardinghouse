@@ -1,5 +1,5 @@
-boardinghouse.contrib.demo.management package
-=============================================
+boardinghouse\.contrib\.demo\.management package
+================================================
 
 Subpackages
 -----------

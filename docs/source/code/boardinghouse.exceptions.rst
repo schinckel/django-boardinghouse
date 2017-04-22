@@ -1,5 +1,5 @@
-boardinghouse.exceptions module
-===============================
+boardinghouse\.exceptions module
+================================
 
 .. automodule:: boardinghouse.exceptions
     :members:

@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 import logging
 import re
 
-import django
 from django.conf import settings
 from django.contrib import messages
 from django.db import ProgrammingError
@@ -37,11 +36,7 @@ def change_schema(request, schema):
 
     # Unauthenticated users may not select a schema.
     # Should this be selectable?
-    if django.VERSION < (1, 10):
-        if not user.is_authenticated():
-            session.pop('schema', None)
-            raise Forbidden
-    elif not user.is_authenticated:
+    if not user.is_authenticated:
         session.pop('schema', None)
         raise Forbidden()
 
@@ -238,7 +233,8 @@ class SchemaMiddleware(object):
                     )
                 # Can we see if there is already a pending message for this
                 # request that has the same content as us?
-                messages.error(request,
+                messages.error(
+                    request,
                     _("You must select a schema to access that resource"),
                     fail_silently=True
                 )

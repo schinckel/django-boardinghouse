@@ -1,5 +1,5 @@
-boardinghouse.middleware module
-===============================
+boardinghouse\.middleware module
+================================
 
 .. automodule:: boardinghouse.middleware
     :members:

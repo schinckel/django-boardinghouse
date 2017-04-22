@@ -29,8 +29,8 @@ def get_constraints(cursor, table_name, schema_name=None):
     if schema_name is None:
         schema_name = settings.TEMPLATE_SCHEMA
 
-    cursor.execute(''
-"""WITH constraints AS (
+    cursor.execute(
+        """WITH constraints AS (
 
           SELECT tc.constraint_type,
                  tc.constraint_name,

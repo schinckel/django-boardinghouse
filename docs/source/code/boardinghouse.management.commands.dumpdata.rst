@@ -1,5 +1,5 @@
-boardinghouse.management.commands.dumpdata module
-=================================================
+boardinghouse\.management\.commands\.dumpdata module
+====================================================
 
 .. automodule:: boardinghouse.management.commands.dumpdata
     :members:

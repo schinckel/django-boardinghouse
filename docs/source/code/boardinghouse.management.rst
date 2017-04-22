@@ -1,5 +1,5 @@
-boardinghouse.management package
-================================
+boardinghouse\.management package
+=================================
 
 Subpackages
 -----------

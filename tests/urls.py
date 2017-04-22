@@ -6,7 +6,6 @@ from django.contrib.auth.views import login, logout_then_login
 from django.db import connection
 from django.http import HttpResponse
 from django.shortcuts import render
-import django
 
 from boardinghouse.schema import activate_schema
 import boardinghouse.contrib.demo.urls
@@ -52,7 +51,4 @@ urlpatterns = [
     url(r'^demo/', include(boardinghouse.contrib.demo.urls.urlpatterns)),
 ]
 
-if django.VERSION < (1, 9):
-    urlpatterns.append(url(r'^admin/', include(admin.site.urls)))
-else:
-    urlpatterns.append(url(r'^admin/', include(admin.site.urls[:2], namespace='admin')))
+urlpatterns.append(url(r'^admin/', include(admin.site.urls[:2], namespace='admin')))

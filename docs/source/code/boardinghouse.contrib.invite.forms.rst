@@ -1,5 +1,5 @@
-boardinghouse.contrib.invite.forms module
-=========================================
+boardinghouse\.contrib\.invite\.forms module
+============================================
 
 .. automodule:: boardinghouse.contrib.invite.forms
     :members:

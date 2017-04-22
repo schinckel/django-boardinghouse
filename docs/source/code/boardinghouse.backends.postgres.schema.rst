@@ -1,5 +1,5 @@
-boardinghouse.backends.postgres.schema module
-=============================================
+boardinghouse\.backends\.postgres\.schema module
+================================================
 
 .. automodule:: boardinghouse.backends.postgres.schema
     :members:

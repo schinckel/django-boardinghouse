@@ -1,5 +1,5 @@
-boardinghouse.apps module
-=========================
+boardinghouse\.apps module
+==========================
 
 .. automodule:: boardinghouse.apps
     :members:

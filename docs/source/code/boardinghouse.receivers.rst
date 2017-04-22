@@ -1,5 +1,5 @@
-boardinghouse.receivers module
-==============================
+boardinghouse\.receivers module
+===============================
 
 .. automodule:: boardinghouse.receivers
     :members:

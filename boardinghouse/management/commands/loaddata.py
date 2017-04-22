@@ -6,25 +6,17 @@ option: ``--schema``. This is required when non-shared-models are
 included in the file(s) to be loaded, and the schema with this name
 will be used as a target.
 """
-from optparse import make_option
-
-import django
 from django.core.management.commands import loaddata
 
 from ...schema import activate_schema, deactivate_schema
 
 
 class Command(loaddata.Command):
-    if django.VERSION < (1, 8):
-        option_list = loaddata.Command.option_list + (
-            make_option('--schema', action='store', dest='schema',
-                help='Specify which schema to load schema-aware models to'),
-        )
-
     def add_arguments(self, parser):
         super(Command, self).add_arguments(parser)
-        parser.add_argument('--schema', action='store', dest='schema',
-             help='Specify which schema to load schema-aware models to')
+        parser.add_argument(
+            '--schema', action='store', dest='schema',
+            help='Specify which schema to load schema-aware models to')
 
     def handle(self, *fixture_labels, **options):
         schema_name = options.get('schema')

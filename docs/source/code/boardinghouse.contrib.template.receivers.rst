@@ -1,5 +1,5 @@
-boardinghouse.contrib.template.receivers module
-===============================================
+boardinghouse\.contrib\.template\.receivers module
+==================================================
 
 .. automodule:: boardinghouse.contrib.template.receivers
     :members:

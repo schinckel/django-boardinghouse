@@ -1,5 +1,5 @@
-boardinghouse.contrib.invite.models module
-==========================================
+boardinghouse\.contrib\.invite\.models module
+=============================================
 
 .. automodule:: boardinghouse.contrib.invite.models
     :members:

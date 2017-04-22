@@ -1,5 +1,5 @@
-boardinghouse.management.commands package
-=========================================
+boardinghouse\.management\.commands package
+===========================================
 
 Submodules
 ----------

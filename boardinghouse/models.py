@@ -78,7 +78,8 @@ class AbstractSchema(SharedSchemaMixin, models.Model):
     itself (at the start and end of the request cycle would be a good plan).
     """
 
-    schema = models.CharField(max_length=36, primary_key=True, unique=True,
+    schema = models.CharField(
+        max_length=36, primary_key=True, unique=True,
         validators=[schema_name_validator],
         help_text='<br>'.join([
             u'The internal name of the schema.',
@@ -86,10 +87,12 @@ class AbstractSchema(SharedSchemaMixin, models.Model):
             u'May not be changed after creation.',
         ]),
     )
-    name = models.CharField(max_length=128, unique=True,
+    name = models.CharField(
+        max_length=128, unique=True,
         help_text=_(u'The display name of the schema.')
     )
-    is_active = models.BooleanField(default=True,
+    is_active = models.BooleanField(
+        default=True,
         help_text=_(u'Use this instead of deleting schemata.')
     )
 
@@ -142,7 +145,8 @@ class Schema(AbstractSchema):
     Unless you set `settings.BOARDINGHOUSE_SCHEMA_MODEL`, this model will
     be used for storing the schema objects.
     """
-    users = models.ManyToManyField(settings.AUTH_USER_MODEL,
+    users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
         blank=True, related_name='schemata',
         help_text=_(u'Which users may access data from this schema.')
     )

@@ -1,5 +1,5 @@
-boardinghouse.contrib.demo.migrations package
-=============================================
+boardinghouse\.contrib\.demo\.migrations package
+================================================
 
 Submodules
 ----------

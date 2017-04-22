@@ -1,5 +1,5 @@
-boardinghouse.contrib package
-=============================
+boardinghouse\.contrib package
+==============================
 
 Subpackages
 -----------

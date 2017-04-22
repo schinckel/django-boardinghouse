@@ -3,7 +3,6 @@
 """
 from __future__ import unicode_literals
 
-import django
 from django.contrib import admin
 from django.contrib.admin.models import LogEntry, LogEntryManager
 from django.db import models
@@ -102,9 +101,6 @@ if not getattr(LogEntry, 'object_schema', None):
 
     def get_queryset(self):
         queryset = super(LogEntryManager, self).get_queryset()
-
-        if django.VERSION < (1, 8):
-            return queryset.extra(where=['object_schema_id = current_schema() OR object_schema_id IS NULL'])
 
         return queryset.filter(Q(object_schema_id=None) |
                                Q(object_schema_id=expressions.RawSQL('current_schema()', [])))

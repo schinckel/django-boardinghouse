@@ -1,5 +1,5 @@
-boardinghouse.operations module
-===============================
+boardinghouse\.operations module
+================================
 
 .. automodule:: boardinghouse.operations
     :members:

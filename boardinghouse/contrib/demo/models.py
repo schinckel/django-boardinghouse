@@ -54,7 +54,8 @@ class DemoSchema(SharedSchemaMixin, models.Model):
         if self.expired:
             return u'Expired demo for {0} (expired {1} ago)'.format(self.user, timesince(self.expires_at))
 
-        return u'Demo for {0}: expires at {1} ({2} from now)'.format(self.user, self.expires_at, timeuntil(self.expires_at))
+        return u'Demo for {0}: expires at {1} ({2} from now)'.format(
+            self.user, self.expires_at, timeuntil(self.expires_at))
 
     @cached_property
     def schema(self):

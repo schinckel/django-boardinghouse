@@ -1,5 +1,5 @@
-boardinghouse.contrib.demo.views module
-=======================================
+boardinghouse\.contrib\.demo\.views module
+==========================================
 
 .. automodule:: boardinghouse.contrib.demo.views
     :members:

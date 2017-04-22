@@ -1,5 +1,5 @@
-boardinghouse.admin module
-==========================
+boardinghouse\.admin module
+===========================
 
 .. automodule:: boardinghouse.admin
     :members:

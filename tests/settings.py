@@ -1,5 +1,4 @@
 import os
-import django
 
 USE_TZ = True
 
@@ -36,9 +35,6 @@ MIDDLEWARE = (
     'boardinghouse.middleware.SchemaMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
 )
-if django.VERSION < (1, 10):
-    MIDDLEWARE_CLASSES = MIDDLEWARE
-    del MIDDLEWARE
 
 PASSWORD_HASHERS = (
     'django.contrib.auth.hashers.MD5PasswordHasher',
@@ -47,17 +43,6 @@ AUTH_USER_MODEL = 'auth.User'
 SECRET_KEY = 'django-boardinghouse-sekret-keye'
 TEST_RUNNER = 'rainbowtests.test.runner.RainbowDiscoverRunner'
 
-# These locations are different for 1.7 and 1.8+ (-> TEMPLATES)
-TEMPLATE_CONTEXT_PROCESSORS = [
-    'django.contrib.auth.context_processors.auth',
-    'django.core.context_processors.debug',
-    'django.core.context_processors.i18n',
-    'django.core.context_processors.media',
-    'django.core.context_processors.static',
-    'django.core.context_processors.tz',
-    'django.contrib.messages.context_processors.messages',
-    'boardinghouse.context_processors.schemata',
-]
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',

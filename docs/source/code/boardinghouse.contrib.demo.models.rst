@@ -1,5 +1,5 @@
-boardinghouse.contrib.demo.models module
-========================================
+boardinghouse\.contrib\.demo\.models module
+===========================================
 
 .. automodule:: boardinghouse.contrib.demo.models
     :members:

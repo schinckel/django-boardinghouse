@@ -1,5 +1,5 @@
-boardinghouse.contrib.template.migrations package
-=================================================
+boardinghouse\.contrib\.template\.migrations package
+====================================================
 
 Submodules
 ----------

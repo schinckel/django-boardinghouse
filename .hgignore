@@ -11,3 +11,5 @@ status.svg
 dist
 .hypothesis
 stubs
+django_boardinghouse-egg-info
+build

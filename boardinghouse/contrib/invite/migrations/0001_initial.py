@@ -25,7 +25,8 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('accepted_at', models.DateTimeField(null=True, blank=True)),
                 ('declined_at', models.DateTimeField(null=True, blank=True)),
-                ('accepted_by', models.ForeignKey(related_name='accepted_invitations', to=settings.AUTH_USER_MODEL, null=True, blank=True)),
+                ('accepted_by', models.ForeignKey(
+                    related_name='accepted_invitations', to=settings.AUTH_USER_MODEL, null=True, blank=True)),
                 ('schema', models.ForeignKey(related_name='invitations', to=settings.BOARDINGHOUSE_SCHEMA_MODEL)),
                 ('sender', models.ForeignKey(related_name='sent_invitations', to=settings.AUTH_USER_MODEL)),
             ],
@@ -36,12 +37,17 @@ class Migration(migrations.Migration):
         ),
         # Only one of accepted_at, declined_at may be non-null.
         migrations.RunSQL(
-            sql='ALTER TABLE invite_invitation ADD CONSTRAINT only_one_of_accept_deny CHECK (accepted_at is NULL or declined_at IS NULL)',
+            sql='''ALTER TABLE invite_invitation
+                   ADD CONSTRAINT only_one_of_accept_deny
+                   CHECK (accepted_at is NULL or declined_at IS NULL)''',
             reverse_sql='ALTER TABLE invite_invitation DROP CONSTRAINT only_one_of_accept_deny'
         ),
         # Ensure accepted_at/accepted_by
         migrations.RunSQL(
-            sql='ALTER TABLE invite_invitation ADD CONSTRAINT accepted_at_and_accepted_by CHECK ((accepted_by_id IS NULL AND accepted_at IS NULL) or (accepted_at IS NOT NULL AND accepted_by_id IS NOT NULL))',
+            sql='''ALTER TABLE invite_invitation
+                   ADD CONSTRAINT accepted_at_and_accepted_by
+                   CHECK ((accepted_by_id IS NULL AND accepted_at IS NULL) OR
+                          (accepted_at IS NOT NULL AND accepted_by_id IS NOT NULL))''',
             reverse_sql='ALTER TABLE invite_invitation DROP CONSTRAINT accepted_at_and_accepted_by'
         ),
     ]

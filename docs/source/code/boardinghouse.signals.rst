@@ -1,5 +1,5 @@
-boardinghouse.signals module
-============================
+boardinghouse\.signals module
+=============================
 
 .. automodule:: boardinghouse.signals
     :members:

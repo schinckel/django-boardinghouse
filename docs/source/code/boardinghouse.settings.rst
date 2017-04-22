@@ -1,5 +1,5 @@
-boardinghouse.settings module
-=============================
+boardinghouse\.settings module
+==============================
 
 .. automodule:: boardinghouse.settings
     :members:

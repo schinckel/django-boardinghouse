@@ -1,5 +1,5 @@
-boardinghouse.contrib.template package
-======================================
+boardinghouse\.contrib\.template package
+========================================
 
 Subpackages
 -----------

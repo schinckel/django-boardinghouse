@@ -1,5 +1,5 @@
-boardinghouse.contrib.invite package
-====================================
+boardinghouse\.contrib\.invite package
+======================================
 
 Subpackages
 -----------

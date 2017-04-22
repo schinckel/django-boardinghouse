@@ -1,5 +1,5 @@
-boardinghouse.backends package
-==============================
+boardinghouse\.backends package
+===============================
 
 Subpackages
 -----------

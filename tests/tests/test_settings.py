@@ -1,7 +1,5 @@
 from copy import deepcopy
-import unittest
 
-import django
 from django.conf import settings
 from django.test import TestCase, modify_settings, override_settings
 from django.core import checks, exceptions
@@ -37,7 +35,6 @@ class TestSettings(TestCase):
         finally:
             settings.DATABASES['default']['ENGINE'] = original
 
-    @unittest.skipIf(django.VERSION >= (1, 10), "settings.MIDDLEWARE_CLASSES")
     @modify_settings(MIDDLEWARE_CLASSES={'remove': [apps.MIDDLEWARE]})
     def test_middleware_missing_old(self):
         errors = apps.check_middleware_installed()
@@ -45,25 +42,8 @@ class TestSettings(TestCase):
         self.assertTrue(isinstance(errors[0], checks.Error))
         self.assertEqual('boardinghouse.E003', errors[0].id)
 
-    @unittest.skipIf(django.VERSION < (1, 10), "settings.MIDDLEWARE")
-    @modify_settings(MIDDLEWARE={'remove': [apps.MIDDLEWARE]})
-    def test_middleware_missing_new(self):
-        errors = apps.check_middleware_installed()
-        self.assertEqual(1, len(errors))
-        self.assertTrue(isinstance(errors[0], checks.Error))
-        self.assertEqual('boardinghouse.E003', errors[0].id)
-
-    @unittest.skipIf(django.VERSION >= (1, 10), "settings.MIDDLEWARE_CLASSES")
     @modify_settings(MIDDLEWARE_CLASSES={'remove': ['django.contrib.sessions.middleware.SessionMiddleware']})
     def test_session_middleware_missing_old(self):
-        errors = apps.check_session_middleware_installed()
-        self.assertEqual(1, len(errors))
-        self.assertTrue(isinstance(errors[0], checks.Error))
-        self.assertEqual('boardinghouse.E002', errors[0].id)
-
-    @unittest.skipIf(django.VERSION < (1, 10), "settings.MIDDLEWARE")
-    @modify_settings(MIDDLEWARE={'remove': ['django.contrib.sessions.middleware.SessionMiddleware']})
-    def test_session_middleware_missing_new(self):
         errors = apps.check_session_middleware_installed()
         self.assertEqual(1, len(errors))
         self.assertTrue(isinstance(errors[0], checks.Error))
@@ -95,14 +75,6 @@ class TestSettings(TestCase):
             self.assertTrue(isinstance(errors[0], checks.Warning))
             self.assertEqual('boardinghouse.W001', errors[0].id)
 
-    @modify_settings(TEMPLATE_CONTEXT_PROCESSORS={'remove': apps.CONTEXT})
-    def test_context_processor_not_installed_in_TEMPLATE_CONTEXT_PROCESSORS(self):
-        del settings.TEMPLATES
-        errors = apps.check_context_processor_installed()
-        self.assertEqual(1, len(errors))
-        self.assertTrue(isinstance(errors[0], checks.Warning))
-        self.assertEqual('boardinghouse.W001', errors[0].id)
-
     @override_settings(TEMPLATES=[{
         'BACKEND': 'django.template.backends.jinja2.Jinja2',
     }])
@@ -113,16 +85,10 @@ class TestSettings(TestCase):
     @modify_settings()
     def test_no_context_processors_found(self):
         del settings.TEMPLATES
-        del settings.TEMPLATE_CONTEXT_PROCESSORS
         errors = apps.check_context_processor_installed()
         self.assertEqual(1, len(errors))
         self.assertTrue(isinstance(errors[0], checks.Warning))
         self.assertEqual('boardinghouse.W001', errors[0].id)
-
-    @modify_settings()
-    def test_context_processor_installed_in_TEMPLATE_CONTEXT_PROCESSORS(self):
-        del settings.TEMPLATES
-        self.assertEqual([], apps.check_context_processor_installed())
 
     @modify_settings()
     def test_no_BOARDINGHOUSE_SCHEMA_MODEL(self):

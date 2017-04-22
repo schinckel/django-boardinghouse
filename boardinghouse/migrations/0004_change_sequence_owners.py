@@ -12,7 +12,7 @@ with open(os.path.join(os.path.dirname(__file__), '..', 'sql', 'clone_schema.003
 with open(os.path.join(os.path.dirname(__file__), '..', 'sql', 'clone_schema.002.sql')) as fp:
     REVERSE = fp.read()
 
-BUILD_DDL = """
+BUILD_DDL = r"""
 SELECT 'ALTER SEQUENCE ' || quote_ident(schema_name) || '.' || quote_ident(sequence_name)
          || ' OWNED BY '   || quote_ident(schema_name) || '.'
          || quote_ident(MIN(table_name)) || '.' || quote_ident(MIN(column_name))

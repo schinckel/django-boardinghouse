@@ -1,4 +1,3 @@
-import django
 from django.conf.urls import url
 
 from .views import CreateDemo, DeleteDemo, ResetDemo
@@ -9,7 +8,4 @@ urlpatterns = [
     url(r'^reset/$', ResetDemo.as_view(), name='reset'),
 ]
 
-if django.VERSION < (1, 9):
-    urlpatterns = (urlpatterns, 'demo', 'demo')
-else:
-    urlpatterns = (urlpatterns, 'demo')
+urlpatterns = (urlpatterns, 'demo')

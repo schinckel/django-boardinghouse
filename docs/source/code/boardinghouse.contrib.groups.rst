@@ -1,5 +1,5 @@
-boardinghouse.contrib.groups package
-====================================
+boardinghouse\.contrib\.groups package
+======================================
 
 Subpackages
 -----------

@@ -1,5 +1,5 @@
-boardinghouse.backends.postgres package
-=======================================
+boardinghouse\.backends\.postgres package
+=========================================
 
 Submodules
 ----------

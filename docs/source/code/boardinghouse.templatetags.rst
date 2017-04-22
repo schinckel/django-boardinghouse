@@ -1,5 +1,5 @@
-boardinghouse.templatetags package
-==================================
+boardinghouse\.templatetags package
+===================================
 
 Submodules
 ----------

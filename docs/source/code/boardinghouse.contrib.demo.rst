@@ -1,5 +1,5 @@
-boardinghouse.contrib.demo package
-==================================
+boardinghouse\.contrib\.demo package
+====================================
 
 Subpackages
 -----------

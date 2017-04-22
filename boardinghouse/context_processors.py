@@ -1,5 +1,4 @@
 from __future__ import unicode_literals
-import django
 
 
 def schemata(request):
@@ -14,12 +13,8 @@ def schemata(request):
         `selected_schema`: the currenly selected schema name
 
     """
-    if django.VERSION < (1, 10):
-        if request.user.is_anonymous():
-            return {}
-    else:
-        if request.user.is_anonymous:
-            return {}
+    if request.user.is_anonymous:
+        return {}
 
     return {
         'schemata': request.user.visible_schemata,

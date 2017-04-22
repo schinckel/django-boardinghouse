@@ -1,5 +1,5 @@
-boardinghouse.contrib.invite.migrations package
-===============================================
+boardinghouse\.contrib\.invite\.migrations package
+==================================================
 
 Submodules
 ----------

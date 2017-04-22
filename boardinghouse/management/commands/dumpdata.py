@@ -10,9 +10,6 @@ schema will be used (which will not contain any data).
 If any models are supplied as arguments (using the ``app_label.model_name``
 notation) that are not shared models, it is an error to fail to pass a schema.
 """
-from optparse import make_option
-
-import django
 from django.apps import apps
 from django.core.management.commands import dumpdata
 
@@ -26,16 +23,11 @@ from ...schema import (
 
 
 class Command(dumpdata.Command):
-    if django.VERSION < (1, 8):
-        option_list = dumpdata.Command.option_list + (
-            make_option('--schema', action='store', dest='schema',
-                help='Specify which schema to dump schema-aware models from'),
-        )
-
     def add_arguments(self, parser):
         super(Command, self).add_arguments(parser)
-        parser.add_argument('--schema', action='store', dest='schema',
-             help='Specify which schema to dump schema-aware models from')
+        parser.add_argument(
+            '--schema', action='store', dest='schema',
+            help='Specify which schema to dump schema-aware models from')
 
     def handle(self, *app_labels, **options):
         schema_name = options.get('schema')
