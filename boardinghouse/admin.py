@@ -44,6 +44,7 @@ def schemata(obj):
     list view.
     """
     return '<br>'.join([s.name for s in obj.schemata.all()])
+
 schemata.allow_tags = True
 
 
