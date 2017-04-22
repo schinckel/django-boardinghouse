@@ -2,7 +2,6 @@ syntax: glob
 
 *.pyc
 .boarding-school
-.coverage
 .coverage*
 .DS_Store
 .hypothesis
