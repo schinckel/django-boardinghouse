@@ -37,22 +37,26 @@ class TestSettings(TestCase):
         finally:
             settings.DATABASES['default']['ENGINE'] = original
 
-    @unittest.skipIf(django.VERSION >= (1, 10), "settings.MIDDLEWARE_CLASSES")
+    @unittest.skipIf(django.VERSION >= (1, 11), "settings.MIDDLEWARE_CLASSES")
     @modify_settings()
     def test_middleware_missing_old(self):
-        settings.MIDDLEWARE_CLASSES = settings.MIDDLEWARE
-        settings.MIDDLEWARE_CLASSES.remove(apps.MIDDLEWARE)
+        settings.MIDDLEWARE_CLASSES = [
+            middleware for middleware in settings.MIDDLEWARE
+            if middleware != apps.MIDDLEWARE
+        ]
         del settings.MIDDLEWARE
         errors = apps.check_middleware_installed()
         self.assertEqual(1, len(errors))
         self.assertTrue(isinstance(errors[0], checks.Error))
         self.assertEqual('boardinghouse.E003', errors[0].id)
 
-    @unittest.skipIf(django.VERSION >= (1, 10), "settings.MIDDLEWARE_CLASSES")
+    @unittest.skipIf(django.VERSION >= (1, 11), "settings.MIDDLEWARE_CLASSES")
     @modify_settings()
     def test_session_middleware_missing_old(self):
-        settings.MIDDLEWARE_CLASSES = settings.MIDDLEWARE
-        settings.MIDDLEWARE_CLASSES.remove('django.contrib.sessions.middleware.SessionMiddleware')
+        settings.MIDDLEWARE_CLASSES = [
+            middleware for middleware in settings.MIDDLEWARE
+            if middleware != 'django.contrib.sessions.middleware.SessionMiddleware'
+        ]
         del settings.MIDDLEWARE
         errors = apps.check_session_middleware_installed()
         self.assertEqual(1, len(errors))
